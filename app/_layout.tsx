@@ -1,51 +1,56 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Slot } from 'expo-router';
+import {
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_400Regular_Italic,
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+  PlayfairDisplay_700Bold_Italic,
+} from '@expo-google-fonts/playfair-display';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 
-import { NotificationProvider } from '@/contexts/NotificationContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { trackerManager } from '@/lib/tracking/tracker-manager';
-import { AppsFlyerTracker } from '@/lib/tracking/trackers/appsflyer-tracker';
-import { PostHogTracker } from '@/lib/tracking/trackers/posthog-tracker';
 import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
 import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
-import { devLog } from '@/utils/dev-log';
-import * as Notifications from 'expo-notifications';
-
-trackerManager.register(new PostHogTracker());
-trackerManager.register(new AppsFlyerTracker());
-trackerManager.init();
-
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    devLog('🔔 handleNotification triggered:', JSON.stringify(notification))
-    return {
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }
-  },
-  handleSuccess: (id) => devLog('✅ handleSuccess:', id),
-  handleError: (id, error) => devLog('❌ handleError:', id, error),
-})
 
 export default function RootLayout() {
-
   const colorScheme = useColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_400Regular_Italic,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
+    PlayfairDisplay_700Bold_Italic,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
     <KeyboardProvider>
       <RevenueCatProvider>
         <PurchaseWrapper>
-          <NotificationProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Slot />
-              <StatusBar style="auto" />
-            </ThemeProvider>
-          </NotificationProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+              <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
         </PurchaseWrapper>
       </RevenueCatProvider>
     </KeyboardProvider>
