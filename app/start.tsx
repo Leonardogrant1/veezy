@@ -55,8 +55,8 @@ export default function StartScreen() {
 
             {/* Animated content */}
             <Animated.View style={[styles.content, { opacity, transform: [{ translateY }] }]}>
-                <Text style={styles.title}>Your daily dose{'\n'}of motivation</Text>
-                <Text style={styles.subtitle}>Affirmations & quotes built{'\n'}for athletes who want more</Text>
+                <Text style={styles.title}>Manifest your{'\n'}future</Text>
+                <Text style={styles.subtitle}>See yourself living{'\n'}your dream life</Text>
 
                 <SlideToStart onComplete={() => router.replace('/onboarding')} />
             </Animated.View>
