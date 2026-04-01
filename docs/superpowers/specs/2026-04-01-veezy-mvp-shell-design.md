@@ -13,8 +13,8 @@ Veezy is a manifestation and vision board app. The MVP shell establishes the ful
 ## Approach
 
 **Option C — Selective Cleanup:**
-- Keep: `OnboardingProgressWrapper`, `OnboardingControlContext`, `types.ts`, `start.tsx` infrastructure
-- Delete: All Discipl-specific step components, `tutorial.tsx`, `home.tsx` (replaced)
+- Keep: `OnboardingProgressWrapper`, `OnboardingControlContext`, `types.ts`, `start.tsx` infrastructure, `tutorial.tsx` (untouched for now)
+- Delete: All Discipl-specific step components, `home.tsx` (replaced)
 - Create: New Veezy-specific step components, new `home.tsx`
 
 ---
@@ -27,9 +27,9 @@ Veezy is a manifestation and vision board app. The MVP shell establishes the ful
 | `/start` | `app/start.tsx` | Landing screen — keep video + slide, update copy only |
 | `/onboarding` | `app/onboarding.tsx` | New Veezy steps via OnboardingProgressWrapper |
 | `/home` | `app/home.tsx` | New Vision Board Grid — full replacement |
-| `/tutorial` | `app/tutorial.tsx` | **Deleted** — not part of Veezy |
+| `/tutorial` | `app/tutorial.tsx` | **Untouched for now** — will be rebuilt for Veezy later |
 
-`index.tsx` needs one change: remove the `hasSeenTutorial` branch (tutorial is gone). Result: `hasCompletedOnboarding` → `/home`, else → `/start`.
+`index.tsx` stays unchanged: `hasCompletedOnboarding` → `/home`, `hasSeenTutorial` check → `/tutorial`, else → `/start`. Tutorial will be rebuilt for Veezy later.
 
 ---
 
