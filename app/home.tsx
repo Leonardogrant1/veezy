@@ -48,6 +48,15 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 )}
             />
+
+            {/* FAB */}
+            <TouchableOpacity
+                style={[styles.fab, { bottom: insets.bottom + 24 }]}
+                activeOpacity={0.85}
+                onPress={() => router.push('/vision/add')}
+            >
+                <Text style={styles.fabIcon}>+</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -113,5 +122,26 @@ const styles = StyleSheet.create({
         fontSize: 18,
         lineHeight: 26,
         textAlign: 'center',
+    },
+    fab: {
+        position: 'absolute',
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: Colors.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    fabIcon: {
+        color: 'white',
+        fontSize: 28,
+        fontFamily: Fonts.sansBold,
+        lineHeight: 32,
     },
 });
