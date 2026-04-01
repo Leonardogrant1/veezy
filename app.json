@@ -9,7 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "studio.northbyte.veezy",
+      "appleTeamId": "KJQ52F94YM",
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.studio.northbyte.veezy"
+        ]
+      },
+      "infoPlist": {
+        "AppGroup": "group.studio.northbyte.veezy",
+        "AppGroupIdentifier": "group.studio.northbyte.veezy",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -38,11 +50,37 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-tracking-transparency",
+      "@bacons/apple-targets",
+      "react-native-appsflyer"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "bundleIdentifier": "studio.northbyte.veezy.widget",
+                  "targetName": "widget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.studio.northbyte.veezy"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "efb95a07-2b9b-4e9d-89c0-0544c3f5e92b"
+      }
     }
   }
 }
