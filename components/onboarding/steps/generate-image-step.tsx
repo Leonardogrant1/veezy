@@ -34,7 +34,7 @@ export function GenerateImageStep() {
             }
         }, 900);
         return () => clearInterval(interval);
-    }, []);
+    }, [setCanContinue]);
 
     return (
         <View style={styles.container}>

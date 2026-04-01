@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 
@@ -21,6 +21,10 @@ export function GoalsStep() {
         setSelected(next);
         setCanContinue(next.length > 0);
     }
+
+    useEffect(() => {
+        setCanContinue(true);
+    }, []);
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
