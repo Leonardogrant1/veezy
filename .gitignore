@@ -39,7 +39,7 @@ yarn-error.*
 app-example
 
 # generated native folders
-/ios
-/android
+app/ios
+app/android
 
 .env

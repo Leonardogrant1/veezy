@@ -7,14 +7,38 @@ export type GenerateVisionResult = {
     visionId: string;
 };
 
-export async function generateVision(description: string, userId: string): Promise<GenerateVisionResult> {
+export type RegenerateVisionResult = {
+    imageUrl: string;
+    imageKey: string;
+};
+
+export async function regenerateVision(visionId: string, description: string, userId: string, existingPhrases?: string[]): Promise<RegenerateVisionResult> {
+    const response = await fetch(`${BACKEND_URL}/vision/regenerate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-rc-user-id': userId,
+        },
+        body: JSON.stringify({ visionId, visionDescription: description, existingPhrases }),
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error ?? `Regeneration failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    return { imageUrl: data.signedUrl, imageKey: data.imageKey };
+}
+
+export async function generateVision(description: string, userId: string, existingPhrases?: string[]): Promise<GenerateVisionResult> {
     const response = await fetch(`${BACKEND_URL}/vision/generate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-rc-user-id': userId,
         },
-        body: JSON.stringify({ visionDescription: description }),
+        body: JSON.stringify({ visionDescription: description, existingPhrases }),
     });
 
     if (!response.ok) {

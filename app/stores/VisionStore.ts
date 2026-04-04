@@ -23,13 +23,13 @@ export const useVisionStore = create<VisionStore>()(
         (set) => ({
             visions: [],
             addVision: (vision) => set((s) => ({
-                visions: [...s.visions, { ...vision, id: vision.id ?? Date.now().toString(), createdAt: new Date().toISOString() }],
+                visions: [...s.visions, { ...vision, id: vision.id ?? Date.now().toString(), createdAt: new Date().toISOString(), imageVersion: 1 }],
             })),
             updatePhrase: (id, phrase) => set((s) => ({
                 visions: s.visions.map((v) => v.id === id ? { ...v, phrase } : v),
             })),
             updateImage: (id, imagePath) => set((s) => ({
-                visions: s.visions.map((v) => v.id === id ? { ...v, imagePath } : v),
+                visions: s.visions.map((v) => v.id === id ? { ...v, imagePath, imageVersion: (v.imageVersion ?? 1) + 1 } : v),
             })),
             deleteVision: (id) => set((s) => ({
                 visions: s.visions.filter((v) => v.id !== id),

@@ -4,4 +4,5 @@ export type Vision = {
     phrase: string
     imagePath: string
     createdAt: string
+    imageVersion: number
 }

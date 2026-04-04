@@ -45,12 +45,23 @@ export default function EditSelfReferenceScreen() {
     const [pickerTarget, setPickerTarget] = useState<Slot | null>(null);
 
     useEffect(() => {
-        setUris({
-            face_front: storedImages.face_front ? MediaHandler.toUri(storedImages.face_front) : null,
-            face_left: storedImages.face_left ? MediaHandler.toUri(storedImages.face_left) : null,
-            face_right: storedImages.face_right ? MediaHandler.toUri(storedImages.face_right) : null,
-            body: storedImages.body ? MediaHandler.toUri(storedImages.body) : null,
-        });
+        const resolve = async () => {
+            setUris({
+                face_front: storedImages.face_front
+                    ? await MediaHandler.resolveUri(storedImages.face_front)
+                    : null,
+                face_left: storedImages.face_left
+                    ? await MediaHandler.resolveUri(storedImages.face_left)
+                    : null,
+                face_right: storedImages.face_right
+                    ? await MediaHandler.resolveUri(storedImages.face_right)
+                    : null,
+                body: storedImages.body
+                    ? await MediaHandler.resolveUri(storedImages.body)
+                    : null,
+            });
+        };
+        resolve().catch(() => {});
     }, []);
 
     async function handlePickFromGallery(slot: Slot) {
@@ -110,7 +121,7 @@ export default function EditSelfReferenceScreen() {
                         throw new Error(`Upload failed for ${s.key}`);
                     }
 
-                    const relativePath = MediaHandler.saveFromLocal(uri, `self-reference/${s.key}.jpg`);
+                    const relativePath = MediaHandler.saveFromLocal(uri, `self-reference/${userId}/${s.key}`);
                     newPaths[s.key] = relativePath;
                 })
             );

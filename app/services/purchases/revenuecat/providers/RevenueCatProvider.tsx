@@ -1,7 +1,11 @@
 
 
 
+import { MediaHandler } from '@/lib/media-handler';
+import { UserCloudSync } from '@/services/user-cloud-sync';
+import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from "@/stores/UserDataStore";
+import { useVisionStore } from "@/stores/VisionStore";
 import { getOrCreateAnonymousId } from "@/utils/anonymous-id";
 import { createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
@@ -41,10 +45,22 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
             Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
             await Purchases.logIn(userId);
 
-            const customerInfo = await Purchases.getCustomerInfo();
-            console.log(customerInfo);
-
             useUserDataStore.setState({ userId });
+
+            const restored = await UserCloudSync.restore().catch((e) => {
+                console.log(e);
+                return false;
+            });
+
+            if (restored) {
+                (async () => {
+                    const visions = useVisionStore.getState().visions;
+                    console.log("visions", visions);
+
+                    await Promise.all(visions.map((v) => MediaHandler.resolveUri(v.imagePath).catch(() => { })));
+                    WidgetBridge.sync(visions).catch(() => { });
+                })();
+            }
             loadOfferings();
         };
         init();
@@ -65,7 +81,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
 
         // Present paywall for current offering:
         const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywallIfNeeded({
-            requiredEntitlementIdentifier: "Discipl Premium"
+            requiredEntitlementIdentifier: "Veezy Premium"
         });
 
         return paywallResult;

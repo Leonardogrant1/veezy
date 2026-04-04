@@ -1,10 +1,42 @@
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
 import { useVisionStore } from '@/stores/VisionStore';
+import { Vision } from '@/types/vision';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+function VisionCard({ item }: { item: Vision }) {
+    const [uri, setUri] = useState<string | null>(null);
+
+    useEffect(() => {
+        MediaHandler.resolveUri(item.imagePath).then((u) => setUri(`${u}?v=${item.imageVersion ?? 1}`));
+    }, [item.imagePath, item.imageVersion]);
+
+    return (
+        <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => router.push(`/vision/${item.id}`)}>
+            {uri && (
+                <Image
+                    source={{ uri }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                />
+            )}
+            <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                style={[StyleSheet.absoluteFill, { top: '35%' }]}
+            />
+            <View style={styles.cardContent}>
+                <Text style={styles.cardCategory}>{item.title.toUpperCase()}</Text>
+                <Text style={styles.cardPhrase} numberOfLines={3}>
+                    {item.phrase}
+                </Text>
+            </View>
+        </TouchableOpacity>
+    );
+}
 
 export default function HomeScreen() {
     const insets = useSafeAreaInsets();
@@ -29,25 +61,7 @@ export default function HomeScreen() {
                     { paddingTop: insets.top + 72, paddingBottom: insets.bottom + 20 },
                 ]}
                 showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => router.push(`/vision/${item.id}`)}>
-                        <Image
-                          source={{ uri: MediaHandler.toUri(item.imagePath) }}
-                          style={StyleSheet.absoluteFill}
-                          resizeMode="cover"
-                        />
-                        <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.8)']}
-                            style={[StyleSheet.absoluteFill, { top: '35%' }]}
-                        />
-                        <View style={styles.cardContent}>
-                            <Text style={styles.cardCategory}>{item.title.toUpperCase()}</Text>
-                            <Text style={styles.cardPhrase} numberOfLines={3}>
-                                {item.phrase}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
+                renderItem={({ item }) => <VisionCard item={item} />}
             />
 
             {/* FAB */}

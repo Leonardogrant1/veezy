@@ -12,14 +12,18 @@ The scene should:
 
 Output only the scene description, no preamble or explanation.`;
 
-export async function generateSceneDescription(personDescription: string, goal: string): Promise<string> {
+export async function generateSceneDescription(personDescription: string, goal: string, existingPhrases?: string[]): Promise<string> {
+    const existingContext = existingPhrases && existingPhrases.length > 0
+        ? `\n\nExisting visions context (maintain visual and lifestyle consistency with these — same world, same level of luxury/success, same environment):\n${existingPhrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+        : '';
+
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4.1',
         messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             {
                 role: 'user',
-                content: `Person description:\n${personDescription}\n\nGoal/Vision:\n${goal}`,
+                content: `Person description:\n${personDescription}\n\nGoal/Vision:\n${goal}${existingContext}`,
             },
         ],
         max_completion_tokens: 400,

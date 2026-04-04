@@ -15,12 +15,17 @@ import {
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { AppState } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
+import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
 import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { UserCloudSync } from '@/services/user-cloud-sync';
+import { WidgetBridge } from '@/services/widgets/widget-bridge';
+import { useVisionStore } from '@/stores/VisionStore';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -36,6 +41,19 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+
+  useEffect(() => {
+    // Sync widget on app start for existing users
+    WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background') {
+        UserCloudSync.upload().catch(() => {});
+        WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   if (!fontsLoaded) return null;
 

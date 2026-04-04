@@ -1,81 +1,133 @@
 import WidgetKit
 import SwiftUI
 
-struct Provider: AppIntentTimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
+// MARK: – Data
+
+private let appGroup = "group.studio.northbyte.veezy"
+
+struct WidgetVision: Decodable {
+    let phrase: String
+    let imagePath: String
+}
+
+struct VisionEntry: TimelineEntry {
+    let date: Date
+    let phrase: String
+    let imagePath: String
+}
+
+// MARK: – Provider
+
+struct VisionProvider: TimelineProvider {
+
+    func placeholder(in context: Context) -> VisionEntry {
+        VisionEntry(date: Date(), phrase: "Deine Vision wird Realität.", imagePath: "")
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: configuration)
+    func getSnapshot(in context: Context, completion: @escaping (VisionEntry) -> Void) {
+        let visions = loadVisions()
+        let entry = visions.first.map {
+            VisionEntry(date: Date(), phrase: $0.phrase, imagePath: $0.imagePath)
+        } ?? placeholder(in: context)
+        completion(entry)
     }
-    
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        var entries: [SimpleEntry] = []
 
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, configuration: configuration)
-            entries.append(entry)
+    func getTimeline(in context: Context, completion: @escaping (Timeline<VisionEntry>) -> Void) {
+        let visions = loadVisions()
+
+        guard !visions.isEmpty else {
+            let fallback = placeholder(in: context)
+            completion(Timeline(entries: [fallback], policy: .after(Date().addingTimeInterval(3 * 3600))))
+            return
         }
 
-        return Timeline(entries: entries, policy: .atEnd)
+        let now = Date()
+        let entries: [VisionEntry] = visions.shuffled().enumerated().map { index, vision in
+            VisionEntry(
+                date: Calendar.current.date(byAdding: .hour, value: index * 3, to: now)!,
+                phrase: vision.phrase,
+                imagePath: vision.imagePath
+            )
+        }
+
+        // .atEnd → nach dem letzten Entry wird eine neue Timeline angefordert
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-//    func relevances() async -> WidgetRelevances<ConfigurationAppIntent> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
+    private func loadVisions() -> [WidgetVision] {
+        guard
+            let defaults = UserDefaults(suiteName: appGroup),
+            let json = defaults.string(forKey: "visions"),
+            let data = json.data(using: .utf8),
+            let visions = try? JSONDecoder().decode([WidgetVision].self, from: data)
+        else { return [] }
+        return visions
+    }
 }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let configuration: ConfigurationAppIntent
-}
+// MARK: – View
 
-struct widgetEntryView : View {
-    var entry: Provider.Entry
+struct VisionWidgetView: View {
+    var entry: VisionEntry
+    @Environment(\.widgetFamily) var family
+
+    private var fontSize: CGFloat {
+        switch family {
+        case .systemLarge: return 22
+        case .systemMedium: return 18
+        default: return 14
+        }
+    }
+
+    private var backgroundImage: UIImage? {
+        guard
+            !entry.imagePath.isEmpty,
+            let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
+        else { return nil }
+        return UIImage(contentsOfFile: containerURL.appendingPathComponent(entry.imagePath).path)
+    }
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Favorite Emoji:")
-            Text(entry.configuration.favoriteEmoji)
-        }
+        Text(entry.phrase)
+            .font(.system(size: fontSize, design: .serif))
+            .italic()
+            .foregroundColor(.white)
+            .multilineTextAlignment(.center)
+            .minimumScaleFactor(0.7)
+            .padding(.all, family == .systemLarge ? 24 : nil)
+            .containerBackground(for: .widget) {
+                ZStack {
+                    if let uiImage = backgroundImage {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Color.black
+                    }
+                    Color.black.opacity(0.45)
+                }
+            }
     }
 }
+
+// MARK: – Widget
 
 struct widget: Widget {
     let kind: String = "widget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
-            widgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+        StaticConfiguration(kind: kind, provider: VisionProvider()) { entry in
+            VisionWidgetView(entry: entry)
         }
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
-extension ConfigurationAppIntent {
-    fileprivate static var smiley: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "😀"
-        return intent
-    }
-    
-    fileprivate static var starEyes: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "🤩"
-        return intent
-    }
-}
+// MARK: – Preview
 
-#Preview(as: .systemSmall) {
+#Preview(as: .systemMedium) {
     widget()
 } timeline: {
-    SimpleEntry(date: .now, configuration: .smiley)
-    SimpleEntry(date: .now, configuration: .starEyes)
+    VisionEntry(date: .now, phrase: "Deine Vision wird Realität.", imagePath: "")
+    VisionEntry(date: .now, phrase: "Du bist auf dem Weg zu deinem Ziel.", imagePath: "")
 }

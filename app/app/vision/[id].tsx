@@ -1,6 +1,10 @@
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
+import { UserCloudSync } from '@/services/user-cloud-sync';
+import { WidgetBridge } from '@/services/widgets/widget-bridge';
+import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
+import { regenerateVision } from '@/utils/generateVision';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -9,6 +13,8 @@ import {
     Animated,
     Easing,
     Image,
+    Keyboard,
+    KeyboardAvoidingView,
     Linking,
     Modal,
     Platform,
@@ -16,10 +22,11 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import Share from 'react-native-share';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Share from 'react-native-share';
 
 
 export default function VisionDetailScreen() {
@@ -28,7 +35,9 @@ export default function VisionDetailScreen() {
 
     const vision = useVisionStore((s) => s.visions.find((v) => v.id === id));
     const updatePhrase = useVisionStore((s) => s.updatePhrase);
+    const updateImage = useVisionStore((s) => s.updateImage);
     const deleteVision = useVisionStore((s) => s.deleteVision);
+    const userId = useUserDataStore((s) => s.userId);
 
     // Enter animation
     const opacity = useRef(new Animated.Value(0)).current;
@@ -41,7 +50,13 @@ export default function VisionDetailScreen() {
         ]).start();
     }, []);
 
+    useEffect(() => {
+        if (!vision) return;
+        MediaHandler.resolveUri(vision.imagePath).then((u) => setResolvedImageUri(`${u}?v=${vision.imageVersion ?? 1}`));
+    }, [vision?.imagePath, vision?.imageVersion]);
+
     // Phrase editing
+    const [resolvedImageUri, setResolvedImageUri] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState('');
 
@@ -52,6 +67,7 @@ export default function VisionDetailScreen() {
 
     const savePhrase = () => {
         if (id) updatePhrase(id, editValue.trim() || (vision?.phrase ?? ''));
+        WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
         setIsEditing(false);
     };
 
@@ -60,13 +76,26 @@ export default function VisionDetailScreen() {
     const [regenPrompt, setRegenPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const handleRegenerate = () => {
+    const handleRegenerate = async () => {
+        if (!id) return;
         setIsGenerating(true);
-        setTimeout(() => {
-            setIsGenerating(false);
+        try {
+            const existingPhrases = useVisionStore.getState().visions
+                .filter((v) => v.id !== id)
+                .map((v) => v.phrase)
+                .filter(Boolean);
+            const generated = await regenerateVision(id, regenPrompt.trim() || vision.phrase, userId, existingPhrases);
+            const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
+            updateImage(id, relativePath);
+            WidgetBridge.updateImage(relativePath, id).catch(() => { });
             setRegenModalVisible(false);
             setRegenPrompt('');
-        }, 1500);
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Fehler', 'Generierung fehlgeschlagen. Bitte versuche es erneut.');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     // Instagram sharing
@@ -108,7 +137,13 @@ export default function VisionDetailScreen() {
                     text: 'Löschen',
                     style: 'destructive',
                     onPress: () => {
-                        if (id) deleteVision(id);
+                        if (id) {
+                            const imagePath = vision.imagePath;
+                            deleteVision(id);
+                            MediaHandler.delete(imagePath);
+                            UserCloudSync.deleteVisionImage(id).catch(() => { });
+                            WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
+                        }
                         router.back();
                     },
                 },
@@ -119,115 +154,131 @@ export default function VisionDetailScreen() {
     if (!vision) return null;
 
     return (
-        <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
-            {/* Fullscreen image */}
-            <Image
-              source={{ uri: MediaHandler.toUri(vision.imagePath) }}
-              style={StyleSheet.absoluteFill}
-              resizeMode="cover"
-            />
-
-            {/* Top gradient for close btn legibility */}
-            <LinearGradient
-                colors={['rgba(0,0,0,0.35)', 'transparent']}
-                style={[StyleSheet.absoluteFill, { bottom: undefined, height: 180 }]}
-            />
-
-            {/* Bottom gradient for text legibility */}
-            <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.75)']}
-                style={[StyleSheet.absoluteFill, { top: undefined, height: 300 }]}
-            />
-
-            {/* Top bar */}
-            <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-                <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.7}>
-                    <Text style={styles.iconText}>✕</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton} onPress={handleDelete} activeOpacity={0.7}>
-                    <Text style={styles.iconText}>⋯</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Bottom content */}
-            <View style={[styles.bottomContent, { paddingBottom: insets.bottom + 32 }]}>
-                <Text style={styles.categoryBadge}>{vision.title.toUpperCase()}</Text>
-
-                {isEditing ? (
-                    <TextInput
-                        style={styles.phraseInput}
-                        value={editValue}
-                        onChangeText={setEditValue}
-                        multiline
-                        autoFocus
-                        selectionColor="white"
-                        placeholderTextColor="rgba(255,255,255,0.5)"
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
+                {/* Fullscreen image */}
+                {resolvedImageUri && (
+                    <Image
+                        source={{ uri: resolvedImageUri }}
+                        style={StyleSheet.absoluteFill}
+                        resizeMode="cover"
                     />
-                ) : (
-                    <TouchableOpacity onPress={startEditing} activeOpacity={0.8}>
-                        <Text style={styles.phrase}>{vision.phrase}</Text>
-                    </TouchableOpacity>
                 )}
 
-                {!isEditing && (
-                    <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
-                        <Text style={styles.shareText}>
-                            {hasInstagram ? '📲  In Instagram Story teilen' : '📤  Teilen'}
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                {/* Top gradient for close btn legibility */}
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.35)', 'transparent']}
+                    style={[StyleSheet.absoluteFill, { bottom: undefined, height: 180 }]}
+                    pointerEvents="none"
+                />
 
-                <View style={styles.actions}>
-                    {isEditing ? (
-                        <TouchableOpacity style={styles.actionButton} onPress={savePhrase} activeOpacity={0.7}>
-                            <Text style={styles.actionText}>Speichern</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <>
-                            <TouchableOpacity style={styles.actionButton} onPress={startEditing} activeOpacity={0.7}>
-                                <Text style={styles.actionText}>✏️  Phrase</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.actionButton} onPress={() => setRegenModalVisible(true)} activeOpacity={0.7}>
-                                <Text style={styles.actionText}>🖼  Neu generieren</Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
+                {/* Bottom gradient for text legibility */}
+                <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.75)']}
+                    style={[StyleSheet.absoluteFill, { top: undefined, height: 300 }]}
+                    pointerEvents="none"
+                />
+
+                {/* Top bar */}
+                <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+                    <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.7}>
+                        <Text style={styles.iconText}>✕</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconButton} onPress={handleDelete} activeOpacity={0.7}>
+                        <Text style={styles.iconText}>⋯</Text>
+                    </TouchableOpacity>
                 </View>
-            </View>
 
-            {/* Regenerate modal */}
-            <Modal
-                visible={regenModalVisible}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setRegenModalVisible(false)}
-            >
-                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => !isGenerating && setRegenModalVisible(false)}>
-                    <TouchableOpacity style={styles.modalSheet} activeOpacity={1}>
-                        <Text style={styles.modalTitle}>Bild neu generieren</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Beschreibe dein Wunschbild…"
-                            placeholderTextColor={Colors.textPlaceholder}
-                            value={regenPrompt}
-                            onChangeText={setRegenPrompt}
-                            multiline
-                            editable={!isGenerating}
-                        />
-                        <TouchableOpacity
-                            style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
-                            onPress={handleRegenerate}
-                            disabled={isGenerating}
-                            activeOpacity={0.8}
-                        >
-                            <Text style={styles.generateButtonText}>
-                                {isGenerating ? 'Generiert…' : 'Generieren'}
-                            </Text>
+                {/* Bottom content */}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={styles.keyboardAvoiding}
+                    pointerEvents="box-none"
+                >
+                    <View style={[styles.bottomContent, { paddingBottom: insets.bottom + 32 }]}>
+                        <Text style={styles.categoryBadge}>{vision.title.toUpperCase()}</Text>
+
+                        {isEditing ? (
+                            <TextInput
+                                style={styles.phraseInput}
+                                value={editValue}
+                                onChangeText={setEditValue}
+                                multiline
+                                autoFocus
+                                selectionColor="white"
+                                placeholderTextColor="rgba(255,255,255,0.5)"
+                            />
+                        ) : (
+                            <TouchableOpacity onPress={startEditing} activeOpacity={0.8}>
+                                <Text style={styles.phrase}>{vision.phrase}</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {!isEditing && (
+                            <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
+                                <Text style={styles.shareText}>
+                                    {hasInstagram ? '📲  In Instagram Story teilen' : '📤  Teilen'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <View style={styles.actions}>
+                            {isEditing ? (
+                                <TouchableOpacity style={styles.actionButton} onPress={savePhrase} activeOpacity={0.7}>
+                                    <Text style={styles.actionText}>Speichern</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <>
+                                    <TouchableOpacity style={styles.actionButton} onPress={startEditing} activeOpacity={0.7}>
+                                        <Text style={styles.actionText}>✏️  Phrase</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.actionButton} onPress={() => setRegenModalVisible(true)} activeOpacity={0.7}>
+                                        <Text style={styles.actionText}>🖼  Neu generieren</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+
+                {/* Regenerate modal */}
+                <Modal
+                    visible={regenModalVisible}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setRegenModalVisible(false)}
+                >
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+                        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => { Keyboard.dismiss(); if (!isGenerating) setRegenModalVisible(false); }}>
+                            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                <View style={styles.modalSheet}>
+                                    <Text style={styles.modalTitle}>Bild neu generieren</Text>
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        placeholder="Beschreibe dein Wunschbild…"
+                                        placeholderTextColor={Colors.textPlaceholder}
+                                        value={regenPrompt}
+                                        onChangeText={setRegenPrompt}
+                                        multiline
+                                        editable={!isGenerating}
+                                    />
+                                    <TouchableOpacity
+                                        style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
+                                        onPress={handleRegenerate}
+                                        disabled={isGenerating}
+                                        activeOpacity={0.8}
+                                    >
+                                        <Text style={styles.generateButtonText}>
+                                            {isGenerating ? 'Generiert…' : 'Generieren'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </TouchableWithoutFeedback>
                         </TouchableOpacity>
-                    </TouchableOpacity>
-                </TouchableOpacity>
-            </Modal>
-        </Animated.View>
+                    </KeyboardAvoidingView>
+                </Modal>
+            </Animated.View>
+        </TouchableWithoutFeedback>
     );
 }
 
@@ -260,11 +311,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: Fonts.sansMedium,
     },
+    keyboardAvoiding: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'flex-end',
+    },
     bottomContent: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
         alignItems: 'center',
         paddingHorizontal: 28,
         gap: 16,

@@ -1,8 +1,9 @@
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
+import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
-import { generateVision } from '@/utils/generateVision';
+import { generateVision, regenerateVision } from '@/utils/generateVision';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -36,6 +37,7 @@ type GeneratedResult = {
 export default function AddVisionScreen() {
     const insets = useSafeAreaInsets();
     const addVision = useVisionStore((s) => s.addVision);
+    const updateImage = useVisionStore((s) => s.updateImage);
     const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
 
@@ -73,12 +75,14 @@ export default function AddVisionScreen() {
         setError(null);
         setState('loading');
         try {
-            const generated = await generateVision(description.trim(), userId);
+            const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
+            const generated = await generateVision(description.trim(), userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(
                 generated.imageUrl,
-                `vision-images/${generated.imageKey}`
+                generated.imageKey
             );
             addVision({ id: generated.visionId, title: '', phrase: generated.phrase, imagePath: relativePath });
+            WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
             setResult(generated);
             setSavedPath(relativePath);
             setSavedVisionId(generated.visionId);
@@ -91,21 +95,21 @@ export default function AddVisionScreen() {
     };
 
     const handleRegenerate = async () => {
+        if (!savedVisionId) return;
         previewOpacity.setValue(0);
         previewScale.setValue(0.95);
         setState('loading');
         setError(null);
         try {
-            if (savedVisionId) deleteVision(savedVisionId);
-            const generated = await generateVision(description.trim(), userId);
-            const relativePath = await MediaHandler.saveFromRemote(
-                generated.imageUrl,
-                `vision-images/${generated.imageKey}`
-            );
-            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, imagePath: relativePath });
-            setResult(generated);
+            const existingPhrases = useVisionStore.getState().visions
+                .filter((v) => v.id !== savedVisionId)
+                .map((v) => v.phrase)
+                .filter(Boolean);
+            const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases);
+            const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
+            updateImage(savedVisionId, relativePath);
+            WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => {});
             setSavedPath(relativePath);
-            setSavedVisionId(generated.visionId);
             setState('preview');
             animatePreviewIn();
         } catch {
