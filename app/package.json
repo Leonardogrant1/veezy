@@ -22,6 +22,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "expo": "^55.0.11",
+    "expo-blur": "~55.0.12",
     "expo-constants": "~55.0.11",
     "expo-file-system": "~55.0.14",
     "expo-font": "~55.0.6",
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
+    "chalk": "^4.1.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"

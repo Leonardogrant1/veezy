@@ -59,7 +59,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
             return generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
         })();
 
-        const [phrase, resultB64] = await Promise.all([phrasePromise, imagePipeline]);
+        const [phraseResult, resultB64] = await Promise.all([phrasePromise, imagePipeline]);
 
         const visionId = crypto.randomUUID();
         const imageKey = `vision-images/${userId}/${visionId}`;
@@ -68,7 +68,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
 
         deductGeneration(userId, count); // fire-and-forget
 
-        return c.json({ phrase, signedUrl, imageKey, visionId });
+        return c.json({ phrase: phraseResult.phrase, category: phraseResult.category, signedUrl, imageKey, visionId });
     } catch (error: any) {
         logger.error({ error: error.message }, 'Vision generate failed');
         return c.json({ error: 'Vision generation failed' }, 500);
@@ -85,22 +85,16 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
         return c.json({ error: 'visionDescription is required' }, 400);
     }
 
-    console.log("REACHED HERE 1")
-
     const userId = c.var.rcUserId;
     const count = await ensureGenerationCount(userId, c.var.rcCustomer);
     if (count <= 0) {
         return c.json({ error: 'No generations remaining', count: 0 }, 403);
     }
 
-    console.log("REACHED HERE 2")
-
     const composite = await R2Storage.downloadBuffer(getSelfReferenceKey(userId, 'composite'));
     if (!composite) {
         return c.json({ error: 'No composite image found. Upload reference images first.' }, 400);
     }
-
-    console.log("REACHED HERE 3")
 
     try {
         const compositeBase64 = composite.toString('base64');
@@ -118,20 +112,14 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
             ).catch(() => { });
         }
 
-        console.log("REACHED HERE 4")
-
         const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined);
         const resultB64 = await generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
-
-        console.log("REACHED HERE 5")
 
         const imageKey = `vision-images/${userId}/${visionId}`;
         await R2Storage.uploadBuffer(imageKey, Buffer.from(resultB64, 'base64'));
         const signedUrl = await R2Storage.getSignedUrl(imageKey);
 
         deductGeneration(userId, count);
-
-        console.log("REACHED HERE 6")
 
         return c.json({ signedUrl, imageKey });
     } catch (error: any) {

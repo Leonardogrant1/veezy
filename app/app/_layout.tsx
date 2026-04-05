@@ -1,4 +1,9 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
@@ -6,19 +11,14 @@ import {
   PlayfairDisplay_700Bold,
   PlayfairDisplay_700Bold_Italic,
 } from '@expo-google-fonts/playfair-display';
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
-import { useEffect } from 'react';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
@@ -44,12 +44,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     // Sync widget on app start for existing users
-    WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
+    WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
 
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background') {
-        UserCloudSync.upload().catch(() => {});
-        WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
+        console.log('Backgrounding app, syncing data...');
+        UserCloudSync.upload().catch(() => { });
+        WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
       }
     });
     return () => sub.remove();

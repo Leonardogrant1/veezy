@@ -38,7 +38,6 @@ export default function AddVisionScreen() {
     const insets = useSafeAreaInsets();
     const addVision = useVisionStore((s) => s.addVision);
     const updateImage = useVisionStore((s) => s.updateImage);
-    const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
 
     const [state, setState] = useState<ScreenState>('input');
@@ -81,8 +80,8 @@ export default function AddVisionScreen() {
                 generated.imageUrl,
                 generated.imageKey
             );
-            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, imagePath: relativePath });
-            WidgetBridge.sync(useVisionStore.getState().visions).catch(() => {});
+            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as any, imagePath: relativePath, imageVersion: 1 });
+            WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
             setResult(generated);
             setSavedPath(relativePath);
             setSavedVisionId(generated.visionId);
@@ -108,7 +107,7 @@ export default function AddVisionScreen() {
             const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(savedVisionId, relativePath);
-            WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => {});
+            WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => { });
             setSavedPath(relativePath);
             setState('preview');
             animatePreviewIn();

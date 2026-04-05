@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { R2Storage } from '@/lib/r2/storage.js';
 import { RCCustomer } from '@/lib/revenuecat/types.js';
+import { logger } from '@/utils/logger.js';
 
 const userDataRoute = new Hono<{
     Variables: { rcUserId: string; rcCustomer: RCCustomer };
@@ -10,8 +11,16 @@ const userDataRoute = new Hono<{
 userDataRoute.get('/backup', revenuecatAuth, async (c) => {
     const userId = c.var.rcUserId;
     const buffer = await R2Storage.downloadBuffer(`user-data/${userId}.json`);
-    if (!buffer) return c.json({ error: 'Not found' }, 404);
-    return c.json(JSON.parse(buffer.toString('utf8')));
+    if (!buffer || buffer.length === 0) {
+        logger.warn({ userId }, 'No backup found for user');
+        return c.json({ error: 'Not found' }, 404);
+    }
+    const text = buffer.toString('utf8');
+    try {
+        return c.json(JSON.parse(text));
+    } catch {
+        return c.json({ error: 'Corrupt backup' }, 500);
+    }
 });
 
 userDataRoute.put('/backup', revenuecatAuth, async (c) => {

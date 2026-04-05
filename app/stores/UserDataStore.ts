@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { storage, StorageKeys } from '@/lib/storage';
 import { SelfReferenceImages, UserData } from '@/types/user-data';
@@ -8,7 +8,7 @@ import { SelfReferenceImages, UserData } from '@/types/user-data';
 const mmkvStorage = createJSONStorage(() => ({
     getItem: (name: string) => storage.getString(name) ?? null,
     setItem: (name: string, value: string) => storage.set(name, value),
-    removeItem: (name: string) => storage.delete(name),
+    removeItem: (name: string) => storage.remove(name),
 }));
 
 type UserDataStore = UserData & {
@@ -21,6 +21,7 @@ type UserDataStore = UserData & {
 export const useUserDataStore = create<UserDataStore>()(
     persist(
         (set) => ({
+            _hydrated: false,
             userId: '',
             hasOnboarded: false,
             hasSeenTutorial: false,
@@ -39,7 +40,7 @@ export const useUserDataStore = create<UserDataStore>()(
         }),
         {
             name: StorageKeys.USER_DATA,
-            storage: mmkvStorage,
+            storage: mmkvStorage
         }
     )
 );

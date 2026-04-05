@@ -1,13 +1,18 @@
-import { fetch } from 'expo/fetch';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
+import { devLog } from '@/utils/dev-log';
+import { fetch } from 'expo/fetch';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? '';
 
 export class UserCloudSync {
     static async upload(): Promise<void> {
-        const userId = useUserDataStore.getState().userId;
-        if (!userId) return;
+        const { userId } = useUserDataStore.getState();
+        const hasHydrated = useUserDataStore.persist.hasHydrated();
+        devLog('UserCloudSync.upload() called');
+        devLog('userId', userId);
+        devLog('hasHydrated', hasHydrated);
+        if (!userId || !hasHydrated) return;
 
         const s = useUserDataStore.getState();
         const backup = {
@@ -21,6 +26,8 @@ export class UserCloudSync {
             imagesUsed: s.imagesUsed,
             selfReferenceImages: s.selfReferenceImages,
         };
+
+        console.log(JSON.stringify(backup));
 
         await fetch(`${BACKEND_URL}/user-data/backup`, {
             method: 'PUT',
@@ -73,6 +80,17 @@ export class UserCloudSync {
 
         const { visions, ...userData } = backup;
         useVisionStore.setState({ visions });
+
+        // If selfReferenceImages are missing/null in the backup, fall back to
+        // the predictable R2 key pattern so images aren't orphaned after a
+        // corrupted backup restore.
+        const slots = ['face_front', 'face_left', 'face_right', 'body'] as const;
+        const restoredSelfRef = userData.selfReferenceImages ?? { face_front: null, face_left: null, face_right: null, body: null };
+        const allNull = slots.every((s) => restoredSelfRef[s] == null);
+        const selfReferenceImages = allNull
+            ? { face_front: `self-reference/${userId}/face_front`, face_left: `self-reference/${userId}/face_left`, face_right: `self-reference/${userId}/face_right`, body: `self-reference/${userId}/body` }
+            : restoredSelfRef;
+
         useUserDataStore.setState({
             hasOnboarded: userData.hasOnboarded ?? false,
             hasSeenTutorial: userData.hasSeenTutorial ?? false,
@@ -81,12 +99,7 @@ export class UserCloudSync {
             gender: userData.gender ?? 'other',
             notifications: userData.notifications ?? false,
             imagesUsed: userData.imagesUsed ?? 0,
-            selfReferenceImages: userData.selfReferenceImages ?? {
-                face_front: null,
-                face_left: null,
-                face_right: null,
-                body: null,
-            },
+            selfReferenceImages,
         });
 
         return true;

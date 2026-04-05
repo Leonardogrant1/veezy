@@ -2,6 +2,7 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export type GenerateVisionResult = {
     phrase: string;
+    category: string;
     imageUrl: string;   // signed URL for preview
     imageKey: string;
     visionId: string;
@@ -49,6 +50,7 @@ export async function generateVision(description: string, userId: string, existi
     const data = await response.json();
     return {
         phrase: data.phrase,
+        category: data.category,
         imageUrl: data.signedUrl,
         imageKey: data.imageKey,
         visionId: data.visionId,

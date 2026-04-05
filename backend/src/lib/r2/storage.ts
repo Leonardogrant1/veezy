@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, GetObjectCommandOutput } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, GetObjectCommandOutput, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getR2Client } from './client.js';
 
@@ -49,6 +49,7 @@ export class R2Storage {
             }
             return Buffer.concat(chunks);
         } catch (err: any) {
+            console.log(err);
             if (err.name === 'NoSuchKey') return null;
             throw err;
         }

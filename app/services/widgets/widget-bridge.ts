@@ -10,6 +10,7 @@ const STORAGE_KEY = 'visions';
 type WidgetEntry = {
     phrase: string;
     imagePath: string; // relativ zum App Group Container, z.B. "vision-images/<userId>/<visionId>.jpg"
+    category?: string;
 };
 
 export class WidgetBridge {
@@ -45,7 +46,7 @@ export class WidgetBridge {
                     new File(compressedUri).copy(dest);
                 }
 
-                return { phrase: vision.phrase, imagePath: widgetPath };
+                return { phrase: vision.phrase, imagePath: widgetPath, category: vision.category };
             })
         );
 

@@ -30,7 +30,6 @@ export default function EditSelfReferenceScreen() {
     const insets = useSafeAreaInsets();
     const storedImages = useUserDataStore((s) => s.selfReferenceImages);
 
-    console.log("storedImages", storedImages);
     const updateSelfReferenceImages = useUserDataStore((s) => s.updateSelfReferenceImages);
     const userId = useUserDataStore((s) => s.userId);
 
@@ -61,7 +60,7 @@ export default function EditSelfReferenceScreen() {
                     : null,
             });
         };
-        resolve().catch(() => {});
+        resolve().catch(() => { });
     }, []);
 
     async function handlePickFromGallery(slot: Slot) {
