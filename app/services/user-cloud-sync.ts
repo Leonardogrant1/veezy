@@ -20,7 +20,7 @@ export class UserCloudSync {
             hasOnboarded: s.hasOnboarded,
             hasSeenTutorial: s.hasSeenTutorial,
             name: s.name,
-            age: s.age,
+            birthday: s.birthday,
             gender: s.gender,
             notifications: s.notifications,
             imagesUsed: s.imagesUsed,
@@ -66,7 +66,7 @@ export class UserCloudSync {
             hasOnboarded: boolean;
             hasSeenTutorial: boolean;
             name: string;
-            age: number;
+            birthday: string | null;
             gender: 'male' | 'female' | 'other';
             notifications: boolean;
             imagesUsed: number;
@@ -95,7 +95,7 @@ export class UserCloudSync {
             hasOnboarded: userData.hasOnboarded ?? false,
             hasSeenTutorial: userData.hasSeenTutorial ?? false,
             name: userData.name ?? '',
-            age: userData.age ?? 0,
+            birthday: userData.birthday ?? null,
             gender: userData.gender ?? 'other',
             notifications: userData.notifications ?? false,
             imagesUsed: userData.imagesUsed ?? 0,

@@ -1,3 +1,6 @@
+import VisionLoading from '@/components/layout/VisionLoading';
+import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
+import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
 import { UserCloudSync } from '@/services/user-cloud-sync';
@@ -11,19 +14,18 @@ import {
     Alert,
     Animated,
     Keyboard,
-    KeyboardAvoidingView,
     Linking,
     Modal,
     Platform,
     Pressable,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
+import { captureRef } from 'react-native-view-shot';
 
 type ModalView = 'menu' | 'edit' | 'regen';
 
@@ -44,11 +46,19 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
 
-    const [view, setView] = useState<ModalView>('menu');
-    const [editValue, setEditValue] = useState('');
-    const [regenPrompt, setRegenPrompt] = useState('');
+    const [editField, setEditField] = useState<'phrase' | 'regen' | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [hasInstagram, setHasInstagram] = useState(false);
+    const loadingOpacity = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(loadingOpacity, {
+            toValue: isGenerating ? 1 : 0,
+            duration: 250,
+            useNativeDriver: true,
+        }).start();
+    }, [isGenerating]);
+    const shareViewRef = useRef<View>(null);
 
     useEffect(() => {
         if (Platform.OS === 'ios') {
@@ -62,9 +72,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
 
     useEffect(() => {
         if (visible) {
-            setView('menu');
-            setEditValue(vision?.phrase ?? '');
-            setRegenPrompt('');
+            setEditField(null);
             Animated.parallel([
                 Animated.timing(overlayOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
                 Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
@@ -86,30 +94,35 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     }
 
     const handleShare = async () => {
-        if (!vision) return;
-        const localUri = MediaHandler.toUri(vision.imagePath);
+        if (!vision || !shareViewRef.current) return;
+        const watermarkedUri = await captureRef(shareViewRef, { format: 'png', quality: 1 });
         if (hasInstagram) {
             await Share.shareSingle({
                 appId: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? '',
-                stickerImage: localUri,
+                stickerImage: watermarkedUri,
+                //@ts-ignore
                 social: Share.Social.INSTAGRAM_STORIES,
                 backgroundBottomColor: '#0a0a0a',
                 backgroundTopColor: '#0a0a0a',
             });
         } else {
-            await Share.open({ url: localUri });
+            await Share.open({
+                url: watermarkedUri,
+                subject: 'Teile deine Vision',
+                filename: 'vision.png',
+                title: 'Teile deine Vision',
+                message: 'Ich habe meine Vision mit Veezy visualisiert! ✨ #Veezy #VisionBoard #Manifestation',
+            });
         }
     };
 
-    const handleSavePhrase = () => {
+    const handleSavePhrase = (value: string) => {
         if (!vision) return;
-        updatePhrase(vision.id, editValue.trim() || vision.phrase);
+        updatePhrase(vision.id, value.trim() || vision.phrase);
         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
-        setView('menu');
-        Keyboard.dismiss();
     };
 
-    const handleRegenerate = async () => {
+    const handleRegenerate = async (prompt: string) => {
         if (!vision) return;
         setIsGenerating(true);
         try {
@@ -117,14 +130,11 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 .filter((v) => v.id !== vision.id)
                 .map((v) => v.phrase)
                 .filter(Boolean);
-            const generated = await regenerateVision(vision.id, regenPrompt.trim() || vision.phrase, userId, existingPhrases);
+            const generated = await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(vision.id, relativePath);
             WidgetBridge.updateImage(relativePath, vision.id).catch(() => { });
-            setRegenPrompt('');
-            setView('menu');
         } catch (error) {
-            console.error(error);
             Alert.alert('Fehler', 'Generierung fehlgeschlagen. Bitte versuche es erneut.');
         } finally {
             setIsGenerating(false);
@@ -155,117 +165,88 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     };
 
     return (
-        <Modal visible={visible} animationType="none" transparent onRequestClose={handleClose}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <>
+            <Modal visible={visible} animationType="none" transparent onRequestClose={handleClose}>
+
                 <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
+                    {vision && (
+                        <View style={styles.offScreen}>
+                            <WatermarkedShareView ref={shareViewRef} imageUri={MediaHandler.toUri(vision.imagePath)} />
+                        </View>
+                    )}
                     <Pressable style={styles.backdropPressable} onPress={handleClose}>
                         <Pressable onPress={(e) => e.stopPropagation()}>
                             <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
                                 <View style={styles.handle} />
 
-                                {view === 'menu' && (
-                                    <>
-                                        <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleShare}>
-                                            <Text style={styles.optionText}>
-                                                {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
-                                            </Text>
-                                        </TouchableOpacity>
+                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleShare}>
+                                    <Text style={styles.optionText}>
+                                        {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
+                                    </Text>
+                                </TouchableOpacity>
 
-                                        <View style={styles.divider} />
+                                <View style={styles.divider} />
 
-                                        <TouchableOpacity
-                                            style={styles.option}
-                                            activeOpacity={0.7}
-                                            onPress={() => { setEditValue(vision?.phrase ?? ''); setView('edit'); }}
-                                        >
-                                            <Text style={styles.optionText}>Phrase bearbeiten</Text>
-                                        </TouchableOpacity>
+                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={() => setEditField('phrase')}>
+                                    <Text style={styles.optionText}>Phrase bearbeiten</Text>
+                                </TouchableOpacity>
 
-                                        <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={() => setView('regen')}>
-                                            <Text style={styles.optionText}>Neu generieren</Text>
-                                        </TouchableOpacity>
+                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={() => {
+                                    Alert.alert(
+                                        'Bild neu generieren?',
+                                        'Ein neues Bild wird für diese Vision erstellt.',
+                                        [
+                                            { text: 'Abbrechen', style: 'cancel' },
+                                            { text: 'Generieren', onPress: () => handleRegenerate(vision?.phrase ?? '') },
+                                        ]
+                                    );
+                                }}>
+                                    <Text style={styles.optionText}>Bild neu generieren</Text>
+                                </TouchableOpacity>
 
-                                        <View style={styles.divider} />
+                                <View style={styles.divider} />
 
-                                        <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleDelete}>
-                                            <Text style={[styles.optionText, styles.destructiveText]}>Löschen</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-
-                                {view === 'edit' && (
-                                    <>
-                                        <TouchableOpacity
-                                            style={styles.option}
-                                            activeOpacity={0.7}
-                                            onPress={() => { setView('menu'); Keyboard.dismiss(); }}
-                                        >
-                                            <Text style={styles.backText}>← Zurück</Text>
-                                        </TouchableOpacity>
-
-                                        <Text style={styles.subTitle}>Phrase bearbeiten</Text>
-
-                                        <TextInput
-                                            style={styles.textInput}
-                                            value={editValue}
-                                            onChangeText={setEditValue}
-                                            multiline
-                                            autoFocus
-                                            placeholderTextColor={Colors.textPlaceholder}
-                                        />
-
-                                        <TouchableOpacity style={styles.primaryButton} activeOpacity={0.8} onPress={handleSavePhrase}>
-                                            <Text style={styles.primaryButtonText}>Speichern</Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
-
-                                {view === 'regen' && (
-                                    <>
-                                        <TouchableOpacity
-                                            style={styles.option}
-                                            activeOpacity={0.7}
-                                            onPress={() => { if (!isGenerating) { setView('menu'); Keyboard.dismiss(); } }}
-                                        >
-                                            <Text style={styles.backText}>← Zurück</Text>
-                                        </TouchableOpacity>
-
-                                        <Text style={styles.subTitle}>Bild neu generieren</Text>
-
-                                        <TextInput
-                                            style={styles.textInput}
-                                            placeholder="Beschreibe dein Wunschbild…"
-                                            placeholderTextColor={Colors.textPlaceholder}
-                                            value={regenPrompt}
-                                            onChangeText={setRegenPrompt}
-                                            multiline
-                                            editable={!isGenerating}
-                                        />
-
-                                        <TouchableOpacity
-                                            style={[styles.primaryButton, isGenerating && styles.primaryButtonDisabled]}
-                                            activeOpacity={0.8}
-                                            onPress={handleRegenerate}
-                                            disabled={isGenerating}
-                                        >
-                                            <Text style={styles.primaryButtonText}>
-                                                {isGenerating ? 'Generiert…' : 'Generieren'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </>
-                                )}
+                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleDelete}>
+                                    <Text style={[styles.optionText, styles.destructiveText]}>Löschen</Text>
+                                </TouchableOpacity>
                             </Animated.View>
                         </Pressable>
                     </Pressable>
                 </Animated.View>
-            </KeyboardAvoidingView>
-        </Modal>
+
+                {isGenerating && (
+                    <Animated.View style={[styles.loadingOverlay, { opacity: loadingOpacity }]} pointerEvents="none">
+                        <VisionLoading />
+                    </Animated.View>
+                )}
+                <EditFieldModal
+                    visible={editField === 'phrase'}
+                    title="Phrase bearbeiten"
+                    type="text"
+                    value={vision?.phrase}
+                    onSave={handleSavePhrase}
+                    onClose={() => setEditField(null)}
+                />
+            </Modal>
+
+        </>
     );
 }
 
 const styles = StyleSheet.create({
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.85)',
+    },
+    offScreen: {
+        position: 'absolute',
+        top: -9999,
+        left: -9999,
+        opacity: 0,
+    },
     backdrop: {
         flex: 1,
+        position: "relative",
         backgroundColor: 'rgba(0,0,0,0.5)',
     },
     backdropPressable: {

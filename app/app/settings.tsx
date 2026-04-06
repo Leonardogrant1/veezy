@@ -2,32 +2,44 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import UserPhotoIcon from '@/assets/icons/user_square.svg';
+import { BirthdayPickerModal } from '@/components/modals/BirthdayPickerModal';
+import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
+import { calculateAge } from '@/types/user-data';
 
 const LEGAL_ROWS = [
-    { label: 'Nutzungsbedingungen', url: 'https://veezy.app/terms' },
-    { label: 'Datenschutz', url: 'https://veezy.app/privacy' },
+    { label: 'Nutzungsbedingungen', url: 'https://northbyte.studio/terms-of-use/veezy' },
+    { label: 'Datenschutz', url: 'https://northbyte.studio/privacy-policy/veezy' },
 ];
 
 export default function SettingsScreen() {
     const insets = useSafeAreaInsets();
     const name = useUserDataStore((s) => s.name);
-    const age = useUserDataStore((s) => s.age);
+    const birthday = useUserDataStore((s) => s.birthday);
+    const haptics = useUserDataStore((s) => s.haptics);
     const updateSettings = useUserDataStore((s) => s.updateSettings);
 
-    const [editField, setEditField] = useState<'name' | 'age' | null>(null);
+    const [editField, setEditField] = useState<'name' | 'birthday' | null>(null);
+
+    const ageDisplay = birthday
+        ? (() => {
+            const [y, m, d] = birthday.split('-');
+            return `${d}.${m}.${y} (${calculateAge(birthday)})`;
+        })()
+        : '—';
 
     const settingsRows = [
         { label: 'Name', value: name || '—', onPress: () => setEditField('name') },
-        { label: 'Alter', value: age > 0 ? String(age) : '—', onPress: () => setEditField('age') },
+        { label: 'Geburtstag', value: ageDisplay, onPress: () => setEditField('birthday') },
         { label: 'Benachrichtigungen', value: undefined, onPress: () => { } },
         { label: 'Abo verwalten', value: undefined, onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions') },
-        { label: 'Feature anfragen', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://veezy.app/features') },
-        { label: 'Bug melden', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://veezy.app/bugs') },
+        { label: 'Feature anfragen', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/features/veezy') },
+        { label: 'Bug melden', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/bugs/veezy') },
     ];
 
     return (
@@ -44,7 +56,7 @@ export default function SettingsScreen() {
                 {/* Self-Reference */}
                 <TouchableOpacity style={styles.selfReferenceCard} onPress={() => router.push('/edit-self-reference')} activeOpacity={0.75}>
                     <View style={styles.selfReferenceLeft}>
-                        <MaterialIcons name="face" size={24} color={Colors.textHeadline} />
+                        <UserPhotoIcon width={24} height={24} color={Colors.textHeadline} />
                         <View style={styles.selfReferenceText}>
                             <Text style={styles.selfReferenceTitle}>Referenzbilder</Text>
                             <Text style={styles.selfReferenceSubtitle}>Fotos für personalisierte Visionen</Text>
@@ -59,7 +71,7 @@ export default function SettingsScreen() {
                     {settingsRows.map((row, i) => (
                         <TouchableOpacity
                             key={row.label}
-                            style={[styles.row, i < settingsRows.length - 1 && styles.rowBorder]}
+                            style={[styles.row, styles.rowBorder]}
                             onPress={row.onPress}
                             activeOpacity={0.6}
                         >
@@ -72,6 +84,15 @@ export default function SettingsScreen() {
                             </View>
                         </TouchableOpacity>
                     ))}
+                    <View style={styles.row}>
+                        <Text style={styles.rowLabel}>Haptik</Text>
+                        <Switch
+                            value={haptics}
+                            onValueChange={(v) => updateSettings({ haptics: v })}
+                            trackColor={{ false: Colors.borderDivider, true: Colors.accent }}
+                            thumbColor="white"
+                        />
+                    </View>
                 </View>
 
                 {/* Legal */}
@@ -90,6 +111,23 @@ export default function SettingsScreen() {
                     ))}
                 </View>
             </ScrollView>
+
+            <EditFieldModal
+                visible={editField === 'name'}
+                title="Name"
+                type="text"
+                placeholder="Dein Name"
+                value={name}
+                onSave={(v) => updateSettings({ name: v })}
+                onClose={() => setEditField(null)}
+            />
+
+            <BirthdayPickerModal
+                visible={editField === 'birthday'}
+                value={birthday}
+                onSave={(iso) => updateSettings({ birthday: iso })}
+                onClose={() => setEditField(null)}
+            />
         </View>
     );
 }
@@ -151,8 +189,8 @@ const styles = StyleSheet.create({
         color: Colors.textMuted,
     },
     sectionLabel: {
-        fontFamily: Fonts.sansSemiBold,
-        fontSize: 13,
+        fontFamily: Fonts.serifBold,
+        fontSize: 16,
         color: Colors.text,
         marginBottom: 10,
         marginTop: 4,

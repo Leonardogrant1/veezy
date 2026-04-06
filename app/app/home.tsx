@@ -4,9 +4,11 @@ import { VisionSlide } from '@/components/layout/VisionSlide';
 import { CATEGORIES, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
+import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -46,6 +48,7 @@ export default function HomeScreen() {
     const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
         const first = viewableItems[0];
         if (first?.index != null) {
+            if (useUserDataStore.getState().haptics) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             Animated.timing(phraseOpacity, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
                 setActiveIndex(first.index!);
                 Animated.timing(phraseOpacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
@@ -62,6 +65,7 @@ export default function HomeScreen() {
     };
 
     const categoryLabel = CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? 'Alle';
+
 
     return (
         <View style={styles.container}>
