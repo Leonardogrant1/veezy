@@ -24,7 +24,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
     logger.info({ existingPhrasesCount: Array.isArray(existingPhrases) ? existingPhrases.length : 0 }, 'Vision generate request received');
 
     const userId = c.var.rcUserId;
-    const count = await ensureGenerationCount(userId, c.var.rcCustomer);
+    const count = await ensureGenerationCount(userId);
     if (count <= 0) {
         return c.json({ error: 'No generations remaining', count: 0 }, 403);
     }
@@ -86,7 +86,8 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
     }
 
     const userId = c.var.rcUserId;
-    const count = await ensureGenerationCount(userId, c.var.rcCustomer);
+    const count = await ensureGenerationCount(userId);
+    console.log('count', count);
     if (count <= 0) {
         return c.json({ error: 'No generations remaining', count: 0 }, 403);
     }

@@ -27,7 +27,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
 import { captureRef } from 'react-native-view-shot';
 
-type ModalView = 'menu' | 'edit' | 'regen';
 
 interface VisionActionsModalProps {
     vision: Vision | null;
