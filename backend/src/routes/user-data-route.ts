@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { R2Storage } from '@/lib/r2/storage.js';
+import { ensureGenerationCount } from '@/lib/revenuecat/generations.js';
 import { RCCustomer } from '@/lib/revenuecat/types.js';
 import { logger } from '@/utils/logger.js';
 
@@ -46,6 +47,12 @@ userDataRoute.get('/signed-url', revenuecatAuth, async (c) => {
 
     const url = await R2Storage.getSignedUrl(key);
     return c.json({ url });
+});
+
+userDataRoute.get('/generations', revenuecatAuth, async (c) => {
+    const userId = c.var.rcUserId;
+    const count = await ensureGenerationCount(userId);
+    return c.json({ count });
 });
 
 userDataRoute.delete('/vision-image', revenuecatAuth, async (c) => {

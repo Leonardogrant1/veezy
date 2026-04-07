@@ -1,21 +1,24 @@
 {
   "name": "@veezy/backend",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsx esbuild.config.ts",
+    "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "deploy": "./deploy.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1022.0",
     "@aws-sdk/s3-request-presigner": "^3.1022.0",
+    "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@google-cloud/vertexai": "^1.10.4",
     "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "@hono/node-server": "^1.14.3",
     "dotenv": "^17.4.0",
+    "esbuild-node-externals": "^1.21.0",
     "google-auth-library": "^10.6.2",
     "hono": "^4.7.7",
     "openai": "^6.33.0",
@@ -29,5 +32,16 @@
     "esbuild": "^0.27.5",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"
+  },
+  "cloudRunConfig": {
+    "image": "docker.io/northbytestudio/veezy-backend:latest",
+    "region": "europe-west3",
+    "memory": "1Gi",
+    "cpu": "1",
+    "timeout": "300",
+    "max-instances": "10",
+    "min-instances": "0",
+    "concurrency": "80",
+    "allow-unauthenticated": true
   }
 }

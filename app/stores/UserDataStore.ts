@@ -31,6 +31,7 @@ export const useUserDataStore = create<UserDataStore>()(
             notifications: false,
             haptics: true,
             imagesUsed: 0,
+            isPremium: false,
             selfReferenceImages: { face_front: null, face_left: null, face_right: null, body: null },
             completeOnboarding: () => set({ hasOnboarded: true }),
             completeTutorial: () => set({ hasSeenTutorial: true }),

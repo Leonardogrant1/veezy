@@ -15,6 +15,7 @@ export type UserData = {
     notifications: boolean
     haptics: boolean
     imagesUsed: number
+    isPremium: boolean
     selfReferenceImages: SelfReferenceImages
 }
 

@@ -4,10 +4,13 @@ import { VisionSlide } from '@/components/layout/VisionSlide';
 import { CATEGORIES, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
+import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -28,6 +31,8 @@ export default function HomeScreen() {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const visions = useVisionStore((s) => s.visions);
+    const { generationCount, hasEntitlement } = useRevenueCat();
+    const { openWithPlacement } = useSuperwallFunctions();
 
     const [activeIndex, setActiveIndex] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
@@ -36,12 +41,14 @@ export default function HomeScreen() {
 
     const phraseOpacity = useRef(new Animated.Value(1)).current;
 
-    const filtered = useMemo(() =>
-        selectedCategory === 'all'
+    const isPremium = hasEntitlement(PREMIUM_IDENTIFIER);
+
+    const filtered = useMemo(() => {
+        const list = selectedCategory === 'all'
             ? visions
-            : visions.filter((v) => v.category === selectedCategory),
-        [visions, selectedCategory]
-    );
+            : visions.filter((v) => v.category === selectedCategory);
+        return isPremium ? list : list.slice(0, 4);
+    }, [visions, selectedCategory, isPremium]);
 
     const activeVision: Vision | undefined = filtered[activeIndex];
 
@@ -76,8 +83,8 @@ export default function HomeScreen() {
                 showsVerticalScrollIndicator={false}
                 onViewableItemsChanged={onViewableItemsChanged}
                 viewabilityConfig={viewabilityConfig}
-                renderItem={({ item }) => (
-                    <VisionSlide item={item} width={width} height={height} />
+                renderItem={({ item, index }) => (
+                    <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />
                 )}
             />
 
@@ -95,9 +102,16 @@ export default function HomeScreen() {
             {/* Fixed topbar */}
             <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
                 <Text style={styles.logo}>veezy</Text>
-                <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/settings')}>
-                    <ProfileIcon width={34} height={34} />
-                </TouchableOpacity>
+                <View style={styles.topBarRight}>
+                    {!hasEntitlement(PREMIUM_IDENTIFIER) && (
+                        <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openWithPlacement('add_premium')}>
+                            <MaterialCommunityIcons name="crown" size={18} color={Colors.accent} />
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/settings')}>
+                        <ProfileIcon width={34} height={34} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {/* Phrase */}
@@ -132,13 +146,20 @@ export default function HomeScreen() {
                     <Text style={styles.categoryText}>{categoryLabel.toUpperCase()}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.fab}
-                    activeOpacity={0.85}
-                    onPress={() => router.push('/vision/add')}
-                >
-                    <PlusIcon width={34} height={34} />
-                </TouchableOpacity>
+                <View style={styles.fabWrapper}>
+                    {generationCount !== null && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countText}>{generationCount}</Text>
+                        </View>
+                    )}
+                    <TouchableOpacity
+                        style={styles.fab}
+                        activeOpacity={0.85}
+                        onPress={() => router.push('/vision/add')}
+                    >
+                        <PlusIcon width={34} height={34} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {/* Category modal */}
@@ -194,6 +215,19 @@ const styles = StyleSheet.create({
         fontSize: 24,
         letterSpacing: -0.5,
     },
+    topBarRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    crownButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: 'rgba(255,215,0,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     phraseContainer: {
         position: 'absolute',
         left: 16,
@@ -248,6 +282,21 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontFamily: Fonts.sansSemiBold,
         letterSpacing: 1,
+    },
+    fabWrapper: {
+        alignItems: 'center',
+        gap: 6,
+    },
+    countBadge: {
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+    },
+    countText: {
+        color: 'rgba(255,255,255,0.7)',
+        fontFamily: Fonts.sansMedium,
+        fontSize: 12,
     },
     fab: {
         width: 55,

@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -9,6 +10,9 @@ import UserPhotoIcon from '@/assets/icons/user_square.svg';
 import { BirthdayPickerModal } from '@/components/modals/BirthdayPickerModal';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { Colors, Fonts } from '@/constants/theme';
+import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { calculateAge } from '@/types/user-data';
 
@@ -23,6 +27,10 @@ export default function SettingsScreen() {
     const birthday = useUserDataStore((s) => s.birthday);
     const haptics = useUserDataStore((s) => s.haptics);
     const updateSettings = useUserDataStore((s) => s.updateSettings);
+
+    const { hasEntitlement } = useRevenueCat();
+    const { openWithPlacement } = useSuperwallFunctions();
+    const isPremium = hasEntitlement(PREMIUM_IDENTIFIER);
 
     const [editField, setEditField] = useState<'name' | 'birthday' | null>(null);
 
@@ -64,6 +72,22 @@ export default function SettingsScreen() {
                     </View>
                     <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
                 </TouchableOpacity>
+
+                {/* Premium card */}
+                {!isPremium && (
+                    <TouchableOpacity style={styles.premiumCard} activeOpacity={0.85} onPress={() => openWithPlacement('add_premium')}>
+                        <View style={styles.premiumLeft}>
+                            <View style={styles.premiumIconBadge}>
+                                <MaterialCommunityIcons name="crown" size={20} color="#FFD700" />
+                            </View>
+                            <View>
+                                <Text style={styles.premiumTitle}>Veezy Premium</Text>
+                                <Text style={styles.premiumSubtitle}>Alle Features freischalten</Text>
+                            </View>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.5)" />
+                    </TouchableOpacity>
+                )}
 
                 {/* Settings */}
                 <Text style={styles.sectionLabel}>Einstellungen</Text>
@@ -187,6 +211,42 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.sans,
         fontSize: 13,
         color: Colors.textMuted,
+    },
+    premiumCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#1a1400',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,215,0,0.25)',
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        marginBottom: 28,
+    },
+    premiumLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    premiumIconBadge: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,215,0,0.15)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    premiumTitle: {
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 15,
+        color: '#FFD700',
+    },
+    premiumSubtitle: {
+        fontFamily: Fonts.sans,
+        fontSize: 13,
+        color: 'rgba(255,215,0,0.6)',
+        marginTop: 2,
     },
     sectionLabel: {
         fontFamily: Fonts.serifBold,

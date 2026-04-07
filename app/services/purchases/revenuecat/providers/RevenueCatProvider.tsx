@@ -1,37 +1,52 @@
-
-
-
 import { MediaHandler } from '@/lib/media-handler';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from "@/stores/UserDataStore";
 import { useVisionStore } from "@/stores/VisionStore";
 import { getOrCreateAnonymousId } from "@/utils/anonymous-id";
+import { devLog } from '@/utils/dev-log';
 import { createContext, useContext, useEffect, useState } from "react";
-import { Platform } from "react-native";
-import Purchases, { PurchasesEntitlementInfos, PurchasesPackage } from "react-native-purchases";
+import { AppState, Platform } from "react-native";
+import Purchases, { type CustomerInfo, PurchasesPackage } from "react-native-purchases";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-import { REVENUECAT_API_KEYS } from "../constants";
-
-
+import { PREMIUM_IDENTIFIER, REVENUECAT_API_KEYS } from "../constants";
 
 interface RevenueCatContextType {
     packages: PurchasesPackage[];
+    customerInfo: CustomerInfo | null;
+    generationCount: number | null;
     presentPaywall: () => Promise<PAYWALL_RESULT>;
-    getUserEntitlements: () => Promise<PurchasesEntitlementInfos>;
+    refreshUserInfo: () => Promise<void>;
+    refreshGenerationCount: () => Promise<void>;
+    hasEntitlement: (entitlement: string) => boolean;
 }
 
 const RevenueCatContext = createContext<RevenueCatContextType | null>(null);
-
-
 
 interface RevenueCatProviderProps {
     children: React.ReactNode;
 }
 
 export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
-
     const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+    const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+    const [generationCount, setGenerationCount] = useState<number | null>(null);
+
+    const fetchGenerationCount = async () => {
+        const userId = useUserDataStore.getState().userId;
+        if (!userId) return;
+        try {
+            const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/user-data/generations`, {
+                headers: { 'x-rc-user-id': userId },
+            });
+            if (!res.ok) return;
+            const { count } = await res.json();
+            setGenerationCount(count);
+        } catch {
+            // silent fail — count stays null
+            devLog("Failed to fetch generation count")
+        }
+    };
 
     useEffect(() => {
         const init = async () => {
@@ -47,23 +62,27 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
 
             useUserDataStore.setState({ userId });
 
-            const restored = await UserCloudSync.restore().catch((e) => {
-                console.log(e);
-                return false;
-            });
+            const [info] = await Promise.all([
+                Purchases.getCustomerInfo(),
+                UserCloudSync.restore().catch((e) => { console.log(e); return false; }),
+            ]);
+            setCustomerInfo(info);
+            useUserDataStore.setState({ isPremium: info.entitlements.active[PREMIUM_IDENTIFIER] !== undefined });
 
-            if (restored) {
-                (async () => {
-                    const visions = useVisionStore.getState().visions;
-                    console.log("visions", visions);
+            fetchGenerationCount();
 
-                    await Promise.all(visions.map((v) => MediaHandler.resolveUri(v.imagePath).catch(() => { })));
-                    WidgetBridge.sync(visions).catch(() => { });
-                })();
-            }
+            const visions = useVisionStore.getState().visions;
+            await Promise.all(visions.map((v) => MediaHandler.resolveUri(v.imagePath).catch(() => { })));
+            WidgetBridge.sync(visions).catch(() => { });
+
             loadOfferings();
         };
         init();
+
+        const sub = AppState.addEventListener('change', (state) => {
+            if (state === 'active') refreshUserInfo();
+        });
+        return () => sub.remove();
     }, []);
 
     const loadOfferings = async () => {
@@ -71,24 +90,26 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
         setPackages(offerings.current?.availablePackages ?? []);
     };
 
-    const getUserEntitlements = async () => {
-        const customerInfo = await Purchases.getCustomerInfo();
-        return customerInfo.entitlements;
+    const hasEntitlement = (entitlement: string) => {
+        return customerInfo?.entitlements.active[entitlement] !== undefined;
     };
 
+    const refreshUserInfo = async () => {
+        const info = await Purchases.getCustomerInfo();
+        setCustomerInfo(info);
+        useUserDataStore.setState({ isPremium: info.entitlements.active[PREMIUM_IDENTIFIER] !== undefined });
+        await fetchGenerationCount();
+    };
 
     const presentPaywall = async () => {
-
-        // Present paywall for current offering:
         const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywallIfNeeded({
-            requiredEntitlementIdentifier: "Veezy Premium"
+            requiredEntitlementIdentifier: PREMIUM_IDENTIFIER
         });
-
         return paywallResult;
-    }
+    };
 
     return (
-        <RevenueCatContext.Provider value={{ packages, presentPaywall, getUserEntitlements }}>
+        <RevenueCatContext.Provider value={{ packages, customerInfo, generationCount, presentPaywall, refreshUserInfo, refreshGenerationCount: fetchGenerationCount, hasEntitlement }}>
             {children}
         </RevenueCatContext.Provider>
     );
@@ -98,5 +119,4 @@ export const useRevenueCat = () => {
     const ctx = useContext(RevenueCatContext);
     if (!ctx) throw new Error("useRevenueCat must be used within RevenueCatProvider");
     return ctx;
-}
-
+};

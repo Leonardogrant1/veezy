@@ -1,8 +1,9 @@
+import { MediaHandler } from '@/lib/media-handler';
+import { useUserDataStore } from '@/stores/UserDataStore';
+import { Vision } from '@/types/vision';
+import { prepareForWidget } from '@/utils/prepare-image-for-widget';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Directory, File, Paths } from 'expo-file-system';
-import { MediaHandler } from '@/lib/media-handler';
-import { prepareForWidget } from '@/utils/prepare-image-for-widget';
-import { Vision } from '@/types/vision';
 
 const APP_GROUP = 'group.studio.northbyte.veezy';
 const STORAGE_KEY = 'visions';
@@ -21,6 +22,9 @@ export class WidgetBridge {
     static async sync(visions: Vision[]): Promise<void> {
         const appGroupDir = Paths.appleSharedContainers[APP_GROUP];
         if (!appGroupDir) return;
+
+        const isPremium = useUserDataStore.getState().isPremium;
+        if (!isPremium) visions = visions.slice(0, 3);
 
         // Remove widget images that no longer have a corresponding vision
         const activeWidgetPaths = new Set(visions.map((v) => `${v.imagePath}.jpg`));

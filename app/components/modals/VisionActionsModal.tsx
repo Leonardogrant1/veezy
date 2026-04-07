@@ -3,6 +3,7 @@ import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -44,6 +45,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     const updateImage = useVisionStore((s) => s.updateImage);
     const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
+    const { refreshGenerationCount } = useRevenueCat();
 
     const [editField, setEditField] = useState<'phrase' | 'regen' | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -133,6 +135,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(vision.id, relativePath);
             WidgetBridge.updateImage(relativePath, vision.id).catch(() => { });
+            refreshGenerationCount().catch(() => { });
         } catch (error) {
             Alert.alert('Fehler', 'Generierung fehlgeschlagen. Bitte versuche es erneut.');
         } finally {

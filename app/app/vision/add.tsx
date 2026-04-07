@@ -4,6 +4,7 @@ import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { generateVision, regenerateVision } from '@/utils/generateVision';
@@ -44,6 +45,7 @@ export default function AddVisionScreen() {
     const addVision = useVisionStore((s) => s.addVision);
     const updateImage = useVisionStore((s) => s.updateImage);
     const userId = useUserDataStore((s) => s.userId);
+    const { refreshGenerationCount } = useRevenueCat();
 
     const [state, setState] = useState<ScreenState>('input');
     const [description, setDescription] = useState('');
@@ -143,6 +145,7 @@ export default function AddVisionScreen() {
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as any, imagePath: relativePath, imageVersion: 1 });
             WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
+            refreshGenerationCount().catch(() => { });
             setResult(generated);
             setSavedPath(relativePath);
             setSavedVisionId(generated.visionId);
@@ -179,6 +182,7 @@ export default function AddVisionScreen() {
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(savedVisionId, relativePath);
             WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => { });
+            refreshGenerationCount().catch(() => { });
             setSavedPath(relativePath);
 
             // Loading ausblenden → Preview

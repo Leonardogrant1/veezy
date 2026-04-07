@@ -43,3 +43,5 @@ app/ios
 app/android
 
 .env
+.env.yaml
+.env.*.yaml
