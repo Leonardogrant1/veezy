@@ -67,7 +67,6 @@
       ],
       "expo-tracking-transparency",
       "@bacons/apple-targets",
-      "react-native-appsflyer",
       "expo-video",
       "expo-font",
       "expo-secure-store",

@@ -1,3 +1,5 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import LottieView from 'lottie-react-native';
 import VisionLoading from '@/components/layout/VisionLoading';
 import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
@@ -180,37 +182,69 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                         <Pressable onPress={(e) => e.stopPropagation()}>
                             <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
                                 <View style={styles.handle} />
+                                <Text style={styles.title}>Vision Optionen</Text>
 
-                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleShare}>
-                                    <Text style={styles.optionText}>
-                                        {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
-                                    </Text>
-                                </TouchableOpacity>
+                                {/* Main actions */}
+                                <View style={styles.card}>
+                                    <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={handleShare}>
+                                        <View style={[styles.iconBadge, { backgroundColor: Colors.accentSubtle + '55' }]}>
+                                            {hasInstagram ? (
+                                                <LottieView
+                                                    source={require('@/assets/animations/instagram.json')}
+                                                    autoPlay
+                                                    loop={false}
+                                                    style={styles.lottieIcon}
+                                                />
+                                            ) : (
+                                                <MaterialIcons name="ios-share" size={18} color={Colors.accent} />
+                                            )}
+                                        </View>
+                                        <Text style={styles.rowLabel}>
+                                            {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
+                                        </Text>
+                                        <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
+                                    </TouchableOpacity>
 
-                                <View style={styles.divider} />
+                                    <View style={styles.divider} />
 
-                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={() => setEditField('phrase')}>
-                                    <Text style={styles.optionText}>Phrase bearbeiten</Text>
-                                </TouchableOpacity>
+                                    <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setEditField('phrase')}>
+                                        <View style={[styles.iconBadge, { backgroundColor: Colors.borderDivider }]}>
+                                            <MaterialIcons name="drive-file-rename-outline" size={18} color={Colors.textMuted} />
+                                        </View>
+                                        <Text style={styles.rowLabel}>Phrase bearbeiten</Text>
+                                        <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
+                                    </TouchableOpacity>
 
-                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={() => {
-                                    Alert.alert(
-                                        'Bild neu generieren?',
-                                        'Ein neues Bild wird für diese Vision erstellt.',
-                                        [
-                                            { text: 'Abbrechen', style: 'cancel' },
-                                            { text: 'Generieren', onPress: () => handleRegenerate(vision?.phrase ?? '') },
-                                        ]
-                                    );
-                                }}>
-                                    <Text style={styles.optionText}>Bild neu generieren</Text>
-                                </TouchableOpacity>
+                                    <View style={styles.divider} />
 
-                                <View style={styles.divider} />
+                                    <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => {
+                                        Alert.alert(
+                                            'Bild neu generieren?',
+                                            'Ein neues Bild wird für diese Vision erstellt.',
+                                            [
+                                                { text: 'Abbrechen', style: 'cancel' },
+                                                { text: 'Generieren', onPress: () => handleRegenerate(vision?.phrase ?? '') },
+                                            ]
+                                        );
+                                    }}>
+                                        <View style={[styles.iconBadge, { backgroundColor: Colors.borderDivider }]}>
+                                            <MaterialIcons name="autorenew" size={18} color={Colors.textMuted} />
+                                        </View>
+                                        <Text style={styles.rowLabel}>Bild neu generieren</Text>
+                                        <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
+                                    </TouchableOpacity>
+                                </View>
 
-                                <TouchableOpacity style={styles.option} activeOpacity={0.7} onPress={handleDelete}>
-                                    <Text style={[styles.optionText, styles.destructiveText]}>Löschen</Text>
-                                </TouchableOpacity>
+                                {/* Destructive */}
+                                <View style={styles.card}>
+                                    <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={handleDelete}>
+                                        <View style={[styles.iconBadge, { backgroundColor: '#FF453A22' }]}>
+                                            <MaterialIcons name="delete-outline" size={18} color="#FF453A" />
+                                        </View>
+                                        <Text style={[styles.rowLabel, styles.destructiveText]}>Vision löschen</Text>
+                                        <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
+                                    </TouchableOpacity>
+                                </View>
                             </Animated.View>
                         </Pressable>
                     </Pressable>
@@ -248,7 +282,7 @@ const styles = StyleSheet.create({
     },
     backdrop: {
         flex: 1,
-        position: "relative",
+        position: 'relative',
         backgroundColor: 'rgba(0,0,0,0.5)',
     },
     backdropPressable: {
@@ -261,7 +295,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 24,
         paddingTop: 12,
         paddingHorizontal: 20,
-        gap: 8,
+        gap: 10,
     },
     handle: {
         width: 36,
@@ -269,61 +303,51 @@ const styles = StyleSheet.create({
         borderRadius: 2,
         backgroundColor: Colors.borderDivider,
         alignSelf: 'center',
-        marginBottom: 16,
+        marginBottom: 4,
     },
-    divider: {
-        height: 1,
-        backgroundColor: Colors.borderDivider,
-        marginVertical: 4,
-    },
-    option: {
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-    },
-    optionText: {
-        color: Colors.text,
-        fontFamily: Fonts.sansMedium,
-        fontSize: 16,
-    },
-    destructiveText: {
-        color: '#FF453A',
-    },
-    backText: {
-        color: Colors.accent,
-        fontFamily: Fonts.sansMedium,
-        fontSize: 15,
-    },
-    subTitle: {
+    title: {
         color: Colors.textHeadline,
         fontFamily: Fonts.serifBold,
         fontSize: 18,
-        paddingHorizontal: 16,
         marginBottom: 4,
     },
-    textInput: {
+    card: {
         backgroundColor: Colors.background,
-        borderRadius: 12,
-        padding: 16,
-        color: Colors.text,
-        fontFamily: Fonts.sans,
-        fontSize: 15,
-        minHeight: 80,
-        textAlignVertical: 'top',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: Colors.borderCard,
+        overflow: 'hidden',
     },
-    primaryButton: {
-        backgroundColor: Colors.accent,
-        borderRadius: 999,
-        paddingVertical: 14,
+    row: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
+        paddingHorizontal: 14,
+        paddingVertical: 13,
+        gap: 12,
     },
-    primaryButtonDisabled: {
-        opacity: 0.6,
+    iconBadge: {
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    primaryButtonText: {
-        color: 'white',
-        fontFamily: Fonts.sansSemiBold,
+    lottieIcon: {
+        width: 22,
+        height: 22,
+    },
+    rowLabel: {
+        flex: 1,
+        color: Colors.text,
+        fontFamily: Fonts.sansMedium,
         fontSize: 15,
+    },
+    divider: {
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: Colors.borderDivider,
+        marginHorizontal: 14,
+    },
+    destructiveText: {
+        color: '#FF453A',
     },
 });

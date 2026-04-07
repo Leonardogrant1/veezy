@@ -2,7 +2,9 @@ import * as Notifications from 'expo-notifications';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { checkAndReschedule } from '@/services/notifications';
 import { useUserDataStore } from '@/stores/UserDataStore';
+import { useVisionStore } from '@/stores/VisionStore';
 import { devLog } from '@/utils/dev-log';
 import { registerPushNotifications } from '@/utils/register-push-notifications';
 
@@ -15,6 +17,11 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const notifications = useUserDataStore((s) => s.notifications);
+    const notificationsPerDay = useUserDataStore((s) => s.notificationsPerDay);
+    const notificationStartHour = useUserDataStore((s) => s.notificationStartHour);
+    const notificationEndHour = useUserDataStore((s) => s.notificationEndHour);
+    const isPremium = useUserDataStore((s) => s.isPremium);
+    const visions = useVisionStore((s) => s.visions);
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
     useEffect(() => {
@@ -35,8 +42,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     useEffect(() => {
         if (!notifications) {
             Notifications.cancelAllScheduledNotificationsAsync();
+            return;
         }
-    }, [notifications]);
+
+        const sourceVisions = isPremium ? visions : visions.slice(0, 3);
+        const visionAffirmations = sourceVisions.flatMap((v) => v.affirmations ?? []);
+
+        checkAndReschedule({
+            notificationsEnabled: true,
+            notificationsPerDay,
+            notificationStartHour,
+            notificationEndHour,
+            randomizeNotificationTimes: true,
+            selectedCategories: ['all'],
+            visionAffirmations,
+        });
+    }, [notifications, isPremium, visions, notificationsPerDay, notificationStartHour, notificationEndHour]);
 
     const registerPushNotificationsAndSaveToken = async () => {
         const { status, pushTokenString } = await registerPushNotifications();

@@ -1,110 +1,239 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { SlideToStart } from '@/components/slide-to-start';
+import Logo from '@/assets/logo.svg';
+import { Cream, Colors, Fonts, Gold } from '@/constants/theme';
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
+const BUTTON_W = 200;
+
+
+function useShimmerAnim() {
+    const x = useRef(new Animated.Value(-BUTTON_W)).current;
+    const scale = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(2800),
+                Animated.parallel([
+                    Animated.timing(x, {
+                        toValue: BUTTON_W,
+                        duration: 600,
+                        useNativeDriver: true,
+                    }),
+                    Animated.sequence([
+                        Animated.timing(scale, { toValue: 1.06, duration: 200, useNativeDriver: true }),
+                        Animated.timing(scale, { toValue: 1, duration: 400, useNativeDriver: true }),
+                    ]),
+                ]),
+                Animated.timing(x, { toValue: -BUTTON_W, duration: 0, useNativeDriver: true }),
+            ])
+        );
+        loop.start();
+        return () => loop.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return { x, scale };
+}
+
+function useFloatAnim(config: { distance: number; duration: number; delay?: number }) {
+    const anim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(anim, {
+                    toValue: config.distance,
+                    duration: config.duration,
+                    delay: config.delay ?? 0,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(anim, {
+                    toValue: -config.distance,
+                    duration: config.duration,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(anim, {
+                    toValue: 0,
+                    duration: config.duration,
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        loop.start();
+        return () => loop.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return anim;
+}
 
 export default function StartScreen() {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(24)).current;
+    // Blob float animations
+    const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
+    const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
+    const blob2Y = useFloatAnim({ distance: 22, duration: 3800, delay: 600 });
+    const blob2X = useFloatAnim({ distance: 14, duration: 3500, delay: 100 });
+    const blob3Y = useFloatAnim({ distance: 14, duration: 4400, delay: 800 });
 
-    const player = useVideoPlayer(require('@/assets/videos/start_screen.mp4'), (p) => {
-        p.loop = true;
-        p.muted = true;
-        p.play();
-    });
+    const { x: shimmerX, scale: buttonScale } = useShimmerAnim();
+
+    // Content stagger
+    const titleOpacity = useRef(new Animated.Value(0)).current;
+    const titleY = useRef(new Animated.Value(20)).current;
+    const subtitleOpacity = useRef(new Animated.Value(0)).current;
+    const subtitleY = useRef(new Animated.Value(20)).current;
+    const buttonOpacity = useRef(new Animated.Value(0)).current;
+    const buttonY = useRef(new Animated.Value(20)).current;
+    const logoOpacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        Animated.parallel([
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 600,
-                delay: 300,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 600,
-                delay: 300,
-                useNativeDriver: true,
-            }),
+        Animated.stagger(120, [
+            Animated.timing(logoOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+            Animated.parallel([
+                Animated.timing(titleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+                Animated.timing(titleY, { toValue: 0, duration: 600, useNativeDriver: true }),
+            ]),
+            Animated.parallel([
+                Animated.timing(subtitleOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+                Animated.timing(subtitleY, { toValue: 0, duration: 600, useNativeDriver: true }),
+            ]),
+            Animated.parallel([
+                Animated.timing(buttonOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+                Animated.timing(buttonY, { toValue: 0, duration: 600, useNativeDriver: true }),
+            ]),
         ]).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <GestureHandlerRootView style={styles.container}>
-            {/* Video placeholder */}
-            <View style={styles.videoPlaceholder}>
-                <VideoView
-                    player={player}
-                    style={styles.absoluteFill}
-                    contentFit="cover"
-                    nativeControls={false}
-                />
+        <View style={styles.container}>
+            {/* Background image */}
+            <Image source={require('@/assets/images/dummy-vision-image.jpg')} style={styles.bgImage} resizeMode="cover" />
+
+            {/* Animated blobs */}
+            <Animated.View style={[styles.blob, styles.blobTop, { transform: [{ translateY: blob1Y }, { translateX: blob1X }] }]} />
+            <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
+            <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
+
+            {/* Centered content */}
+            <View style={styles.content}>
+                <Animated.View style={[styles.logoWrapper, { opacity: logoOpacity }]}>
+                    <Logo width={64} height={64} />
+                </Animated.View>
+
+                <Animated.Text style={[styles.title, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
+                    Manifest deine{'\n'}Zukunft
+                </Animated.Text>
+                <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity, transform: [{ translateY: subtitleY }] }]}>
+                    Sieh dich selbst dort,{'\n'}wo du hinwillst.
+                </Animated.Text>
+                <Animated.View style={{ opacity: buttonOpacity, transform: [{ translateY: buttonY }, { scale: buttonScale }] }}>
+                    <TouchableOpacity style={styles.button} onPress={() => router.replace('/onboarding')} activeOpacity={0.85}>
+                        <Text style={styles.buttonText}>Loslegen</Text>
+                        {/* Shimmer sweep */}
+                        <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }, { rotate: '20deg' }] }]}>
+                            <LinearGradient
+                                colors={['transparent', 'rgba(255,255,255,0.35)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.shimmerGradient}
+                            />
+                        </Animated.View>
+                    </TouchableOpacity>
+                </Animated.View>
             </View>
-
-            {/* Gradient overlay */}
-            <LinearGradient
-                colors={['transparent', 'rgba(13,13,13,0.6)', '#0d0d0d']}
-                locations={[0, 0.5, 0.85]}
-                style={styles.gradient}
-            />
-
-            {/* Animated content */}
-            <Animated.View style={[styles.content, { opacity, transform: [{ translateY }] }]}>
-                <Text style={styles.title}>Manifest your{'\n'}future</Text>
-                <Text style={styles.subtitle}>See yourself living{'\n'}your dream life</Text>
-
-                <SlideToStart onComplete={() => router.replace('/onboarding')} />
-            </Animated.View>
-        </GestureHandlerRootView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0d0d0d',
+        backgroundColor: Cream[400],
     },
-    videoPlaceholder: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#1a1a1a',
-        alignItems: 'center',
-        justifyContent: 'center',
+    bgImage: {
+        position: 'absolute',
+        width: SCREEN_W,
+        height: SCREEN_H,
+        opacity: 0.13,
+        top: 0,
+        left: 0,
     },
-    videoPlaceholderText: {
-        color: 'rgba(255,255,255,0.1)',
-        fontSize: 13,
-        fontWeight: '600',
-        letterSpacing: 3,
+    blob: {
+        position: 'absolute',
+        borderRadius: 999,
     },
-    gradient: {
-        ...StyleSheet.absoluteFillObject,
+    blobTop: {
+        width: 380,
+        height: 380,
+        backgroundColor: Gold[400],
+        top: -120,
+        right: -100,
+        opacity: 0.35,
+    },
+    blobBottom: {
+        width: 320,
+        height: 320,
+        backgroundColor: Gold[300],
+        bottom: -80,
+        left: -80,
+        opacity: 0.35,
+    },
+    blobCenter: {
+        width: 200,
+        height: 200,
+        backgroundColor: Gold[500],
+        top: '35%',
+        left: '20%',
+        opacity: 0.15,
     },
     content: {
         flex: 1,
-        justifyContent: 'flex-end',
-        paddingHorizontal: 24,
-        paddingBottom: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+    },
+    logoWrapper: {
+        marginBottom: 32,
     },
     title: {
-        color: 'white',
-        fontSize: 36,
-        fontWeight: '700',
-        lineHeight: 44,
-        marginBottom: 12,
+        fontFamily: Fonts.serifBold,
+        fontSize: 42,
+        lineHeight: 52,
+        color: Colors.textHeadline,
+        textAlign: 'center',
+        marginBottom: 16,
     },
     subtitle: {
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: 15,
-        lineHeight: 22,
-        marginBottom: 36,
+        fontFamily: Fonts.sans,
+        fontSize: 16,
+        lineHeight: 24,
+        color: Colors.textMuted,
+        textAlign: 'center',
+        marginBottom: 48,
     },
-    absoluteFill: {
-        ...StyleSheet.absoluteFillObject,
+    button: {
+        backgroundColor: Colors.accent,
+        paddingHorizontal: 48,
+        paddingVertical: 16,
+        borderRadius: 999,
+        overflow: 'hidden',
+    },
+    shimmer: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        width: 60,
+    },
+    shimmerGradient: {
+        flex: 1,
+        width: 60,
+    },
+    buttonText: {
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 16,
+        color: '#ffffff',
+        letterSpacing: 0.3,
     },
 });

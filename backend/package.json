@@ -23,8 +23,9 @@
     "hono": "^4.7.7",
     "openai": "^6.33.0",
     "pino": "^10.3.1",
+    "postcss": "^8.5.8",
     "sharp": "^0.34.5",
-    "zod": "^4.0"
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

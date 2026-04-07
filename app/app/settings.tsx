@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UserPhotoIcon from '@/assets/icons/user_square.svg';
 import { BirthdayPickerModal } from '@/components/modals/BirthdayPickerModal';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
+import { NotificationSettingsModal } from '@/components/modals/NotificationSettingsModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
@@ -33,6 +34,7 @@ export default function SettingsScreen() {
     const isPremium = hasEntitlement(PREMIUM_IDENTIFIER);
 
     const [editField, setEditField] = useState<'name' | 'birthday' | null>(null);
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
 
     const ageDisplay = birthday
         ? (() => {
@@ -44,7 +46,7 @@ export default function SettingsScreen() {
     const settingsRows = [
         { label: 'Name', value: name || '—', onPress: () => setEditField('name') },
         { label: 'Geburtstag', value: ageDisplay, onPress: () => setEditField('birthday') },
-        { label: 'Benachrichtigungen', value: undefined, onPress: () => { } },
+        { label: 'Benachrichtigungen', value: undefined, onPress: () => setShowNotificationModal(true) },
         { label: 'Abo verwalten', value: undefined, onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions') },
         { label: 'Tutorial wiederholen', value: undefined, onPress: () => router.replace('/tutorial') },
         { label: 'Feature anfragen', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/features/veezy') },
@@ -152,6 +154,11 @@ export default function SettingsScreen() {
                 value={birthday}
                 onSave={(iso) => updateSettings({ birthday: iso })}
                 onClose={() => setEditField(null)}
+            />
+
+            <NotificationSettingsModal
+                visible={showNotificationModal}
+                onClose={() => setShowNotificationModal(false)}
             />
         </View>
     );

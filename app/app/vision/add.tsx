@@ -47,6 +47,7 @@ export default function AddVisionScreen() {
     const addVision = useVisionStore((s) => s.addVision);
     const updateImage = useVisionStore((s) => s.updateImage);
     const userId = useUserDataStore((s) => s.userId);
+    const motivationStyle = useUserDataStore((s) => s.motivationStyle);
     const { refreshGenerationCount } = useRevenueCat();
 
     const [state, setState] = useState<ScreenState>('input');
@@ -143,7 +144,7 @@ export default function AddVisionScreen() {
 
         try {
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
-            const generated = await generateVision(description.trim(), userId, existingPhrases);
+            const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmations: generated.affirmations });
             WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });

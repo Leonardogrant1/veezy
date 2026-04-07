@@ -182,15 +182,12 @@ export default function HomeScreen() {
 
             {/* Phrase */}
             {!isEmpty && <Animated.View style={[styles.phraseContainer, { bottom: insets.bottom + 90, opacity: phraseOpacity }]}>
-                <View style={styles.phraseCard}>
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => activeVision && setActionsVision(activeVision)}
-                        style={styles.chevronButton}
-                        hitSlop={{ top: 10, bottom: 10, left: 20, right: 20 }}
-                    >
-                        <Feather name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
-                    </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.phraseCard}
+                    activeOpacity={0.7}
+                    onPress={() => activeVision && setActionsVision(activeVision)}
+                >
+                    <Feather name="chevron-up" size={20} color="rgba(255,255,255,0.6)" style={styles.chevronButton} />
 
                     <Text style={styles.category}>
                         {(activeVision.category ?? 'Lifestyle').toUpperCase()}
@@ -199,7 +196,7 @@ export default function HomeScreen() {
                     <Text style={styles.phrase}>
                         {activeVision?.phrase ?? ''}
                     </Text>
-                </View>
+                </TouchableOpacity>
             </Animated.View>}
 
             {/* Bottom bar: category selector + FAB */}
@@ -333,8 +330,7 @@ const styles = StyleSheet.create({
         gap: 5,
     },
     chevronButton: {
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignSelf: 'center',
         marginBottom: 2,
     },
     category: {

@@ -13,7 +13,7 @@ export function TutorialProvider({ children, onComplete }: { children: React.Rea
     const [step, setStep] = useState(0);
 
     function nextStep() {
-        if (step < 7) {
+        if (step < 9) {
             setStep((s) => s + 1);
         } else {
             trackerManager.track('tutorial_completed');

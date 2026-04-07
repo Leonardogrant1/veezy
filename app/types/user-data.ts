@@ -5,6 +5,10 @@ export type SelfReferenceImages = {
     body:       string | null
 }
 
+export type MotivationStyle = 'affirmation' | 'fuel'
+
+export type PrimaryCategory = 'wealth' | 'lifestyle' | 'body' | 'mindset'
+
 export type UserData = {
     userId: string
     hasOnboarded: boolean
@@ -13,10 +17,15 @@ export type UserData = {
     birthday: string | null
     gender: 'male' | 'female' | 'other'
     notifications: boolean
+    notificationsPerDay: number
+    notificationStartHour: number
+    notificationEndHour: number
     haptics: boolean
     imagesUsed: number
     isPremium: boolean
     selfReferenceImages: SelfReferenceImages
+    motivationStyle: MotivationStyle
+    primaryCategory: PrimaryCategory | null
 }
 
 export function calculateAge(birthday: string): number {

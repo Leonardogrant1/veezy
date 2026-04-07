@@ -63,18 +63,6 @@ function TutorialContent() {
     const phrase = firstVision?.phrase ?? DUMMY_PHRASE;
     const category = ((firstVision?.category as string) ?? DUMMY_CATEGORY).toUpperCase();
 
-    const swipeAnim = useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-        const anim = Animated.loop(
-            Animated.sequence([
-                Animated.timing(swipeAnim, { toValue: -10, duration: 550, useNativeDriver: true }),
-                Animated.timing(swipeAnim, { toValue: 0, duration: 550, useNativeDriver: true }),
-            ])
-        );
-        anim.start();
-        return () => anim.stop();
-    }, []);
-
     return (
         <View style={styles.container}>
             {/* Background image */}
@@ -123,16 +111,6 @@ function TutorialContent() {
                 </PulseWrapper>
             </View>
 
-            {/* Swipe hint */}
-            {step === 3 && (
-                <Animated.View
-                    style={[styles.swipeHint, { bottom: insets.bottom + 220 }, styles.elevated, { transform: [{ translateY: swipeAnim }] }]}
-                    pointerEvents="none"
-                >
-                    <Feather name="chevron-up" size={30} color="rgba(255,255,255,0.6)" />
-                    <Feather name="chevron-up" size={30} color="rgba(255,255,255,0.3)" style={{ marginTop: -18 }} />
-                </Animated.View>
-            )}
 
             {/* Bottom bar */}
             <View
@@ -242,12 +220,6 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.serifBold,
         fontSize: 22,
         lineHeight: 30,
-    },
-    swipeHint: {
-        position: 'absolute',
-        alignSelf: 'center',
-        alignItems: 'center',
-        zIndex: 1,
     },
     bottomBar: {
         position: 'absolute',

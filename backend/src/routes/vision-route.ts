@@ -15,7 +15,7 @@ const visionRoute = new Hono<{
 }>();
 
 visionRoute.post('/generate', revenuecatAuth, async (c) => {
-    const { visionDescription, existingPhrases } = await c.req.json();
+    const { visionDescription, existingPhrases, motivationStyle } = await c.req.json();
 
     if (!visionDescription || typeof visionDescription !== 'string') {
         return c.json({ error: 'visionDescription is required' }, 400);
@@ -43,7 +43,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const cachedPersonDesc = cachedDescBuffer?.toString('utf8') ?? null;
 
         // Phrase runs in parallel with the image pipeline
-        const phrasePromise = generatePhrase(visionDescription);
+        const phrasePromise = generatePhrase(visionDescription, motivationStyle === 'fuel' ? 'fuel' : 'affirmation');
 
         const imagePipeline = (async () => {
             let personDesc = cachedPersonDesc;

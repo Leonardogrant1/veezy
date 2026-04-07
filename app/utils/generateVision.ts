@@ -33,14 +33,14 @@ export async function regenerateVision(visionId: string, description: string, us
     return { imageUrl: data.signedUrl, imageKey: data.imageKey };
 }
 
-export async function generateVision(description: string, userId: string, existingPhrases?: string[]): Promise<GenerateVisionResult> {
+export async function generateVision(description: string, userId: string, existingPhrases?: string[], motivationStyle?: string): Promise<GenerateVisionResult> {
     const response = await fetch(`${BACKEND_URL}/vision/generate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-rc-user-id': userId,
         },
-        body: JSON.stringify({ visionDescription: description, existingPhrases }),
+        body: JSON.stringify({ visionDescription: description, existingPhrases, motivationStyle }),
     });
 
     if (!response.ok) {

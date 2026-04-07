@@ -99,6 +99,22 @@ struct VisionWidgetView: View {
         return UIImage(contentsOfFile: containerURL.appendingPathComponent(entry.imagePath).path)
     }
 
+    private var getPaddingHorizontal: CGFloat {
+        switch family {
+        case .systemLarge: return 18
+        case .systemMedium: return 12
+        default: return 12
+        }
+    }
+
+    private var getPaddingBottom: CGFloat {
+        switch family {
+        case .systemLarge: return 16
+        case .systemMedium: return 12
+        default: return 12
+        }
+    }
+
     var body: some View {
         if entry.phrase.isEmpty && entry.imagePath.isEmpty {
             WidgetPlaceholderView()
@@ -116,8 +132,8 @@ struct VisionWidgetView: View {
                     .foregroundColor(Color(white: 0.92))
                     .minimumScaleFactor(0.7)
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 16)
+            .padding(.horizontal, getPaddingHorizontal)
+            .padding(.bottom, getPaddingBottom)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .containerBackground(for: .widget) {
                 ZStack {
@@ -169,7 +185,7 @@ struct widget: Widget {
 
 // MARK: – Preview
 
-#Preview(as: .systemLarge) {
+#Preview(as: .systemMedium) {
     widget()
 } timeline: {
     VisionEntry(date: .now, phrase: "Ich lebe kadwd  ooiwdaw n  ionw", imagePath: "", category: nil)

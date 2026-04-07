@@ -1,5 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Gold } from '@/constants/theme';
+
+function useFloatAnim(config: { distance: number; duration: number; delay?: number }) {
+    const anim = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(anim, { toValue: config.distance, duration: config.duration, delay: config.delay ?? 0, useNativeDriver: true }),
+                Animated.timing(anim, { toValue: -config.distance, duration: config.duration, useNativeDriver: true }),
+                Animated.timing(anim, { toValue: 0, duration: config.duration, useNativeDriver: true }),
+            ])
+        );
+        loop.start();
+        return () => loop.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return anim;
+}
 
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
@@ -12,12 +30,23 @@ type Props = {
     steps: OnboardingStep[];
 };
 
+function bgForStep(step: OnboardingStep) {
+    return step.theme === 'light' ? '#f5f0e6' : '#0d0d0d';
+}
+
 export function OnboardingProgressWrapper({ steps }: Props) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [canContinue, setCanContinue] = useState(steps[0].initialCanContinue ?? true);
     const [isLoading, setIsLoading] = useState(false);
+    const [containerBg, setContainerBg] = useState(() => bgForStep(steps[0]));
     const inFlightRef = useRef(false);
     const { openWithPlacement } = useSuperwallFunctions()
+
+    const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
+    const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
+    const blob2Y = useFloatAnim({ distance: 22, duration: 3800, delay: 600 });
+    const blob2X = useFloatAnim({ distance: 14, duration: 3500, delay: 100 });
+    const blob3Y = useFloatAnim({ distance: 14, duration: 4400, delay: 800 });
 
     const opacity = useRef(new Animated.Value(1)).current;
     const translateX = useRef(new Animated.Value(0)).current;
@@ -30,7 +59,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     const continueText = step.continueButtonText ?? 'Continue';
     const isLight = step.theme === 'light';
 
-    function animateIn() {
+    function animateIn(bgColor: string) {
         opacity.setValue(0);
         translateX.setValue(20);
         Animated.parallel([
@@ -44,7 +73,9 @@ export function OnboardingProgressWrapper({ steps }: Props) {
                 duration: 300,
                 useNativeDriver: true,
             }),
-        ]).start();
+        ]).start(() => {
+            setContainerBg(bgColor);
+        });
     }
 
     async function finishOnboarding() {
@@ -82,14 +113,21 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     }
 
     useEffect(() => {
-        animateIn();
+        animateIn(bgForStep(step));
         trackerManager.track('onboarding_step', { step: step.component.name });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex]);
 
     return (
         <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, nextStep }}>
-            <View style={[styles.container, isLight && styles.containerLight]}>
+            <View style={[styles.container, { backgroundColor: containerBg }]}>
+                {isLight && (
+                    <>
+                        <Animated.View style={[styles.blob, styles.blobTop, { transform: [{ translateY: blob1Y }, { translateX: blob1X }] }]} />
+                        <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
+                        <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
+                    </>
+                )}
                 {showProgress && (
                     <View style={styles.progressBar}>
                         {steps.map((_, i) => (
@@ -137,8 +175,33 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0d0d0d',
     },
-    containerLight: {
-        backgroundColor: '#f5f0e6',
+    blob: {
+        position: 'absolute',
+        borderRadius: 999,
+    },
+    blobTop: {
+        width: 380,
+        height: 380,
+        backgroundColor: Gold[400],
+        top: -120,
+        right: -100,
+        opacity: 0.35,
+    },
+    blobBottom: {
+        width: 320,
+        height: 320,
+        backgroundColor: Gold[300],
+        bottom: -80,
+        left: -80,
+        opacity: 0.35,
+    },
+    blobCenter: {
+        width: 200,
+        height: 200,
+        backgroundColor: Gold[500],
+        top: '35%',
+        left: '20%',
+        opacity: 0.15,
     },
     progressBar: {
         flexDirection: 'row',
