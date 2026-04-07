@@ -46,6 +46,7 @@ export default function SettingsScreen() {
         { label: 'Geburtstag', value: ageDisplay, onPress: () => setEditField('birthday') },
         { label: 'Benachrichtigungen', value: undefined, onPress: () => { } },
         { label: 'Abo verwalten', value: undefined, onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions') },
+        { label: 'Tutorial wiederholen', value: undefined, onPress: () => router.replace('/tutorial') },
         { label: 'Feature anfragen', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/features/veezy') },
         { label: 'Bug melden', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/bugs/veezy') },
     ];

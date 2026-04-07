@@ -106,6 +106,49 @@ export default function HomeScreen() {
                 pointerEvents="none"
             />
 
+            {__DEV__ && (
+                <View style={styles.debugContainer}>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={() => {
+                            useUserDataStore.setState({ hasOnboarded: false });
+                            router.replace('/start');
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>⚙ Onboarding</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={() => {
+                            useUserDataStore.setState({ hasSeenTutorial: false });
+                            router.replace('/tutorial');
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>🎓 Tutorial</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={async () => {
+                            // const scheduleId = await Notifications.scheduleNotificationAsync({
+                            //     content: {
+                            //         title: "DEV: Test Push 🚀",
+                            //         body: "Diese Benachrichtigung wurde vor 5 Sekunden geplant.",
+                            //         sound: true,
+                            //     },
+                            //     trigger: { seconds: 5, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+                            // });
+                            // devLog('Scheduled ID:', scheduleId)
+
+
+                            // const all = await Notifications.getAllScheduledNotificationsAsync()
+                            // devLog('All scheduled:', all.length)
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>🔔 Test Push (5s)</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
             {/* Fixed topbar */}
             <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
                 <Text style={styles.logo}>veezy</Text>
@@ -270,7 +313,7 @@ const styles = StyleSheet.create({
         left: 24,
         right: 24,
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'space-between',
     },
     categorySelector: {
@@ -317,5 +360,23 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
+    },
+    debugContainer: {
+        position: 'absolute',
+        top: 130,
+        right: 16,
+        gap: 8,
+        alignItems: 'flex-end',
+    },
+    debugButton: {
+        backgroundColor: 'rgba(255,59,48,0.85)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    debugButtonText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
     },
 });

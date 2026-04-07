@@ -64,6 +64,7 @@ export default function RootLayout() {
         <PurchaseWrapper>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="home" options={{ animation: 'fade' }} />
               <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
               <Stack.Screen name="edit-self-reference" options={{ presentation: 'modal' }} />
               <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />

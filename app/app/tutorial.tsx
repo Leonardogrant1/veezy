@@ -1,22 +1,21 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import PlusIcon from '@/assets/icons/plus.svg';
+import ProfileIcon from '@/assets/icons/profile.svg';
+import { TutorialOverlay } from '@/components/tutorial-overlay';
+import { Colors, Fonts } from '@/constants/theme';
+import { TutorialProvider, useTutorial } from '@/contexts/TutorialContext';
+import { MediaHandler } from '@/lib/media-handler';
+import { useUserDataStore } from '@/stores/UserDataStore';
+import { useVisionStore } from '@/stores/VisionStore';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View, ViewToken } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import BallIcon from '@/assets/icons/ball.svg';
-import UserIcon from '@/assets/icons/user.svg';
-import { getRandomSportImage } from '@/assets/sports-images';
-import { TutorialOverlay } from '@/components/tutorial-overlay';
-import { Fonts } from '@/constants/theme';
-import { TutorialProvider, useTutorial } from '@/contexts/TutorialContext';
-import { useUserDataStore } from '@/stores/UserDataStore';
-
-
-const DUMMY_QUOTES = [
-    { id: '1', text: '"Disziplin ist die Brücke zwischen Zielen und Leistung."', category: 'discipline' },
-    { id: '2', text: '"Erfolg ist die Summe kleiner Anstrengungen, Tag für Tag wiederholt."', category: 'mindset' },
-];
+const DUMMY_IMAGE = require('@/assets/sports-images/other/0.jpeg');
+const DUMMY_PHRASE = 'Ich lebe das Leben meiner Träume — jeden Tag.';
+const DUMMY_CATEGORY = 'LIFESTYLE';
 
 function PulseWrapper({ active, children }: { active: boolean; children: React.ReactNode }) {
     const pulse = useRef(new Animated.Value(1)).current;
@@ -26,7 +25,7 @@ function PulseWrapper({ active, children }: { active: boolean; children: React.R
             pulse.setValue(1);
             const anim = Animated.loop(
                 Animated.sequence([
-                    Animated.timing(pulse, { toValue: 1.15, duration: 700, useNativeDriver: true }),
+                    Animated.timing(pulse, { toValue: 1.12, duration: 700, useNativeDriver: true }),
                     Animated.timing(pulse, { toValue: 1.0, duration: 700, useNativeDriver: true }),
                 ])
             );
@@ -35,7 +34,6 @@ function PulseWrapper({ active, children }: { active: boolean; children: React.R
         } else {
             pulse.setValue(1);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [active]);
 
     return (
@@ -46,158 +44,119 @@ function PulseWrapper({ active, children }: { active: boolean; children: React.R
 }
 
 function TutorialContent() {
-    const { step, nextStep } = useTutorial();
+    const { step } = useTutorial();
     const { height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const [currentIndex, setCurrentIndex] = useState(0);
 
-    const images = useMemo(() => {
-        const recent: number[] = [];
-        return DUMMY_QUOTES.map(() => {
-            const img = getRandomSportImage([], recent);
-            recent.push(img);
-            return img;
-        });
-    }, []);
+    const visions = useVisionStore((s) => s.visions);
+    const firstVision = visions[0];
+    const [imageUri, setImageUri] = useState<string | null>(null);
 
-    const scrollY = useRef(new Animated.Value(0)).current;
-    const quoteOpacity = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        if (firstVision?.imagePath) {
+            MediaHandler.resolveUri(firstVision.imagePath)
+                .then(setImageUri)
+                .catch(() => setImageUri(null));
+        }
+    }, [firstVision?.imagePath]);
+
+    const phrase = firstVision?.phrase ?? DUMMY_PHRASE;
+    const category = ((firstVision?.category as string) ?? DUMMY_CATEGORY).toUpperCase();
 
     const swipeAnim = useRef(new Animated.Value(0)).current;
     useEffect(() => {
-        Animated.loop(
+        const anim = Animated.loop(
             Animated.sequence([
-                Animated.timing(swipeAnim, { toValue: -8, duration: 600, useNativeDriver: true }),
-                Animated.timing(swipeAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
+                Animated.timing(swipeAnim, { toValue: -10, duration: 550, useNativeDriver: true }),
+                Animated.timing(swipeAnim, { toValue: 0, duration: 550, useNativeDriver: true }),
             ])
-        ).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        );
+        anim.start();
+        return () => anim.stop();
     }, []);
-
-    const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-        if (viewableItems[0]) setCurrentIndex(viewableItems[0].index ?? 0);
-    });
-
-    // Trigger nextStep when user swiped to second quote
-    useEffect(() => {
-        if (currentIndex === 1 && step === 4) {
-            nextStep();
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentIndex]);
-
-    const currentQuote = DUMMY_QUOTES[currentIndex];
 
     return (
         <View style={styles.container}>
-            {/* Scrolling background — identical to home.tsx */}
-            <Animated.FlatList
-                data={DUMMY_QUOTES}
-                keyExtractor={(item) => item.id}
-                pagingEnabled
-                scrollEnabled={step === 4}
-                showsVerticalScrollIndicator={false}
-                snapToInterval={height}
-                decelerationRate="fast"
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: true }
-                )}
-                scrollEventThrottle={16}
-                onScrollBeginDrag={() =>
-                    Animated.timing(quoteOpacity, { toValue: 0, duration: 150, useNativeDriver: true }).start()
-                }
-                onMomentumScrollEnd={() =>
-                    Animated.timing(quoteOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start()
-                }
-                onViewableItemsChanged={onViewableItemsChanged.current}
-                viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
-                renderItem={({ index }) => (
-                    <View style={[styles.card, { height }]}>
-                        <Animated.Image
-                            source={images[index]}
-                            style={[
-                                styles.bgImage,
-                                {
-                                    top: -insets.top,
-                                    height: height + insets.top + insets.bottom,
-                                    transform: [{ translateY: Animated.subtract(scrollY, index * height) }],
-                                    opacity: scrollY.interpolate({
-                                        inputRange: [(index - 1) * height, index * height, (index + 1) * height],
-                                        outputRange: [0, 1, 0],
-                                        extrapolate: 'clamp',
-                                    }),
-                                },
-                            ]}
-                            resizeMode="cover"
-                        />
-                    </View>
-                )}
+            {/* Background image */}
+            <Image
+                source={imageUri ? { uri: imageUri } : DUMMY_IMAGE}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
             />
 
-            {/* Fixed overlay + quote — identical to home.tsx */}
-            <View style={StyleSheet.absoluteFill} pointerEvents="none">
-                <View style={[StyleSheet.absoluteFill, styles.overlay]} />
+            {/* Gradients */}
+            <LinearGradient
+                colors={['rgba(0,0,0,0.55)', 'transparent']}
+                style={[styles.topGradient, { height: insets.top + 80 }]}
+                pointerEvents="none"
+            />
+            <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.95)']}
+                style={styles.bottomGradient}
+                pointerEvents="none"
+            />
+
+            {/* Top bar */}
+            <View
+                style={[styles.topBar, { paddingTop: insets.top + 12 }, step === 6 && styles.elevated]}
+                pointerEvents="box-none"
+            >
+                <Text style={styles.logo}>veezy</Text>
+                <PulseWrapper active={step === 6}>
+                    <ProfileIcon width={34} height={34} />
+                </PulseWrapper>
             </View>
-            <Animated.View style={[styles.quoteContainer, { opacity: quoteOpacity }]} pointerEvents="none">
-                <Text style={[styles.quoteText, { fontFamily: Fonts?.serif }]}>{currentQuote.text}</Text>
-            </Animated.View>
 
-            {/* Fixed UI — same structure as home.tsx fixedOverlay */}
-            <View style={styles.fixedOverlay} pointerEvents="box-none">
-                {/* Top bar */}
-                <View style={styles.topBar} pointerEvents="box-none">
-                    {/* Sports button — highlighted at step 3 */}
-                    <TouchableOpacity
-                        style={[styles.iconButton, { zIndex: step === 3 ? 20 : 1 }]}
-                        onPress={step === 3 ? nextStep : undefined}
-                        activeOpacity={step === 3 ? 0.7 : 1}
-                    >
-                        <PulseWrapper active={step === 3}>
-                            <BallIcon width={22} height={22} color="white" />
-                        </PulseWrapper>
-                    </TouchableOpacity>
+            {/* Phrase card */}
+            <View
+                style={[styles.phraseContainer, { bottom: insets.bottom + 90 }, (step === 1 || step === 2) && styles.elevated]}
+                pointerEvents="none"
+            >
+                <PulseWrapper active={step === 2}>
+                    <View style={styles.phraseCard}>
+                        <View style={styles.chevronButton}>
+                            <Feather name="chevron-up" size={20} color="rgba(255,255,255,0.6)" />
+                        </View>
+                        <Text style={styles.category}>{category}</Text>
+                        <Text style={styles.phrase}>{phrase}</Text>
+                    </View>
+                </PulseWrapper>
+            </View>
 
-                    <View style={styles.heartsRowSpacer} />
-
-                    {/* Settings button — highlighted at step 2 */}
-                    <TouchableOpacity
-                        style={[styles.iconButton, { zIndex: step === 2 ? 20 : 1 }]}
-                        onPress={step === 2 ? nextStep : undefined}
-                        activeOpacity={step === 2 ? 0.7 : 1}
-                    >
-                        <PulseWrapper active={step === 2}>
-                            <UserIcon width={22} height={22} color="white" />
-                        </PulseWrapper>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Swipe hint — highlighted at step 4 */}
+            {/* Swipe hint */}
+            {step === 3 && (
                 <Animated.View
-                    style={[styles.swipeHint, { zIndex: step === 4 ? 20 : 1, transform: [{ translateY: swipeAnim }] }]}
+                    style={[styles.swipeHint, { bottom: insets.bottom + 220 }, styles.elevated, { transform: [{ translateY: swipeAnim }] }]}
                     pointerEvents="none"
                 >
-                    <PulseWrapper active={step === 4}>
-                        <View style={styles.swipeHintInner}>
-                            <MaterialIcons name="keyboard-arrow-up" size={20} color="rgba(255,255,255,0.6)" />
-                            <Text style={styles.swipeText}>SWIPE UP FOR NEXT QUOTE</Text>
-                        </View>
-                    </PulseWrapper>
+                    <Feather name="chevron-up" size={30} color="rgba(255,255,255,0.6)" />
+                    <Feather name="chevron-up" size={30} color="rgba(255,255,255,0.3)" style={{ marginTop: -18 }} />
                 </Animated.View>
+            )}
 
-                {/* Category badge — highlighted at step 1 */}
-                <TouchableOpacity
-                    style={[styles.categoryBadge, { zIndex: step === 1 ? 20 : 1 }]}
-                    onPress={step === 1 ? nextStep : undefined}
-                    activeOpacity={step === 1 ? 0.7 : 1}
-                >
-                    <PulseWrapper active={step === 1}>
-                        <Text style={styles.categoryText}>{currentQuote.category.toUpperCase()}</Text>
-                    </PulseWrapper>
-                </TouchableOpacity>
+            {/* Bottom bar */}
+            <View
+                style={[
+                    styles.bottomBar,
+                    { paddingBottom: insets.bottom + 24 },
+                    (step === 4 || step === 5) && styles.elevated,
+                ]}
+                pointerEvents="none"
+            >
+                <PulseWrapper active={step === 5}>
+                    <View style={styles.categorySelector}>
+                        <Text style={styles.categoryText}>ALL</Text>
+                    </View>
+                </PulseWrapper>
+
+                <PulseWrapper active={step === 4}>
+                    <View style={styles.fab}>
+                        <PlusIcon width={34} height={34} />
+                    </View>
+                </PulseWrapper>
             </View>
 
-            {/* Tutorial overlay — backdrop zIndex 10, tooltips zIndex 30 */}
+            {/* Tutorial overlay — rendered last, sits on top */}
             <TutorialOverlay />
         </View>
     );
@@ -223,83 +182,104 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#000',
     },
-    card: {
-        backgroundColor: 'transparent',
-    },
-    bgImage: {
+    topGradient: {
         position: 'absolute',
+        top: 0,
         left: 0,
         right: 0,
     },
-    overlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.45)',
-    },
-    quoteContainer: {
-        ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        paddingHorizontal: 32,
-        paddingBottom: 80,
-    },
-    quoteText: {
-        color: 'white',
-        fontSize: 30,
-        fontStyle: 'italic',
-        textAlign: 'center',
-        lineHeight: 40,
-    },
-    fixedOverlay: {
-        ...StyleSheet.absoluteFillObject,
+    bottomGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 500,
     },
     topBar: {
         position: 'absolute',
-        top: 56,
-        left: 16,
-        right: 16,
+        top: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        paddingBottom: 12,
+        zIndex: 1,
     },
-    iconButton: {
-        padding: 15,
-        borderRadius: 100,
+    logo: {
+        color: 'white',
+        fontFamily: Fonts.serifBold,
+        fontSize: 24,
+        letterSpacing: -0.5,
+    },
+    phraseContainer: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        zIndex: 1,
+    },
+    phraseCard: {
+        borderRadius: 18,
+        overflow: 'hidden',
+        paddingHorizontal: 18,
+        paddingVertical: 16,
+        gap: 5,
+    },
+    chevronButton: {
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: 2,
     },
-    heartsRowSpacer: {
-        flex: 1,
+    category: {
+        color: Colors.accent,
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 10,
+        letterSpacing: 2.5,
+    },
+    phrase: {
+        color: 'rgba(255,255,255,0.92)',
+        fontFamily: Fonts.serifBold,
+        fontSize: 22,
+        lineHeight: 30,
     },
     swipeHint: {
         position: 'absolute',
-        bottom: 150,
-        left: 0,
-        right: 0,
+        alignSelf: 'center',
         alignItems: 'center',
+        zIndex: 1,
     },
-    swipeHintInner: {
-        alignItems: 'center',
-        gap: 2,
-    },
-    swipeText: {
-        color: 'rgba(255,255,255,0.55)',
-        fontSize: 11,
-        letterSpacing: 1.2,
-    },
-    categoryBadge: {
+    bottomBar: {
         position: 'absolute',
-        bottom: 36,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
+        bottom: 0,
+        left: 24,
+        right: 24,
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        zIndex: 1,
+    },
+    categorySelector: {
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: Colors.accent,
     },
     categoryText: {
-        backgroundColor: 'rgba(20,20,20,0.85)',
         color: 'white',
         fontSize: 13,
-        fontWeight: '700',
-        letterSpacing: 2,
-        paddingHorizontal: 24,
-        paddingVertical: 10,
-        borderRadius: 24,
-        overflow: 'hidden',
+        fontFamily: Fonts.sansSemiBold,
+        letterSpacing: 1,
+    },
+    fab: {
+        width: 55,
+        height: 55,
+        borderRadius: 20,
+        backgroundColor: Colors.accent,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    elevated: {
+        zIndex: 20,
     },
 });
