@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { createMMKV } from 'react-native-mmkv';
 
-import { buildFeed, Category } from '@/data/quotes';
+import AFFIRMATIONS from '@/assets/affirmations.json';
 import { devLog } from '@/utils/dev-log';
 
 type NotificationSettings = {
@@ -11,7 +11,17 @@ type NotificationSettings = {
     notificationEndHour: number;
     randomizeNotificationTimes: boolean;
     selectedCategories: string[];
+    visionAffirmations?: string[];
 };
+
+function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
 
 const storage = createMMKV({ id: 'notification-storage' });
 const LAST_SCHEDULED_KEY = 'lastScheduled';
@@ -34,14 +44,22 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
         selectedCategories,
     } = settings;
 
-    const allQuotes = buildFeed(selectedCategories as Category[]);
-    if (allQuotes.length === 0) return;
-
-    const MAX_NOTIFICATIONS = 60; // Puffer lassen
+    const MAX_NOTIFICATIONS = 60;
     const days = Math.floor(MAX_NOTIFICATIONS / notificationsPerDay);
     const totalNeeded = days * notificationsPerDay;
-    let quoteIndex = 0;
 
+    // Use vision-specific affirmations if available, otherwise fall back to generic pool
+    const sourceAffirmations = settings.visionAffirmations && settings.visionAffirmations.length > 0
+        ? settings.visionAffirmations
+        : AFFIRMATIONS;
+
+    // Shuffle affirmations and repeat until we have enough
+    let pool: string[] = [];
+    while (pool.length < totalNeeded) {
+        pool = [...pool, ...shuffle(sourceAffirmations)];
+    }
+
+    let affirmationIndex = 0;
     const scheduled: Promise<string>[] = [];
 
     for (let day = 0; day < days; day++) {
@@ -49,8 +67,7 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
         date.setDate(date.getDate() + day + 1);
 
         for (let i = 0; i < notificationsPerDay; i++) {
-            const quote = allQuotes[quoteIndex % allQuotes.length];
-            quoteIndex++;
+            const body = pool[affirmationIndex++];
 
             const baseHour = notificationStartHour + i * (notificationEndHour - notificationStartHour) / notificationsPerDay;
             const hour = Math.floor(baseHour);
@@ -58,12 +75,10 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
             const offset = randomizeNotificationTimes ? Math.floor(Math.random() * 21) - 10 : 0;
             const minute = clamp(baseMinute + offset, 0, 59);
 
-            const body = quote.author ? `"${quote.text}" — ${quote.author}` : quote.text;
-
             scheduled.push(
                 Notifications.scheduleNotificationAsync({
                     content: {
-                        title: 'Veezy',
+                        title: '✨ veezy',
                         body,
                     },
                     trigger: {

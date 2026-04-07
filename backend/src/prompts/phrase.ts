@@ -4,12 +4,18 @@ import z from 'zod';
 
 const SYSTEM_PROMPT = `Du bist ein Manifestations-Coach.
 Der User beschreibt seine Vision für die Zukunft.
-Erstelle daraus eine kraftvolle Affirmation und wähle die passende Kategorie.
+Erstelle daraus eine kraftvolle Affirmation, wähle die passende Kategorie, und erstelle 5 kurze, personalisierte Affirmationen zur Vision.
 
-Affirmation:
+Affirmation (phrase):
 - Präsens, Ich-Form ("Ich bin...", "Ich habe...", "Ich lebe...")
 - Max. 1-2 Sätze
 - Emotional, konkret, positiv
+- Auf Deutsch
+
+Affirmations (5 Stück):
+- Präsens, Ich-Form
+- Kurz (max. 1 Satz)
+- Zur Vision passend, variiert
 - Auf Deutsch
 
 Kategorien:
@@ -20,16 +26,18 @@ Kategorien:
 - mindset: Growth, Spiritualität, Mindset, innere Stärke
 - purpose: Mission, Impact, Legacy, Sinn
 
-Antworte ausschließlich mit JSON: { "phrase": "...", "category": "..." }`;
+Antworte ausschließlich mit JSON: { "phrase": "...", "category": "...", "affirmations": ["...", "...", "...", "...", "..."] }`;
 
 export type PhraseResult = {
     phrase: string;
     category: 'wealth' | 'body' | 'lifestyle' | 'relationships' | 'mindset' | 'purpose';
+    affirmations: string[];
 };
 
 const PhraseResultSchema = z.object({
     phrase: z.string(),
     category: z.enum(['wealth', 'body', 'lifestyle', 'relationships', 'mindset', 'purpose']),
+    affirmations: z.array(z.string()).length(5),
 });
 
 export async function generatePhrase(description: string): Promise<PhraseResult> {
@@ -40,7 +48,7 @@ export async function generatePhrase(description: string): Promise<PhraseResult>
             { role: 'user', content: description },
         ],
         response_format: zodResponseFormat(PhraseResultSchema, "data"),
-        max_tokens: 150,
+        max_tokens: 400,
         temperature: 0.8,
     });
 
@@ -48,6 +56,6 @@ export async function generatePhrase(description: string): Promise<PhraseResult>
     if (!raw) throw new Error('OpenAI returned empty response');
 
     const parsed = JSON.parse(raw) as PhraseResult;
-    if (!parsed.phrase || !parsed.category) throw new Error('Invalid phrase response structure');
+    if (!parsed.phrase || !parsed.category || !Array.isArray(parsed.affirmations)) throw new Error('Invalid phrase response structure');
     return parsed;
 }

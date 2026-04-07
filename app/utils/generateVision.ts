@@ -6,6 +6,7 @@ export type GenerateVisionResult = {
     imageUrl: string;   // signed URL for preview
     imageKey: string;
     visionId: string;
+    affirmations: string[];
 };
 
 export type RegenerateVisionResult = {
@@ -54,5 +55,6 @@ export async function generateVision(description: string, userId: string, existi
         imageUrl: data.signedUrl,
         imageKey: data.imageKey,
         visionId: data.visionId,
+        affirmations: data.affirmations ?? [],
     };
 }

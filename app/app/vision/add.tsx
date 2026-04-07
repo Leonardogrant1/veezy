@@ -3,10 +3,11 @@ import VisionLoading from '@/components/layout/VisionLoading';
 import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
-import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
+import { VisionCategory } from '@/types/vision';
 import { generateVision, regenerateVision } from '@/utils/generateVision';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -38,6 +39,7 @@ type GeneratedResult = {
     imageKey: string;
     visionId: string;
     category: string;
+    affirmations: string[];
 };
 
 export default function AddVisionScreen() {
@@ -143,7 +145,7 @@ export default function AddVisionScreen() {
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
             const generated = await generateVision(description.trim(), userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
-            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as any, imagePath: relativePath, imageVersion: 1 });
+            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmations: generated.affirmations });
             WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
             refreshGenerationCount().catch(() => { });
             setResult(generated);

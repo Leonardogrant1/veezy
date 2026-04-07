@@ -11,9 +11,11 @@ import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwa
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
+import { devLog } from '@/utils/dev-log';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -143,19 +145,19 @@ export default function HomeScreen() {
                     <TouchableOpacity
                         style={styles.debugButton}
                         onPress={async () => {
-                            // const scheduleId = await Notifications.scheduleNotificationAsync({
-                            //     content: {
-                            //         title: "DEV: Test Push 🚀",
-                            //         body: "Diese Benachrichtigung wurde vor 5 Sekunden geplant.",
-                            //         sound: true,
-                            //     },
-                            //     trigger: { seconds: 5, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
-                            // });
-                            // devLog('Scheduled ID:', scheduleId)
+                            const scheduleId = await Notifications.scheduleNotificationAsync({
+                                content: {
+                                    title: "DEV: Test Push 🚀",
+                                    body: "Diese Benachrichtigung wurde vor 5 Sekunden geplant.",
+                                    sound: true,
+                                },
+                                trigger: { seconds: 5, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+                            });
+                            devLog('Scheduled ID:', scheduleId)
 
 
-                            // const all = await Notifications.getAllScheduledNotificationsAsync()
-                            // devLog('All scheduled:', all.length)
+                            const all = await Notifications.getAllScheduledNotificationsAsync()
+                            devLog('All scheduled:', all.length)
                         }}
                     >
                         <Text style={styles.debugButtonText}>🔔 Test Push (5s)</Text>

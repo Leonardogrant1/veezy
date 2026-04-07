@@ -68,7 +68,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
 
         deductGeneration(userId, count); // fire-and-forget
 
-        return c.json({ phrase: phraseResult.phrase, category: phraseResult.category, signedUrl, imageKey, visionId });
+        return c.json({ phrase: phraseResult.phrase, category: phraseResult.category, affirmations: phraseResult.affirmations, signedUrl, imageKey, visionId });
     } catch (error: any) {
         logger.error({ error: error.message }, 'Vision generate failed');
         return c.json({ error: 'Vision generation failed' }, 500);
