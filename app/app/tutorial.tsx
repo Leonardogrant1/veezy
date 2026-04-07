@@ -13,8 +13,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const DUMMY_IMAGE = require('@/assets/sports-images/other/0.jpeg');
-const DUMMY_PHRASE = 'Ich lebe das Leben meiner Träume — jeden Tag.';
+const DUMMY_IMAGE = require('@/assets/images/dummy-vision-image.jpg');
+const DUMMY_PHRASE = 'Ich lebe in meinem Traumhaus direkt am Strand in Bali und genieße jeden Tag die Schönheit der Natur und des Meeres.';
 const DUMMY_CATEGORY = 'LIFESTYLE';
 
 function PulseWrapper({ active, children }: { active: boolean; children: React.ReactNode }) {

@@ -1,5 +1,6 @@
 import PlusIcon from '@/assets/icons/plus.svg';
 import ProfileIcon from '@/assets/icons/profile.svg';
+import { GlowPulse } from '@/components/layout/GlowPulse';
 import { VisionSlide } from '@/components/layout/VisionSlide';
 import { CATEGORIES, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
@@ -81,19 +82,32 @@ export default function HomeScreen() {
     const categoryLabel = CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? 'Alle';
 
 
+    const isEmpty = (filtered.length === 0);
+
     return (
         <View style={styles.container}>
-            <FlatList
-                data={filtered}
-                keyExtractor={(item) => item.id}
-                pagingEnabled
-                showsVerticalScrollIndicator={false}
-                onViewableItemsChanged={onViewableItemsChanged}
-                viewabilityConfig={viewabilityConfig}
-                renderItem={({ item, index }) => (
-                    <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />
-                )}
-            />
+            {isEmpty ? (
+                <View style={[styles.emptyState, { paddingBottom: insets.bottom + 120 }]}>
+                    <GlowPulse size={220} />
+                    <Text style={styles.emptyTitle}>Erstelle deine erste Vision</Text>
+                    <Text style={styles.emptySubtitle}>Tippe auf das{' '}
+                        <Text style={styles.emptyAccent}>+</Text>
+                        {' '}um deine erste Vision zu erstellen
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={filtered}
+                    keyExtractor={(item) => item.id}
+                    pagingEnabled
+                    showsVerticalScrollIndicator={false}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
+                    renderItem={({ item, index }) => (
+                        <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />
+                    )}
+                />
+            )}
 
             <LinearGradient
                 colors={['rgba(0,0,0,0.55)', 'transparent']}
@@ -165,7 +179,7 @@ export default function HomeScreen() {
             </View>
 
             {/* Phrase */}
-            <Animated.View style={[styles.phraseContainer, { bottom: insets.bottom + 90, opacity: phraseOpacity }]}>
+            {!isEmpty && <Animated.View style={[styles.phraseContainer, { bottom: insets.bottom + 90, opacity: phraseOpacity }]}>
                 <View style={styles.phraseCard}>
                     <TouchableOpacity
                         activeOpacity={0.7}
@@ -184,7 +198,7 @@ export default function HomeScreen() {
                         {activeVision?.phrase ?? ''}
                     </Text>
                 </View>
-            </Animated.View>
+            </Animated.View>}
 
             {/* Bottom bar: category selector + FAB */}
             <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 24 }]}>
@@ -277,6 +291,32 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,215,0,0.15)',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    emptyState: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 12,
+        paddingHorizontal: 40,
+    },
+
+
+    emptyTitle: {
+        color: 'rgba(255,255,255,0.5)',
+        fontFamily: Fonts.serifBold,
+        fontSize: 20,
+        textAlign: 'center',
+    },
+    emptySubtitle: {
+        color: 'rgba(255,255,255,0.3)',
+        fontFamily: Fonts.sans,
+        fontSize: 15,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    emptyAccent: {
+        color: Colors.accent,
+        fontFamily: Fonts.sansSemiBold,
     },
     phraseContainer: {
         position: 'absolute',
@@ -379,4 +419,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
     },
+
+
 });
