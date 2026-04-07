@@ -14,7 +14,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
     FlatList,
@@ -51,6 +51,13 @@ export default function HomeScreen() {
     }, [visions, selectedCategory, isPremium]);
 
     const activeVision: Vision | undefined = filtered[activeIndex];
+
+    const lockedIndex = isPremium ? -1 : filtered.length - 1;
+    useEffect(() => {
+        if (activeIndex !== lockedIndex) return;
+        const timer = setTimeout(() => openWithPlacement('feed_end_reached'), 800);
+        return () => clearTimeout(timer);
+    }, [activeIndex, lockedIndex]);
 
     const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
         const first = viewableItems[0];
@@ -104,7 +111,7 @@ export default function HomeScreen() {
                 <Text style={styles.logo}>veezy</Text>
                 <View style={styles.topBarRight}>
                     {!hasEntitlement(PREMIUM_IDENTIFIER) && (
-                        <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openWithPlacement('add_premium')}>
+                        <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openWithPlacement('add_premium_top')}>
                             <MaterialCommunityIcons name="crown" size={18} color={Colors.accent} />
                         </TouchableOpacity>
                     )}

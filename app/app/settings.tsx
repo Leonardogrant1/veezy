@@ -75,10 +75,10 @@ export default function SettingsScreen() {
 
                 {/* Premium card */}
                 {!isPremium && (
-                    <TouchableOpacity style={styles.premiumCard} activeOpacity={0.85} onPress={() => openWithPlacement('add_premium')}>
+                    <TouchableOpacity style={styles.premiumCard} activeOpacity={0.85} onPress={() => openWithPlacement('add_premium_settings')}>
                         <View style={styles.premiumLeft}>
                             <View style={styles.premiumIconBadge}>
-                                <MaterialCommunityIcons name="crown" size={20} color="#FFD700" />
+                                <MaterialCommunityIcons name="crown" size={20} color={Colors.accent} />
                             </View>
                             <View>
                                 <Text style={styles.premiumTitle}>Veezy Premium</Text>
@@ -240,12 +240,12 @@ const styles = StyleSheet.create({
     premiumTitle: {
         fontFamily: Fonts.sansSemiBold,
         fontSize: 15,
-        color: '#FFD700',
+        color: Colors.accent,
     },
     premiumSubtitle: {
         fontFamily: Fonts.sans,
         fontSize: 13,
-        color: 'rgba(255,215,0,0.6)',
+        color: Colors.accent,
         marginTop: 2,
     },
     sectionLabel: {
