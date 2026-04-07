@@ -1,5 +1,10 @@
 {
   "name": "veezy",
   "private": true,
-  "workspaces": ["app", "backend"]
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "eas-build-pre-install": "echo 'skipping backend'"
+  }
 }

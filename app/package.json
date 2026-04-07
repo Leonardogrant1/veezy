@@ -57,7 +57,8 @@
     "react-native-gesture-handler": "~2.30.0",
     "react-native-keyboard-controller": "1.20.7",
     "react-native-mmkv": "^4.3.0",
-    "react-native-purchases": "^9.15.0",
+    "react-native-nitro-modules": "^0.35.3",
+    "react-native-purchases": "^9.15.1",
     "react-native-purchases-ui": "^9.15.0",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -77,6 +78,5 @@
     "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true,
-  "packageManager": "npm"
+  "private": true
 }

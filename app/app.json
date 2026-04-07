@@ -17,6 +17,7 @@
       "bundleIdentifier": "studio.northbyte.veezy",
       "appleTeamId": "KJQ52F94YM",
       "entitlements": {
+        "com.apple.developer.in-app-payments": [],
         "com.apple.security.application-groups": [
           "group.studio.northbyte.veezy"
         ]
@@ -42,7 +43,7 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "com.google.android.gms.permission.AD_ID",
-        "com.google.android.gms.permission.AD_ID"
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "studio.northbyte.veezy"
     },
@@ -101,13 +102,23 @@
                       "group.studio.northbyte.veezy"
                     ]
                   }
+                },
+                {
+                  "bundleIdentifier": "studio.northbyte.veezy.widget",
+                  "targetName": "widget",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.studio.northbyte.veezy"
+                    ]
+                  }
                 }
               ]
             }
           }
         },
-        "projectId": "efb95a07-2b9b-4e9d-89c0-0544c3f5e92b"
+        "projectId": "e16abbb8-fa40-49b2-a7da-d03d3949ad71"
       }
-    }
+    },
+    "owner": "leonardogrant1"
   }
 }

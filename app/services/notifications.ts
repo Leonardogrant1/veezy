@@ -63,7 +63,7 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
             scheduled.push(
                 Notifications.scheduleNotificationAsync({
                     content: {
-                        title: 'Discipl',
+                        title: 'Veezy',
                         body,
                     },
                     trigger: {

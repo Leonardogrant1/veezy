@@ -1,4 +1,5 @@
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { devError, devLog } from "@/utils/dev-log";
 import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useUser } from "expo-superwall";
 import { createContext, useContext } from "react";
@@ -39,7 +40,7 @@ export const useSuperwallFunctions = () => {
 };
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
-
+    const { refreshUserInfo } = useRevenueCat();
 
     const { registerPlacement, state: placementState } = usePlacement({
         onError: (err) => devError("Placement Error:", err),
@@ -53,6 +54,9 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
                 : result?.type === 'restored' ? 'paywall_restored'
                     : 'paywall_declined';
             trackerManager.track(eventName, { paywall_name: info?.name ?? 'unknown', result: result?.type });
+            if (result?.type === 'purchased' || result?.type === 'restored') {
+                refreshUserInfo().catch(() => {});
+            }
         },
     });
     const openWithPlacement = async (placement: string, onFeature?: () => void) => {

@@ -1,6 +1,7 @@
 import { MediaHandler } from '@/lib/media-handler';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { Vision } from '@/types/vision';
+import { devLog } from '@/utils/dev-log';
 import { prepareForWidget } from '@/utils/prepare-image-for-widget';
 import { ExtensionStorage } from '@bacons/apple-targets';
 import { Directory, File, Paths } from 'expo-file-system';
@@ -56,6 +57,8 @@ export class WidgetBridge {
 
         storage.set(STORAGE_KEY, JSON.stringify(entries));
         ExtensionStorage.reloadWidget();
+
+        devLog('Widget synced', entries);
     }
 
     /**
