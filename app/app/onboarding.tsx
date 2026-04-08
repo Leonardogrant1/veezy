@@ -18,7 +18,6 @@ import { useUserDataStore } from '@/stores/UserDataStore';
 import { SelfReferenceImages } from '@/types/user-data';
 import { registerPushNotifications } from '@/utils/register-push-notifications';
 import { File } from 'expo-file-system';
-import * as StoreReview from 'expo-store-review';
 import { fetch } from 'expo/fetch';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -102,14 +101,7 @@ export default function OnboardingScreen() {
             { component: MicroLogicSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
             { component: PhotoBridgeStep, showProgressIndicator: false, continueButtonText: t('onboarding.photo_bridge.continue'), theme: 'light' },
             { component: PhotoUploadStep, continueButtonText: t('onboarding.photo_upload.continue'), theme: 'light', initialCanContinue: false, preContinue: handleUploadAndComposite },
-            {
-                component: VisionGenerationStep, showProgressIndicator: false, showContinueButton: false, preContinue: async () => {
-                    try {
-                        const isAvailable = await StoreReview.isAvailableAsync();
-                        if (isAvailable) await StoreReview.requestReview();
-                    } catch { /* silently continue */ }
-                }
-            },
+            { component: VisionGenerationStep, showProgressIndicator: false, showContinueButton: false },
             { component: VisionReactionStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
             { component: CompanionSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
             { component: NotificationSetupStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false, preContinue: handleRequestNotifications },

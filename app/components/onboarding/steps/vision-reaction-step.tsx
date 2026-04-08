@@ -1,6 +1,7 @@
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import * as StoreReview from 'expo-store-review';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -19,10 +20,17 @@ export function VisionReactionStep() {
         { id: 'not_yet', label: t('onboarding.reaction.not_yet') },
     ];
 
+    const POSITIVE: OptionId[] = ['want_it', 'wild', 'good'];
+
     function handleSelect(id: OptionId) {
         setSelected(id);
         setCanContinue(true);
         trackerManager.track('onboarding_reaction_selected', { reaction: id });
+        if (POSITIVE.includes(id)) {
+            StoreReview.isAvailableAsync().then((available) => {
+                if (available) StoreReview.requestReview();
+            }).catch(() => { });
+        }
     }
 
     return (
