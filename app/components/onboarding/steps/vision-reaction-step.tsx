@@ -1,5 +1,6 @@
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -19,6 +20,7 @@ export function VisionReactionStep() {
     function handleSelect(id: OptionId) {
         setSelected(id);
         setCanContinue(true);
+        trackerManager.track('onboarding_reaction_selected', { reaction: id });
     }
 
     return (

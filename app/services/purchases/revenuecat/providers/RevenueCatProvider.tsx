@@ -1,4 +1,5 @@
 import { MediaHandler } from '@/lib/media-handler';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from "@/stores/UserDataStore";
@@ -59,6 +60,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
             Purchases.configure({ apiKey });
             Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
             await Purchases.logIn(userId);
+            trackerManager.identify(userId);
 
             useUserDataStore.setState({ userId });
 

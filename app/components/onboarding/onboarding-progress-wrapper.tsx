@@ -105,7 +105,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
 
     useEffect(() => {
         animateIn();
-        trackerManager.track('onboarding_step', { step: step.component.name });
+        trackerManager.track('onboarding_step', { step: step.component.name, index: currentIndex });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex]);
 

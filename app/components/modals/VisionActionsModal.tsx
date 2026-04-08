@@ -11,6 +11,7 @@ import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { regenerateVision } from '@/utils/generateVision';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -108,6 +109,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 backgroundBottomColor: '#0a0a0a',
                 backgroundTopColor: '#0a0a0a',
             });
+            trackerManager.track('instagram_story_vision_shared');
         } else {
             await Share.open({
                 url: watermarkedUri,
@@ -116,12 +118,14 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 title: 'Teile deine Vision',
                 message: 'Ich habe meine Vision mit Veezy visualisiert! ✨ #Veezy #VisionBoard #Manifestation',
             });
+            trackerManager.track('vision_shared');
         }
     };
 
     const handleSavePhrase = (value: string) => {
         if (!vision) return;
         updatePhrase(vision.id, value.trim() || vision.phrase);
+        trackerManager.track('vision_phrase_edited');
         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
     };
 
@@ -136,9 +140,11 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
             const generated = await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(vision.id, relativePath);
+            trackerManager.track('vision_regenerated');
             WidgetBridge.updateImage(relativePath, vision.id).catch(() => { });
             refreshGenerationCount().catch(() => { });
         } catch (error) {
+            trackerManager.track('vision_regeneration_failed');
             Alert.alert('Fehler', 'Generierung fehlgeschlagen. Bitte versuche es erneut.');
         } finally {
             setIsGenerating(false);

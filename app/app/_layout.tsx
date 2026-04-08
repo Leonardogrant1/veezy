@@ -21,6 +21,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
 import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { UserCloudSync } from '@/services/user-cloud-sync';
@@ -63,6 +64,10 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    const notificationSub = Notifications.addNotificationResponseReceivedListener(() => {
+      trackerManager.track('notification_opened');
+    });
+
     // Sync widget on app start for existing users
     WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
 
@@ -73,7 +78,10 @@ export default function RootLayout() {
         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
       }
     });
-    return () => sub.remove();
+    return () => {
+      notificationSub.remove();
+      sub.remove();
+    };
   }, []);
 
   if (!fontsLoaded) return null;

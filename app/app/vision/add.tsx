@@ -8,6 +8,7 @@ import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { VisionCategory } from '@/types/vision';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { generateVision, regenerateVision } from '@/utils/generateVision';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -147,6 +148,7 @@ export default function AddVisionScreen() {
             const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmationsAffirmation: generated.affirmationsAffirmation, affirmationsFuel: generated.affirmationsFuel });
+            trackerManager.track('vision_created', { category: generated.category, motivation_style: motivationStyle });
             WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
             refreshGenerationCount().catch(() => { });
             setResult(generated);
@@ -159,6 +161,7 @@ export default function AddVisionScreen() {
             setState('preview');
             animatePreviewIn();
         } catch {
+            trackerManager.track('vision_creation_failed');
             await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
             inputOpacity.setValue(1);
             inputTranslate.setValue(0);
@@ -184,6 +187,7 @@ export default function AddVisionScreen() {
             const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(savedVisionId, relativePath);
+            trackerManager.track('vision_regenerated');
             WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => { });
             refreshGenerationCount().catch(() => { });
             setSavedPath(relativePath);
@@ -193,6 +197,7 @@ export default function AddVisionScreen() {
             setState('preview');
             animatePreviewIn();
         } catch {
+            trackerManager.track('vision_regeneration_failed');
             await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
             setError('Etwas ist schiefgelaufen. Bitte versuche es erneut.');
             setState('preview');
@@ -210,8 +215,10 @@ export default function AddVisionScreen() {
                 backgroundBottomColor: '#0a0a0a',
                 backgroundTopColor: '#0a0a0a',
             });
+            trackerManager.track('instagram_story_vision_shared');
         } else {
             await Share.open({ url: watermarkedUri });
+            trackerManager.track('vision_shared');
         }
     };
 

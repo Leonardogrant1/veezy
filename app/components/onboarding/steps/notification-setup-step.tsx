@@ -7,6 +7,7 @@ import { Animated, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpaci
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { formatHour } from '@/components/modals/NotificationSettingsModal';
 import { Colors, Fonts, Gold } from '@/constants/theme';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { MotivationStyle } from '@/types/user-data';
@@ -134,6 +135,7 @@ export function NotificationSetupStep() {
 
     async function handleTestNotification() {
         const { status } = await Notifications.requestPermissionsAsync();
+        trackerManager.track('notification_permission', { status: status === 'granted' ? 'authorized' : 'declined' });
         if (status !== 'granted') {
             unlock(); // denied → still let them continue
             return;

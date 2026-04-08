@@ -6,6 +6,7 @@ import { CATEGORIES, CategoryFilter, CategoryModal } from '@/components/modals/C
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -79,6 +80,7 @@ export default function HomeScreen() {
         setSelectedCategory(key);
         setActiveIndex(0);
         setCategoryModalVisible(false);
+        trackerManager.track('category_selected', { category: key });
     };
 
     const categoryLabel = CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? 'Alle';
