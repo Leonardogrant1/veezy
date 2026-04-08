@@ -106,7 +106,7 @@ export default function OnboardingScreen() {
         },
         { component: VisionReactionStep, theme: 'light', continueButtonText: 'Weiter', initialCanContinue: false },
         { component: CompanionSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-        { component: NotificationSetupStep, theme: 'light', continueButtonText: 'Weiter', preContinue: handleRequestNotifications },
+        { component: NotificationSetupStep, theme: 'light', continueButtonText: 'Weiter', initialCanContinue: false, preContinue: handleRequestNotifications },
         { component: AddWidgetStep, theme: 'light', continueButtonText: 'Weiter' },
         { component: TrialOfferStep, theme: 'light', continueButtonText: 'Weiter' },
         { component: TrialReminderStep, theme: 'light', continueButtonText: 'Weiter' },

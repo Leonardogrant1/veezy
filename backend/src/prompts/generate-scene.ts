@@ -11,6 +11,9 @@ Rules:
 - Be specific about location, lighting, time of day, and environment.
 - Show the person as confident and living their vision.
 - Keep the description focused and unified — everything in the scene belongs to the same frame.
+- The output must describe ONLY ONE single scene — as if captured in a single camera frame.
+- Do NOT describe any before/after states, multiple locations, or sequences of events.
+- Portrait orientation: the scene should work as a tall vertical photograph (3:4 ratio, taller than wide).
 
 Output only the scene description, no preamble or explanation.`;
 

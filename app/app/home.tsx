@@ -218,7 +218,13 @@ export default function HomeScreen() {
                     <TouchableOpacity
                         style={styles.fab}
                         activeOpacity={0.85}
-                        onPress={() => router.push('/vision/add')}
+                        onPress={() => {
+                            if (generationCount !== null && generationCount <= 0) {
+                                openWithPlacement('generate_vision');
+                            } else {
+                                router.push('/vision/add');
+                            }
+                        }}
                     >
                         <PlusIcon width={34} height={34} />
                     </TouchableOpacity>

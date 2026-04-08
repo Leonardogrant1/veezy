@@ -1,11 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import { useMemo, useState } from 'react';
-import { FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { formatHour } from '@/components/modals/NotificationSettingsModal';
-import { Colors, Fonts } from '@/constants/theme';
+import { Colors, Fonts, Gold } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { MotivationStyle } from '@/types/user-data';
@@ -66,6 +67,7 @@ function HourPicker({ visible, value, onSelect, onClose }: HourPickerProps) {
 }
 
 export function NotificationSetupStep() {
+    const { setCanContinue } = useOnboardingControl();
     const { notificationsPerDay, notificationStartHour, notificationEndHour, motivationStyle, updateSettings } =
         useUserDataStore();
     const visions = useVisionStore((s) => s.visions);
@@ -76,6 +78,26 @@ export function NotificationSetupStep() {
     const [style, setStyle] = useState<MotivationStyle>(motivationStyle);
     const [picker, setPicker] = useState<'start' | 'end' | null>(null);
     const [testSent, setTestSent] = useState(false);
+    const [unlocked, setUnlocked] = useState(false);
+
+    // Pulse animation on the test button while not yet unlocked
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        if (unlocked) {
+            pulseAnim.stopAnimation();
+            pulseAnim.setValue(1);
+            return;
+        }
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, { toValue: 1.03, duration: 700, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+            ])
+        );
+        loop.start();
+        return () => loop.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [unlocked]);
 
     // Stable examples — picked once on mount, don't change when style switches
     const examples = useMemo<Record<MotivationStyle, string>>(() => ({
@@ -83,6 +105,11 @@ export function NotificationSetupStep() {
         fuel: pickRandom(visions.flatMap((v) => v.affirmationsFuel ?? [])) ?? FALLBACK_EXAMPLES.fuel,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }), []);
+
+    function unlock() {
+        setUnlocked(true);
+        setCanContinue(true);
+    }
 
     function updateCount(next: number) {
         const clamped = Math.max(MIN, Math.min(MAX, next));
@@ -107,18 +134,19 @@ export function NotificationSetupStep() {
 
     async function handleTestNotification() {
         const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== 'granted') return;
+        if (status !== 'granted') {
+            unlock(); // denied → still let them continue
+            return;
+        }
 
         await Notifications.scheduleNotificationAsync({
-            content: {
-                title: '✨ veezy',
-                body: examples[style],
-            },
+            content: { title: '✨ veezy', body: examples[style] },
             trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3 },
         });
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setTestSent(true);
+        unlock();
         setTimeout(() => setTestSent(false), 3000);
     }
 
@@ -200,20 +228,26 @@ export function NotificationSetupStep() {
             </View>
 
             {/* Test-Benachrichtigung */}
-            <TouchableOpacity
-                style={[styles.testButton, testSent && styles.testButtonSent]}
-                onPress={handleTestNotification}
-                activeOpacity={0.75}
-            >
-                <MaterialIcons
-                    name={testSent ? 'check' : 'notifications-none'}
-                    size={18}
-                    color={testSent ? Colors.accent : Colors.textMuted}
-                />
-                <Text style={[styles.testButtonText, testSent && styles.testButtonTextSent]}>
-                    {testSent ? 'Gesendet — schau gleich rein!' : 'Test-Benachrichtigung senden'}
-                </Text>
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <TouchableOpacity
+                    style={[
+                        styles.testButton,
+                        !unlocked && styles.testButtonHighlight,
+                        testSent && styles.testButtonSent,
+                    ]}
+                    onPress={handleTestNotification}
+                    activeOpacity={0.75}
+                >
+                    <MaterialIcons
+                        name={testSent ? 'check' : 'notifications-active'}
+                        size={18}
+                        color={testSent ? Colors.accent : !unlocked ? Colors.accent : Colors.textMuted}
+                    />
+                    <Text style={[styles.testButtonText, (!unlocked || testSent) && styles.testButtonTextSent]}>
+                        {testSent ? 'Gesendet — schau gleich rein!' : 'Test-Benachrichtigung senden'}
+                    </Text>
+                </TouchableOpacity>
+            </Animated.View>
 
             <HourPicker
                 visible={picker === 'start'}
@@ -388,11 +422,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        paddingVertical: 14,
+        paddingVertical: 16,
         borderRadius: 12,
-        borderWidth: 1,
+        borderWidth: 1.5,
         borderColor: Colors.borderCard,
         backgroundColor: 'rgba(255,255,255,0.4)',
+    },
+    testButtonHighlight: {
+        borderColor: Colors.accent,
+        backgroundColor: Gold[50],
     },
     testButtonSent: {
         borderColor: Colors.accentSubtle,

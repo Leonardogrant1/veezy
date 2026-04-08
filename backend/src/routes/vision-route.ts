@@ -5,7 +5,7 @@ import { RCCustomer } from '@/lib/revenuecat/types.js';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { describePersonFromImages } from '@/prompts/describe-person.js';
 import { generateSceneDescription } from '@/prompts/generate-scene.js';
-import { generateBothPhrases } from '@/prompts/phrase.js';
+import { generatePhraseAndAffirmations } from '@/prompts/phrase.js';
 import { getSelfReferenceKey } from '@/utils/get-self-reference-key.js';
 import { logger } from '@/utils/logger.js';
 import { Hono } from 'hono';
@@ -43,7 +43,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const cachedPersonDesc = cachedDescBuffer?.toString('utf8') ?? null;
 
         // Both phrase styles run in parallel with the image pipeline
-        const phrasePromise = generateBothPhrases(visionDescription, motivationStyle === 'fuel' ? 'fuel' : 'affirmation');
+        const phrasePromise = generatePhraseAndAffirmations(visionDescription);
 
         const imagePipeline = (async () => {
             let personDesc = cachedPersonDesc;

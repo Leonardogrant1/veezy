@@ -31,10 +31,15 @@ export async function generateImageWithGeminiVertex(
     sceneDescription: string,
     personDescription: string,
     referenceImages: Array<{ base64: string; mimeType: string }>,
+    aspectRatio: '1:1' | '9:16' | '16:9' | '4:3' | '3:4' = '3:4',
 ): Promise<string> {
     const client = getClient();
 
-    const prompt = `Create a single photorealistic photograph of the following scene. One unified image — no collage, no grid, no split-screen, no multiple panels, no before/after.
+    const prompt = `Create a single photorealistic photograph of the following scene.
+
+ASPECT RATIO: Portrait orientation, 3:4 ratio (taller than wide). Fill the entire vertical frame.
+
+CRITICAL — ONE SCENE ONLY: This must be a single, unified photograph. Absolutely no collage, no grid, no split panels, no before/after, no multiple scenes, no side-by-side layouts. One frame. One moment. One location.
 
 PERSON (use the reference image to accurately depict this person):
 ${personDescription}
@@ -61,6 +66,9 @@ Critical: One scene, one frame. The person must closely match the reference phot
         contents,
         config: {
             responseModalities: ['IMAGE', 'TEXT'],
+            imageConfig: {
+                aspectRatio
+            }
         },
     });
 
