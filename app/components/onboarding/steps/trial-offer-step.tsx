@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts, Gold } from '@/constants/theme';
 
@@ -20,6 +21,7 @@ function useFadeSlide(delay: number) {
 }
 
 export function TrialOfferStep() {
+    const { t } = useTranslation();
     const labelAnim = useFadeSlide(100);
     const titleAnim = useFadeSlide(300);
     const subtitleAnim = useFadeSlide(550);
@@ -27,12 +29,12 @@ export function TrialOfferStep() {
     return (
         <View style={styles.container}>
             <View style={styles.inner}>
-                <Animated.Text style={[styles.label, labelAnim]}>EXKLUSIV FÜR DICH</Animated.Text>
+                <Animated.Text style={[styles.label, labelAnim]}>{t('onboarding.trial_offer.label')}</Animated.Text>
                 <Animated.Text style={[styles.title, titleAnim]}>
-                    3 Tage kostenlos.{'\n'}Kein Risiko.
+                    {t('onboarding.trial_offer.title')}
                 </Animated.Text>
                 <Animated.Text style={[styles.subtitle, subtitleAnim]}>
-                    Wir geben dir vollen Zugang zu veezy Premium — damit du selbst spürst, was möglich ist.
+                    {t('onboarding.trial_offer.subtitle')}
                 </Animated.Text>
             </View>
         </View>

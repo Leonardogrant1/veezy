@@ -63,11 +63,12 @@ const AffirmationsSchema = z.object({
 
 type Category = BothPhrasesResult['category'];
 
-async function generatePhraseAndCategory(description: string): Promise<{ phrase: string; category: Category }> {
+async function generatePhraseAndCategory(description: string, language: 'de' | 'en' = 'en'): Promise<{ phrase: string; category: Category }> {
+    const systemPrompt = SYSTEM_PROMPT_PHRASE + `\n\nRespond in ${language === 'de' ? 'German' : 'English'}.`;
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-5.1',
         messages: [
-            { role: 'system', content: SYSTEM_PROMPT_PHRASE },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: description },
         ],
         response_format: zodResponseFormat(PhraseAndCategorySchema as any, "data"),
@@ -83,8 +84,9 @@ async function generatePhraseAndCategory(description: string): Promise<{ phrase:
     return parsed;
 }
 
-async function generateAffirmationsForStyle(description: string, style: 'affirmation' | 'fuel'): Promise<string[]> {
-    const systemPrompt = style === 'fuel' ? SYSTEM_PROMPT_FUEL : SYSTEM_PROMPT_AFFIRMATION;
+async function generateAffirmationsForStyle(description: string, style: 'affirmation' | 'fuel', language: 'de' | 'en' = 'en'): Promise<string[]> {
+    const basePrompt = style === 'fuel' ? SYSTEM_PROMPT_FUEL : SYSTEM_PROMPT_AFFIRMATION;
+    const systemPrompt = basePrompt + `\n\nRespond in ${language === 'de' ? 'German' : 'English'}.`;
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-5.1',
         messages: [
@@ -104,11 +106,11 @@ async function generateAffirmationsForStyle(description: string, style: 'affirma
     return parsed.affirmations;
 }
 
-export async function generatePhraseAndAffirmations(description: string): Promise<BothPhrasesResult> {
+export async function generatePhraseAndAffirmations(description: string, language: 'de' | 'en' = 'en'): Promise<BothPhrasesResult> {
     const [phraseAndCat, affirmationResult, fuelResult] = await Promise.all([
-        generatePhraseAndCategory(description),
-        generateAffirmationsForStyle(description, 'affirmation'),
-        generateAffirmationsForStyle(description, 'fuel'),
+        generatePhraseAndCategory(description, language),
+        generateAffirmationsForStyle(description, 'affirmation', language),
+        generateAffirmationsForStyle(description, 'fuel', language),
     ]);
 
     return {

@@ -3,19 +3,21 @@ import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-const OPTIONS = [
-    { id: 'want_it', label: 'Ich will das' },
-    { id: 'wild', label: 'Krass zu sehen' },
-    { id: 'good', label: 'Fühlt sich gut an' },
-    { id: 'not_yet', label: 'Noch nicht ganz meins' },
-] as const;
-
-type OptionId = typeof OPTIONS[number]['id'];
+type OptionId = 'want_it' | 'wild' | 'good' | 'not_yet';
 
 export function VisionReactionStep() {
+    const { t } = useTranslation();
     const { setCanContinue } = useOnboardingControl();
     const [selected, setSelected] = useState<OptionId | null>(null);
+
+    const OPTIONS: { id: OptionId; label: string }[] = [
+        { id: 'want_it', label: t('onboarding.reaction.want_it') },
+        { id: 'wild', label: t('onboarding.reaction.wild') },
+        { id: 'good', label: t('onboarding.reaction.good') },
+        { id: 'not_yet', label: t('onboarding.reaction.not_yet') },
+    ];
 
     function handleSelect(id: OptionId) {
         setSelected(id);
@@ -26,7 +28,7 @@ export function VisionReactionStep() {
     return (
         <View style={styles.container}>
             <View style={styles.inner}>
-                <Text style={styles.headline}>Wie fühlt sich{'\n'}das an?</Text>
+                <Text style={styles.headline}>{t('onboarding.reaction.headline')}</Text>
                 <View style={styles.options}>
                     {OPTIONS.map((opt) => {
                         const isSelected = selected === opt.id;

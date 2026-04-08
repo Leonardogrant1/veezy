@@ -2,14 +2,7 @@ import Logo from '@/assets/logo.svg';
 import { Colors, Fonts, Gold } from '@/constants/theme';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-
-const BENEFITS = [
-    'Deine Vision täglich vor Augen',
-    'Personalisierte Affirmationen',
-    'Home- & Lock-Screen Widget',
-    'Motivationsstil nach deiner Wahl',
-    '3 Tage kostenlos testen',
-];
+import { useTranslation } from 'react-i18next';
 
 function useFadeSlide(delay: number) {
     const opacity = useRef(new Animated.Value(0)).current;
@@ -51,6 +44,16 @@ function BenefitRow({ text, delay }: { text: string; delay: number }) {
 }
 
 export function WhatYouWillGetStep() {
+    const { t } = useTranslation();
+
+    const BENEFITS = [
+        t('onboarding.what_you_get.benefit_1'),
+        t('onboarding.what_you_get.benefit_2'),
+        t('onboarding.what_you_get.benefit_3'),
+        t('onboarding.what_you_get.benefit_4'),
+        t('onboarding.what_you_get.benefit_5'),
+    ];
+
     const logoOpacity = useRef(new Animated.Value(0)).current;
     const logoScale = useRef(new Animated.Value(0.7)).current;
     const titleAnim = useFadeSlide(200);
@@ -69,7 +72,7 @@ export function WhatYouWillGetStep() {
                     <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }] }}>
                         <Logo width={72} height={72} />
                     </Animated.View>
-                    <Animated.Text style={[styles.title, titleAnim]}>Was dich erwartet</Animated.Text>
+                    <Animated.Text style={[styles.title, titleAnim]}>{t('onboarding.what_you_get.title')}</Animated.Text>
                 </View>
 
                 <View style={styles.benefits}>

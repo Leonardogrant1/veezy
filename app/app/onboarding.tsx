@@ -5,6 +5,7 @@ import { NameStep } from '@/components/onboarding/steps/name-step';
 import { NotificationSetupStep } from '@/components/onboarding/steps/notification-setup-step';
 import { PhotoBridgeStep } from '@/components/onboarding/steps/photo-bridge-step';
 import { PhotoUploadStep } from '@/components/onboarding/steps/photo-upload-step';
+import { TrackingStep } from '@/components/onboarding/steps/tracking-step';
 import { TrialOfferStep } from '@/components/onboarding/steps/trial-offer-step';
 import { TrialReminderStep } from '@/components/onboarding/steps/trial-reminder-step';
 import { VisionGenerationStep } from '@/components/onboarding/steps/vision-generation-step';
@@ -20,36 +21,15 @@ import { File } from 'expo-file-system';
 import * as StoreReview from 'expo-store-review';
 import { fetch } from 'expo/fetch';
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'http://localhost:8080';
 
 const SELF_REF_KEYS: (keyof SelfReferenceImages)[] = ['face_front', 'face_smile', 'face_left', 'face_right', 'body'];
 
-const HookSlide = makeEmotionSlide({
-    label: 'PHASE 1',
-    headline: 'Stell dir vor, du könntest dein zukünftiges Leben sehen.',
-    subtext: 'Nicht träumen. Sehen.',
-});
-
-const IdentityShiftSlide = makeEmotionSlide({
-    label: 'PHASE 2',
-    headline: 'Stell dir vor… du hast es geschafft.',
-    subtext: 'Wie fühlt sich das an?',
-});
-
-const MicroLogicSlide = makeEmotionSlide({
-    label: 'PHASE 3',
-    headline: 'Dein Gehirn glaubt, was es regelmäßig sieht.',
-    subtext: 'Wiederholung schafft Realität.',
-});
-
-const CompanionSlide = makeEmotionSlide({
-    label: 'DEIN WEG',
-    headline: 'Wir begleiten dich auf deinem Weg.',
-    subtext: 'Jeden Tag erinnern wir dich an dein Ziel, damit du nicht vergisst, wohin du willst.',
-});
-
 export default function OnboardingScreen() {
+    const { t } = useTranslation();
+
     const handleUploadAndComposite = useCallback(async () => {
         const { selfReferenceImages, userId, updateSelfReferenceImages } = useUserDataStore.getState();
         const filledKeys = SELF_REF_KEYS.filter((k) => selfReferenceImages[k]);
@@ -88,30 +68,57 @@ export default function OnboardingScreen() {
         }
     }, []);
 
-    const ONBOARDING_STEPS = useMemo<OnboardingStep[]>(() => [
-        { component: HookSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-        { component: NameStep, theme: 'light', continueButtonText: 'Weiter', initialCanContinue: false },
-        { component: VisionStep, showProgressIndicator: false, continueButtonText: 'Weiter', initialCanContinue: false },
-        { component: IdentityShiftSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-        { component: MicroLogicSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-        { component: PhotoBridgeStep, showProgressIndicator: false, continueButtonText: 'Zeig es mir', theme: 'light' },
-        { component: PhotoUploadStep, continueButtonText: 'Kreiere meine Vision!', theme: 'light', initialCanContinue: false, preContinue: handleUploadAndComposite },
-        {
-            component: VisionGenerationStep, showProgressIndicator: false, showContinueButton: false, preContinue: async () => {
-                try {
-                    const isAvailable = await StoreReview.isAvailableAsync();
-                    if (isAvailable) await StoreReview.requestReview();
-                } catch { /* silently continue */ }
-            }
-        },
-        { component: VisionReactionStep, theme: 'light', continueButtonText: 'Weiter', initialCanContinue: false },
-        { component: CompanionSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-        { component: NotificationSetupStep, theme: 'light', continueButtonText: 'Weiter', initialCanContinue: false, preContinue: handleRequestNotifications },
-        { component: AddWidgetStep, theme: 'light', continueButtonText: 'Weiter' },
-        { component: TrialOfferStep, theme: 'light', continueButtonText: 'Weiter' },
-        { component: TrialReminderStep, theme: 'light', continueButtonText: 'Weiter' },
-        { component: WhatYouWillGetStep, theme: 'light', continueButtonText: 'Los geht\'s!' },
-    ], [handleUploadAndComposite]);
+    const ONBOARDING_STEPS = useMemo<OnboardingStep[]>(() => {
+        const HookSlide = makeEmotionSlide({
+            label: t('onboarding.hook.label'),
+            headline: t('onboarding.hook.headline'),
+            subtext: t('onboarding.hook.subtext'),
+        });
+
+        const IdentityShiftSlide = makeEmotionSlide({
+            label: t('onboarding.identity_shift.label'),
+            headline: t('onboarding.identity_shift.headline'),
+            subtext: t('onboarding.identity_shift.subtext'),
+        });
+
+        const MicroLogicSlide = makeEmotionSlide({
+            label: t('onboarding.micro_logic.label'),
+            headline: t('onboarding.micro_logic.headline'),
+            subtext: t('onboarding.micro_logic.subtext'),
+        });
+
+        const CompanionSlide = makeEmotionSlide({
+            label: t('onboarding.companion.label'),
+            headline: t('onboarding.companion.headline'),
+            subtext: t('onboarding.companion.subtext'),
+        });
+
+        return [
+            { component: HookSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: TrackingStep, showProgressIndicator: false, continueButtonText: t('common.continue'), theme: 'light' },
+            { component: NameStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
+            { component: VisionStep, showProgressIndicator: false, continueButtonText: t('common.continue'), initialCanContinue: false },
+            { component: IdentityShiftSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: MicroLogicSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: PhotoBridgeStep, showProgressIndicator: false, continueButtonText: t('onboarding.photo_bridge.continue'), theme: 'light' },
+            { component: PhotoUploadStep, continueButtonText: t('onboarding.photo_upload.continue'), theme: 'light', initialCanContinue: false, preContinue: handleUploadAndComposite },
+            {
+                component: VisionGenerationStep, showProgressIndicator: false, showContinueButton: false, preContinue: async () => {
+                    try {
+                        const isAvailable = await StoreReview.isAvailableAsync();
+                        if (isAvailable) await StoreReview.requestReview();
+                    } catch { /* silently continue */ }
+                }
+            },
+            { component: VisionReactionStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
+            { component: CompanionSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: NotificationSetupStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false, preContinue: handleRequestNotifications },
+            { component: AddWidgetStep, theme: 'light', continueButtonText: t('common.continue') },
+            { component: TrialOfferStep, theme: 'light', continueButtonText: t('common.continue') },
+            { component: TrialReminderStep, theme: 'light', continueButtonText: t('common.continue') },
+            { component: WhatYouWillGetStep, theme: 'light', continueButtonText: t('onboarding.what_you_get.cta') },
+        ];
+    }, [handleUploadAndComposite, t]);
 
     return <OnboardingProgressWrapper steps={ONBOARDING_STEPS} />;
 }

@@ -2,11 +2,11 @@ import PlusIcon from '@/assets/icons/plus.svg';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import { GlowPulse } from '@/components/layout/GlowPulse';
 import { VisionSlide } from '@/components/layout/VisionSlide';
-import { CATEGORIES, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
+import { CATEGORY_KEYS, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
-import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -14,6 +14,7 @@ import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
 import { devLog } from '@/utils/dev-log';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
@@ -32,6 +33,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const visions = useVisionStore((s) => s.visions);
@@ -83,7 +85,7 @@ export default function HomeScreen() {
         trackerManager.track('category_selected', { category: key });
     };
 
-    const categoryLabel = CATEGORIES.find((c) => c.key === selectedCategory)?.label ?? 'Alle';
+    const categoryLabel = t(`category.${selectedCategory}`);
 
 
     const isEmpty = (filtered.length === 0);
@@ -93,10 +95,10 @@ export default function HomeScreen() {
             {isEmpty ? (
                 <View style={[styles.emptyState, { paddingBottom: insets.bottom + 120 }]}>
                     <GlowPulse size={220} />
-                    <Text style={styles.emptyTitle}>Erstelle deine erste Vision</Text>
-                    <Text style={styles.emptySubtitle}>Tippe auf das{' '}
+                    <Text style={styles.emptyTitle}>{t('home.empty_title')}</Text>
+                    <Text style={styles.emptySubtitle}>{t('home.empty_subtitle_pre')}{' '}
                         <Text style={styles.emptyAccent}>+</Text>
-                        {' '}um deine erste Vision zu erstellen
+                        {' '}{t('home.empty_subtitle_post')}
                     </Text>
                 </View>
             ) : (
@@ -192,7 +194,7 @@ export default function HomeScreen() {
                     <Feather name="chevron-up" size={20} color="rgba(255,255,255,0.6)" style={styles.chevronButton} />
 
                     <Text style={styles.category}>
-                        {(activeVision.category ?? 'Lifestyle').toUpperCase()}
+                        {t(`category.${activeVision.category ?? 'lifestyle'}`).toUpperCase()}
                     </Text>
 
                     <Text style={styles.phrase}>

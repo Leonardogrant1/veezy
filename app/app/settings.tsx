@@ -5,28 +5,27 @@ import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import UserPhotoIcon from '@/assets/icons/user_square.svg';
 import { BirthdayPickerModal } from '@/components/modals/BirthdayPickerModal';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { NotificationSettingsModal } from '@/components/modals/NotificationSettingsModal';
 import { Colors, Fonts } from '@/constants/theme';
+import { changeLanguage } from '@/i18n';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { calculateAge } from '@/types/user-data';
 
-const LEGAL_ROWS = [
-    { label: 'Nutzungsbedingungen', url: 'https://northbyte.studio/terms-of-use/veezy' },
-    { label: 'Datenschutz', url: 'https://northbyte.studio/privacy-policy/veezy' },
-];
-
 export default function SettingsScreen() {
+    const { t, i18n } = useTranslation();
     const insets = useSafeAreaInsets();
     const name = useUserDataStore((s) => s.name);
     const birthday = useUserDataStore((s) => s.birthday);
     const haptics = useUserDataStore((s) => s.haptics);
+    const language = useUserDataStore((s) => s.language);
     const updateSettings = useUserDataStore((s) => s.updateSettings);
 
     const { hasEntitlement } = useRevenueCat();
@@ -44,14 +43,26 @@ export default function SettingsScreen() {
         : '—';
 
     const settingsRows = [
-        { label: 'Name', value: name || '—', onPress: () => setEditField('name') },
-        { label: 'Geburtstag', value: ageDisplay, onPress: () => setEditField('birthday') },
-        { label: 'Benachrichtigungen', value: undefined, onPress: () => setShowNotificationModal(true) },
-        { label: 'Abo verwalten', value: undefined, onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions') },
-        { label: 'Tutorial wiederholen', value: undefined, onPress: () => router.replace('/tutorial') },
-        { label: 'Feature anfragen', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/features/veezy') },
-        { label: 'Bug melden', value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/bugs/veezy') },
+        { label: t('settings.row_name'), value: name || '—', onPress: () => setEditField('name') },
+        { label: t('settings.row_birthday'), value: ageDisplay, onPress: () => setEditField('birthday') },
+        { label: t('settings.row_notifications'), value: undefined, onPress: () => setShowNotificationModal(true) },
+        { label: t('settings.row_subscription'), value: undefined, onPress: () => Linking.openURL('https://apps.apple.com/account/subscriptions') },
+        { label: t('settings.row_tutorial'), value: undefined, onPress: () => router.replace('/tutorial') },
+        { label: t('settings.row_request_feature'), value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/features/veezy') },
+        { label: t('settings.row_report_bug'), value: undefined, onPress: () => WebBrowser.openBrowserAsync('https://northbyte.studio/bugs/veezy') },
     ];
+
+    const LEGAL_ROWS = [
+        { label: t('settings.legal_terms'), url: 'https://northbyte.studio/terms-of-use/veezy' },
+        { label: t('settings.legal_privacy'), url: 'https://northbyte.studio/privacy-policy/veezy' },
+    ];
+
+    const currentLang = i18n.language as 'de' | 'en';
+
+    function handleLanguageToggle(lang: 'de' | 'en') {
+        changeLanguage(lang);
+        updateSettings({ language: lang });
+    }
 
     return (
         <View style={styles.container}>
@@ -69,8 +80,8 @@ export default function SettingsScreen() {
                     <View style={styles.selfReferenceLeft}>
                         <UserPhotoIcon width={24} height={24} color={Colors.textHeadline} />
                         <View style={styles.selfReferenceText}>
-                            <Text style={styles.selfReferenceTitle}>Referenzbilder</Text>
-                            <Text style={styles.selfReferenceSubtitle}>Fotos für personalisierte Visionen</Text>
+                            <Text style={styles.selfReferenceTitle}>{t('settings.self_reference_title')}</Text>
+                            <Text style={styles.selfReferenceSubtitle}>{t('settings.self_reference_subtitle')}</Text>
                         </View>
                     </View>
                     <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
@@ -84,8 +95,8 @@ export default function SettingsScreen() {
                                 <MaterialCommunityIcons name="crown" size={20} color={Colors.accent} />
                             </View>
                             <View>
-                                <Text style={styles.premiumTitle}>Veezy Premium</Text>
-                                <Text style={styles.premiumSubtitle}>Alle Features freischalten</Text>
+                                <Text style={styles.premiumTitle}>{t('settings.premium_title')}</Text>
+                                <Text style={styles.premiumSubtitle}>{t('settings.premium_subtitle')}</Text>
                             </View>
                         </View>
                         <MaterialIcons name="chevron-right" size={20} color="rgba(255,255,255,0.5)" />
@@ -93,9 +104,9 @@ export default function SettingsScreen() {
                 )}
 
                 {/* Settings */}
-                <Text style={styles.sectionLabel}>Einstellungen</Text>
+                <Text style={styles.sectionLabel}>{t('settings.section_settings')}</Text>
                 <View style={styles.rowGroup}>
-                    {settingsRows.map((row, i) => (
+                    {settingsRows.map((row) => (
                         <TouchableOpacity
                             key={row.label}
                             style={[styles.row, styles.rowBorder]}
@@ -111,8 +122,9 @@ export default function SettingsScreen() {
                             </View>
                         </TouchableOpacity>
                     ))}
-                    <View style={styles.row}>
-                        <Text style={styles.rowLabel}>Haptik</Text>
+                    {/* Haptics row */}
+                    <View style={[styles.row, styles.rowBorder]}>
+                        <Text style={styles.rowLabel}>{t('settings.row_haptics')}</Text>
                         <Switch
                             value={haptics}
                             onValueChange={(v) => updateSettings({ haptics: v })}
@@ -120,10 +132,30 @@ export default function SettingsScreen() {
                             thumbColor="white"
                         />
                     </View>
+                    {/* Language row */}
+                    <View style={styles.row}>
+                        <Text style={styles.rowLabel}>{t('settings.row_language')}</Text>
+                        <View style={styles.languagePicker}>
+                            <TouchableOpacity
+                                style={[styles.langButton, currentLang === 'de' && styles.langButtonActive]}
+                                onPress={() => handleLanguageToggle('de')}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.langFlag}>🇩🇪</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.langButton, currentLang === 'en' && styles.langButtonActive]}
+                                onPress={() => handleLanguageToggle('en')}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.langFlag}>🇬🇧</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Legal */}
-                <Text style={styles.sectionLabel}>Rechtliches</Text>
+                <Text style={styles.sectionLabel}>{t('settings.section_legal')}</Text>
                 <View style={styles.rowGroup}>
                     {LEGAL_ROWS.map((row, i) => (
                         <TouchableOpacity
@@ -141,9 +173,9 @@ export default function SettingsScreen() {
 
             <EditFieldModal
                 visible={editField === 'name'}
-                title="Name"
+                title={t('settings.edit_name_title')}
                 type="text"
-                placeholder="Dein Name"
+                placeholder={t('settings.edit_name_placeholder')}
                 value={name}
                 onSave={(v) => updateSettings({ name: v })}
                 onClose={() => setEditField(null)}
@@ -297,4 +329,23 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: Colors.textMuted,
     },
+    languagePicker: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    langButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.borderDivider,
+        borderWidth: 1.5,
+        borderColor: 'transparent',
+    },
+    langButtonActive: {
+        backgroundColor: Colors.surface,
+        borderColor: Colors.accent,
+    },
+    langFlag: { fontSize: 16 },
 });

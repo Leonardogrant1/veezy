@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { Animated, Easing, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
 export function NameStep() {
+    const { t } = useTranslation();
     const { setCanContinue } = useOnboardingControl();
     const updateSettings = useUserDataStore((s) => s.updateSettings);
     const [name, setName] = useState('');
@@ -41,12 +43,12 @@ export function NameStep() {
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>
             <View style={styles.inner} pointerEvents="box-none">
                 <Animated.View style={[styles.content, { transform: [{ translateY: focusOffset }] }]}>
-                    <Text style={styles.headline}>Wie sollen wir{'\n'}dich nennen?</Text>
+                    <Text style={styles.headline}>{t('onboarding.name.headline')}</Text>
                     <TextInput
                         style={styles.input}
                         value={name}
                         onChangeText={handleChange}
-                        placeholder="Dein Name"
+                        placeholder={t('onboarding.name.placeholder')}
                         placeholderTextColor={Colors.textPlaceholder}
                         autoCapitalize="words"
                         autoFocus

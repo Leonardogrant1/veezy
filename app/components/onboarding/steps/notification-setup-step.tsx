@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { formatHour } from '@/components/modals/NotificationSettingsModal';
@@ -15,16 +16,6 @@ import { MotivationStyle } from '@/types/user-data';
 const MIN = 1;
 const MAX = 10;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-
-const FALLBACK_EXAMPLES: Record<MotivationStyle, string> = {
-    affirmation: '"Ich lebe in meinem Traumhaus am Meer und bin vollkommen frei."',
-    fuel: '"Jetzt alles geben – oder für immer davon träumen."',
-};
-
-const STYLE_OPTIONS: { value: MotivationStyle; label: string; description: string }[] = [
-    { value: 'affirmation', label: 'Affirmation', description: 'Positive Bestätigung & ruhige Stärke' },
-    { value: 'fuel', label: 'Fuel', description: 'Dringlichkeit & knallharter Antrieb' },
-];
 
 function pickRandom<T>(arr: T[]): T | undefined {
     if (arr.length === 0) return undefined;
@@ -68,7 +59,18 @@ function HourPicker({ visible, value, onSelect, onClose }: HourPickerProps) {
 }
 
 export function NotificationSetupStep() {
+    const { t } = useTranslation();
     const { setCanContinue } = useOnboardingControl();
+
+    const FALLBACK_EXAMPLES: Record<MotivationStyle, string> = {
+        affirmation: t('onboarding.notifications.fallback_affirmation'),
+        fuel: t('onboarding.notifications.fallback_fuel'),
+    };
+
+    const STYLE_OPTIONS: { value: MotivationStyle; label: string; description: string }[] = [
+        { value: 'affirmation', label: t('onboarding.notifications.style_affirmation_label'), description: t('onboarding.notifications.style_affirmation_desc') },
+        { value: 'fuel', label: t('onboarding.notifications.style_fuel_label'), description: t('onboarding.notifications.style_fuel_desc') },
+    ];
     const { notificationsPerDay, notificationStartHour, notificationEndHour, motivationStyle, updateSettings } =
         useUserDataStore();
     const visions = useVisionStore((s) => s.visions);
@@ -154,16 +156,13 @@ export function NotificationSetupStep() {
 
     return (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-            <Text style={styles.title}>Dein Reminder-Plan</Text>
-            <Text style={styles.subtitle}>
-                Stell ein, wann und wie oft veezy dich an deine Ziele erinnern soll.
-            </Text>
+            <Text style={styles.title}>{t('onboarding.notifications.title')}</Text>
+            <Text style={styles.subtitle}>{t('onboarding.notifications.subtitle')}</Text>
 
-            {/* Häufigkeit & Zeitraum */}
-            <Text style={styles.sectionLabel}>Häufigkeit & Zeitraum</Text>
+            <Text style={styles.sectionLabel}>{t('onboarding.notifications.section_frequency')}</Text>
             <View style={styles.card}>
                 <View style={styles.row}>
-                    <Text style={styles.rowLabel}>Pro Tag</Text>
+                    <Text style={styles.rowLabel}>{t('onboarding.notifications.per_day')}</Text>
                     <View style={styles.counter}>
                         <TouchableOpacity style={styles.counterButton} onPress={() => updateCount(count - 1)}>
                             <MaterialIcons name="remove" size={18} color={Colors.textHeadline} />
@@ -178,7 +177,7 @@ export function NotificationSetupStep() {
                 <View style={styles.divider} />
 
                 <TouchableOpacity style={styles.row} onPress={() => setPicker('start')}>
-                    <Text style={styles.rowLabel}>Startzeit</Text>
+                    <Text style={styles.rowLabel}>{t('onboarding.notifications.start_time')}</Text>
                     <View style={styles.timeChip}>
                         <Text style={styles.timeChipText}>{formatHour(startHour)}</Text>
                     </View>
@@ -187,7 +186,7 @@ export function NotificationSetupStep() {
                 <View style={styles.divider} />
 
                 <TouchableOpacity style={styles.row} onPress={() => setPicker('end')}>
-                    <Text style={styles.rowLabel}>Endzeit</Text>
+                    <Text style={styles.rowLabel}>{t('onboarding.notifications.end_time')}</Text>
                     <View style={styles.timeChip}>
                         <Text style={styles.timeChipText}>{formatHour(endHour)}</Text>
                     </View>
@@ -195,11 +194,10 @@ export function NotificationSetupStep() {
             </View>
 
             <Text style={styles.summary}>
-                {count}x täglich zwischen {formatHour(startHour)} und {formatHour(endHour)}
+                {t('onboarding.notifications.summary', { count, start: formatHour(startHour), end: formatHour(endHour) })}
             </Text>
 
-            {/* Motivationsstil */}
-            <Text style={styles.sectionLabel}>Motivationsstil</Text>
+            <Text style={styles.sectionLabel}>{t('onboarding.notifications.section_style')}</Text>
             <View style={styles.styleOptions}>
                 {STYLE_OPTIONS.map((opt) => {
                     const isSelected = style === opt.value;
@@ -246,7 +244,7 @@ export function NotificationSetupStep() {
                         color={testSent ? Colors.accent : !unlocked ? Colors.accent : Colors.textMuted}
                     />
                     <Text style={[styles.testButtonText, (!unlocked || testSent) && styles.testButtonTextSent]}>
-                        {testSent ? 'Gesendet — schau gleich rein!' : 'Test-Benachrichtigung senden'}
+                        {testSent ? t('onboarding.notifications.test_sent') : t('onboarding.notifications.test_button')}
                     </Text>
                 </TouchableOpacity>
             </Animated.View>

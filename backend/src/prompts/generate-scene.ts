@@ -17,15 +17,17 @@ Rules:
 
 Output only the scene description, no preamble or explanation.`;
 
-export async function generateSceneDescription(personDescription: string, goal: string, existingPhrases?: string[]): Promise<string> {
+export async function generateSceneDescription(personDescription: string, goal: string, existingPhrases?: string[], language: 'de' | 'en' = 'en'): Promise<string> {
     const existingContext = existingPhrases && existingPhrases.length > 0
         ? `\n\nExisting visions context (maintain visual and lifestyle consistency with these — same world, same level of luxury/success, same environment):\n${existingPhrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
         : '';
 
+    const systemPrompt = SYSTEM_PROMPT + `\n\nWrite the scene description in ${language === 'de' ? 'German' : 'English'}.`;
+
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-4.1',
         messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: systemPrompt },
             {
                 role: 'user',
                 content: `Person description:\n${personDescription}\n\nGoal/Vision:\n${goal}${existingContext}`,

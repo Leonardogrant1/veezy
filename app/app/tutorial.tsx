@@ -4,6 +4,7 @@ import { TutorialOverlay } from '@/components/tutorial-overlay';
 import { Colors, Fonts } from '@/constants/theme';
 import { TutorialProvider, useTutorial } from '@/contexts/TutorialContext';
 import { MediaHandler } from '@/lib/media-handler';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Feather } from '@expo/vector-icons';
@@ -144,6 +145,7 @@ export default function TutorialScreen() {
     const completeTutorial = useUserDataStore((s) => s.completeTutorial);
 
     function handleComplete() {
+        trackerManager.track('tutorial_completed');
         completeTutorial();
         router.replace('/home');
     }

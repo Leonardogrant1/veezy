@@ -15,7 +15,8 @@ const visionRoute = new Hono<{
 }>();
 
 visionRoute.post('/generate', revenuecatAuth, async (c) => {
-    const { visionDescription, existingPhrases, motivationStyle } = await c.req.json();
+    const { visionDescription, existingPhrases, motivationStyle, language } = await c.req.json();
+    const lang: 'de' | 'en' = language === 'de' ? 'de' : 'en';
 
     if (!visionDescription || typeof visionDescription !== 'string') {
         return c.json({ error: 'visionDescription is required' }, 400);
@@ -43,7 +44,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const cachedPersonDesc = cachedDescBuffer?.toString('utf8') ?? null;
 
         // Both phrase styles run in parallel with the image pipeline
-        const phrasePromise = generatePhraseAndAffirmations(visionDescription);
+        const phrasePromise = generatePhraseAndAffirmations(visionDescription, lang);
 
         const imagePipeline = (async () => {
             let personDesc = cachedPersonDesc;
@@ -55,7 +56,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
                     'text/plain',
                 ).catch(() => { });
             }
-            const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined);
+            const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined, lang);
             return generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
         })();
 
@@ -76,7 +77,8 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
 });
 
 visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
-    const { visionId, visionDescription, existingPhrases } = await c.req.json();
+    const { visionId, visionDescription, existingPhrases, language } = await c.req.json();
+    const lang: 'de' | 'en' = language === 'de' ? 'de' : 'en';
 
     if (!visionId || typeof visionId !== 'string') {
         return c.json({ error: 'visionId is required' }, 400);
@@ -113,7 +115,7 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
             ).catch(() => { });
         }
 
-        const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined);
+        const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined, lang);
         const resultB64 = await generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
 
         const imageKey = `vision-images/${userId}/${visionId}`;

@@ -1,9 +1,16 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { File } from 'expo-file-system';
 
+import body_icon from '@/assets/face-photo-icons/body.svg';
+import face_front_icon from '@/assets/face-photo-icons/face_front.svg';
+import face_left_icon from '@/assets/face-photo-icons/face_left.svg';
+import face_right_icon from '@/assets/face-photo-icons/face_right.svg';
+import face_smile_icon from '@/assets/face-photo-icons/face_smile.svg';
+
 import { router } from 'expo-router';
 import { fetch } from 'expo/fetch';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,18 +24,19 @@ import { pickFromCamera, pickFromGallery } from '@/utils/image-picker';
 
 type Slot = keyof SelfReferenceImages;
 
-const SLOTS: { key: Slot; label: string; hint: string }[] = [
-    { key: 'face_front',  label: 'Frontal',   hint: 'Gerade in die Kamera' },
-    { key: 'face_smile',  label: 'Lächelnd',  hint: 'Natürliches Lächeln' },
-    { key: 'face_left',   label: 'Links',      hint: 'Kopf leicht links' },
-    { key: 'face_right',  label: 'Rechts',     hint: 'Kopf leicht rechts' },
-    { key: 'body',        label: 'Körper',     hint: 'Ganzkörper sichtbar' },
-];
-
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'http://localhost:8080';
 
 export default function EditSelfReferenceScreen() {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+
+    const SLOTS: { key: Slot; label: string; hint: string; wide?: boolean; icon: any }[] = [
+        { key: 'face_front', label: t('onboarding.photo_upload.slot_front'), hint: t('onboarding.photo_upload.slot_front_hint'), icon: face_front_icon },
+        { key: 'face_smile', label: t('onboarding.photo_upload.slot_smile'), hint: t('onboarding.photo_upload.slot_smile_hint'), icon: face_smile_icon },
+        { key: 'face_left', label: t('onboarding.photo_upload.slot_left'), hint: t('onboarding.photo_upload.slot_left_hint'), icon: face_left_icon },
+        { key: 'face_right', label: t('onboarding.photo_upload.slot_right'), hint: t('onboarding.photo_upload.slot_right_hint'), icon: face_right_icon },
+        { key: 'body', label: t('onboarding.photo_upload.slot_body'), hint: t('onboarding.photo_upload.slot_body_hint'), wide: true, icon: body_icon },
+    ];
     const storedImages = useUserDataStore((s) => s.selfReferenceImages);
 
     const updateSelfReferenceImages = useUserDataStore((s) => s.updateSelfReferenceImages);
@@ -48,11 +56,11 @@ export default function EditSelfReferenceScreen() {
     useEffect(() => {
         const resolve = async () => {
             setUris({
-                face_front:  storedImages.face_front  ? await MediaHandler.resolveUri(storedImages.face_front)  : null,
-                face_smile:  storedImages.face_smile  ? await MediaHandler.resolveUri(storedImages.face_smile)  : null,
-                face_left:   storedImages.face_left   ? await MediaHandler.resolveUri(storedImages.face_left)   : null,
-                face_right:  storedImages.face_right  ? await MediaHandler.resolveUri(storedImages.face_right)  : null,
-                body:        storedImages.body        ? await MediaHandler.resolveUri(storedImages.body)        : null,
+                face_front: storedImages.face_front ? await MediaHandler.resolveUri(storedImages.face_front) : null,
+                face_smile: storedImages.face_smile ? await MediaHandler.resolveUri(storedImages.face_smile) : null,
+                face_left: storedImages.face_left ? await MediaHandler.resolveUri(storedImages.face_left) : null,
+                face_right: storedImages.face_right ? await MediaHandler.resolveUri(storedImages.face_right) : null,
+                body: storedImages.body ? await MediaHandler.resolveUri(storedImages.body) : null,
             });
         };
         resolve().catch(() => { });
@@ -130,7 +138,7 @@ export default function EditSelfReferenceScreen() {
 
             router.back();
         } catch (e: any) {
-            setError(e.message ?? 'Fehler beim Speichern');
+            setError(e.message ?? t('edit_self_reference.save_error'));
         } finally {
             setSaving(false);
         }
@@ -146,10 +154,8 @@ export default function EditSelfReferenceScreen() {
                     <MaterialIcons name="close" size={22} color={Colors.textMuted} />
                 </TouchableOpacity>
 
-                <Text style={styles.title}>Referenzbilder</Text>
-                <Text style={styles.subtitle}>
-                    Diese Bilder werden genutzt, um dich in deinen Visionen darzustellen. Lade ein Foto aus vier Perspektiven hoch.
-                </Text>
+                <Text style={styles.title}>{t('settings.self_reference_title')}</Text>
+                <Text style={styles.subtitle}>{t('edit_self_reference.subtitle')}</Text>
 
                 <View style={styles.slots}>
                     {SLOTS.map((slot) => {
@@ -157,15 +163,15 @@ export default function EditSelfReferenceScreen() {
                         return (
                             <TouchableOpacity
                                 key={slot.key}
-                                style={styles.slot}
+                                style={[styles.slot, slot.wide && styles.slotWide]}
                                 onPress={() => setPickerTarget(slot.key)}
                                 activeOpacity={0.8}
                             >
                                 {uri ? (
-                                    <Image source={{ uri }} style={styles.slotImage} resizeMode="cover" />
+                                    <Image source={{ uri }} style={[styles.slotImage, slot.wide && styles.slotImageWide]} resizeMode="cover" />
                                 ) : (
-                                    <View style={styles.slotEmpty}>
-                                        <MaterialIcons name="add-a-photo" size={28} color={Colors.textPlaceholder} />
+                                    <View style={[styles.slotEmpty, slot.wide && styles.slotEmptyWide]}>
+                                        <slot.icon width={slot.key === 'body' ? 100 : 70} height={slot.key === 'body' ? 100 : 70} />
                                     </View>
                                 )}
                                 <View style={styles.slotFooter}>
@@ -206,7 +212,7 @@ export default function EditSelfReferenceScreen() {
                     {saving ? (
                         <ActivityIndicator color="white" />
                     ) : (
-                        <Text style={styles.saveButtonText}>Speichern</Text>
+                        <Text style={styles.saveButtonText}>{t('edit_self_reference.save')}</Text>
                     )}
                 </TouchableOpacity>
             </View>
@@ -252,16 +258,22 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     slot: {
-        width: '47%',
+        width: '48%',
         borderRadius: 16,
         overflow: 'hidden',
         backgroundColor: Colors.surface,
         borderWidth: 1,
         borderColor: Colors.borderCard,
     },
+    slotWide: {
+        width: '100%',
+    },
     slotImage: {
         width: '100%',
         aspectRatio: 3 / 4,
+    },
+    slotImageWide: {
+        aspectRatio: 16 / 9,
     },
     slotEmpty: {
         width: '100%',
@@ -269,6 +281,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: Colors.surface,
+    },
+    slotEmptyWide: {
+        aspectRatio: 16 / 9,
     },
     slotFooter: {
         padding: 10,

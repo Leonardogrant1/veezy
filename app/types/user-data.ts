@@ -28,6 +28,7 @@ export type UserData = {
     motivationStyle: MotivationStyle
     primaryCategory: PrimaryCategory | null
     visionDescription: string
+    language: 'de' | 'en'
 }
 
 export function calculateAge(birthday: string): number {

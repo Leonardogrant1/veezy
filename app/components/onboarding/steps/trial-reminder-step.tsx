@@ -1,13 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts, Gold } from '@/constants/theme';
-
-const STEPS = [
-    { day: 'Heute', text: 'Dein kostenloser Zugang beginnt.' },
-    { day: 'Tag 2', text: 'Erinnerung: Dein Test endet morgen.' },
-    { day: 'Tag 3', text: 'Abo beginnt — jederzeit kündbar.' },
-];
 
 function TimelineRow({ day, text, delay }: { day: string; text: string; delay: number }) {
     const opacity = useRef(new Animated.Value(0)).current;
@@ -36,6 +31,14 @@ function TimelineRow({ day, text, delay }: { day: string; text: string; delay: n
 }
 
 export function TrialReminderStep() {
+    const { t } = useTranslation();
+
+    const STEPS = [
+        { day: t('onboarding.trial_reminder.day_today'), text: t('onboarding.trial_reminder.day_today_desc') },
+        { day: t('onboarding.trial_reminder.day_2'), text: t('onboarding.trial_reminder.day_2_desc') },
+        { day: t('onboarding.trial_reminder.day_3'), text: t('onboarding.trial_reminder.day_3_desc') },
+    ];
+
     const titleOpacity = useRef(new Animated.Value(0)).current;
     const titleY = useRef(new Animated.Value(16)).current;
 
@@ -50,8 +53,8 @@ export function TrialReminderStep() {
         <View style={styles.container}>
             <View style={styles.inner}>
                 <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleY }] }}>
-                    <Text style={styles.label}>SO FUNKTIONIERT ES</Text>
-                    <Text style={styles.title}>Keine versteckten Kosten.</Text>
+                    <Text style={styles.label}>{t('onboarding.trial_reminder.label')}</Text>
+                    <Text style={styles.title}>{t('onboarding.trial_reminder.title')}</Text>
                 </Animated.View>
 
                 <View style={styles.timeline}>
@@ -63,7 +66,7 @@ export function TrialReminderStep() {
                 <Animated.Text
                     style={[styles.note, { opacity: titleOpacity }]}
                 >
-                    Jederzeit in den iPhone-Einstellungen kündbar.
+                    {t('onboarding.trial_reminder.cancel_note')}
                 </Animated.Text>
             </View>
         </View>

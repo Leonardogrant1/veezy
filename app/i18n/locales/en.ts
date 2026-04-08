@@ -1,0 +1,194 @@
+const en = {
+  // Common
+  'common.continue': 'Continue',
+  'common.error_generic': 'Something went wrong. Please try again.',
+
+  // Start screen
+  'start.title': "Manifest your\nFuture",
+  'start.subtitle': "See yourself where\nyou want to be.",
+  'start.cta': 'Get Started',
+
+  // Onboarding — emotion slides
+  'onboarding.hook.label': 'PHASE 1',
+  'onboarding.hook.headline': 'Imagine you could see your future life.',
+  'onboarding.hook.subtext': "Don't dream it. See it.",
+
+  'onboarding.identity_shift.label': 'PHASE 2',
+  'onboarding.identity_shift.headline': "Imagine… you made it.",
+  'onboarding.identity_shift.subtext': 'How does that feel?',
+
+  'onboarding.micro_logic.label': 'PHASE 3',
+  'onboarding.micro_logic.headline': 'Your brain believes what it sees repeatedly.',
+  'onboarding.micro_logic.subtext': 'Repetition creates reality.',
+
+  'onboarding.companion.label': 'YOUR PATH',
+  'onboarding.companion.headline': "We'll walk this path with you.",
+  'onboarding.companion.subtext': "Every day we'll remind you of your goal so you never forget where you're going.",
+
+  // Name step
+  'onboarding.name.headline': "What should\nwe call you?",
+  'onboarding.name.placeholder': 'Your name',
+
+  // Vision step
+  'onboarding.vision.headline_with_name': "{{name}}, what's your vision?",
+  'onboarding.vision.headline': "What's your vision?",
+  'onboarding.vision.subtitle': 'Briefly describe where you see yourself in a few years.',
+  'onboarding.vision.placeholder': 'A house by the sea, financial freedom…',
+
+  // Photo bridge step
+  'onboarding.photo_bridge.teaser': 'Imagine…',
+  'onboarding.photo_bridge.headline': "you see yourself\nright there.",
+  'onboarding.photo_bridge.subtext': "Not just any image.\nYou.",
+  'onboarding.photo_bridge.continue': 'Show me',
+
+  // Photo upload step
+  'onboarding.photo_upload.title': 'Your Photos',
+  'onboarding.photo_upload.subtitle': 'These photos are used to place you in your vision. Upload photos from different angles.',
+  'onboarding.photo_upload.slot_front': 'Front',
+  'onboarding.photo_upload.slot_front_hint': 'Looking straight at camera',
+  'onboarding.photo_upload.slot_smile': 'Smiling',
+  'onboarding.photo_upload.slot_smile_hint': 'Natural smile',
+  'onboarding.photo_upload.slot_left': 'Left',
+  'onboarding.photo_upload.slot_left_hint': 'Head slightly left',
+  'onboarding.photo_upload.slot_right': 'Right',
+  'onboarding.photo_upload.slot_right_hint': 'Head slightly right',
+  'onboarding.photo_upload.slot_body': 'Full Body',
+  'onboarding.photo_upload.slot_body_hint': 'Full body visible',
+  'onboarding.photo_upload.continue': 'Create my Vision!',
+
+  // Tracking step
+  'onboarding.tracking.label': 'PRIVACY',
+  'onboarding.tracking.headline': "Your vision stays yours.\nOur data stays anonymous.",
+  'onboarding.tracking.subtitle': 'We only track how you use the app — never what you write, never who you are.',
+  'onboarding.tracking.badge_no_data': 'Zero personal data collected',
+  'onboarding.tracking.badge_no_selling': 'Never sold. Never shared.',
+  'onboarding.tracking.badge_insights': 'Only to make veezy better for you',
+
+  // Vision generation step
+  'onboarding.vision_generation.error_title': 'Something went wrong',
+  'onboarding.vision_generation.error_sub': 'Your vision will be generated later.',
+  'onboarding.vision_generation.continue': 'Continue',
+
+  // Vision reaction step
+  'onboarding.reaction.headline': "How does\nthis feel?",
+  'onboarding.reaction.want_it': 'I want that',
+  'onboarding.reaction.wild': 'Wild to see',
+  'onboarding.reaction.good': 'Feels good',
+  'onboarding.reaction.not_yet': "Not quite mine yet",
+
+  // Notification setup step
+  'onboarding.notifications.title': 'Your Reminder Plan',
+  'onboarding.notifications.subtitle': "Set when and how often veezy should remind you of your goals.",
+  'onboarding.notifications.section_frequency': 'Frequency & Time',
+  'onboarding.notifications.per_day': 'Per Day',
+  'onboarding.notifications.start_time': 'Start Time',
+  'onboarding.notifications.end_time': 'End Time',
+  'onboarding.notifications.summary': '{{count}}x daily between {{start}} and {{end}}',
+  'onboarding.notifications.section_style': 'Motivation Style',
+  'onboarding.notifications.style_affirmation_label': 'Affirmation',
+  'onboarding.notifications.style_affirmation_desc': 'Positive affirmation & calm strength',
+  'onboarding.notifications.style_fuel_label': 'Fuel',
+  'onboarding.notifications.style_fuel_desc': 'Urgency & hard-hitting drive',
+  'onboarding.notifications.test_button': 'Send test notification',
+  'onboarding.notifications.test_sent': "Sent — check it out!",
+  'onboarding.notifications.fallback_affirmation': '"I live in my dream home by the sea and am completely free."',
+  'onboarding.notifications.fallback_fuel': '"Give it everything now — or dream about it forever."',
+
+  // Add widget step
+  'onboarding.widget.title': 'Your Visions. Every Day.',
+  'onboarding.widget.subtitle': 'Add veezy to your home screen to keep your goals in sight at all times.',
+
+  // Trial offer step
+  'onboarding.trial_offer.label': 'EXCLUSIVELY FOR YOU',
+  'onboarding.trial_offer.title': "3 days free.\nNo risk.",
+  'onboarding.trial_offer.subtitle': "We give you full access to veezy Premium — so you can feel for yourself what's possible.",
+
+  // Trial reminder step
+  'onboarding.trial_reminder.label': 'HOW IT WORKS',
+  'onboarding.trial_reminder.title': 'No hidden costs.',
+  'onboarding.trial_reminder.day_today': 'Today',
+  'onboarding.trial_reminder.day_today_desc': 'Your free access begins.',
+  'onboarding.trial_reminder.day_2': 'Day 2',
+  'onboarding.trial_reminder.day_2_desc': 'Reminder: your trial ends tomorrow.',
+  'onboarding.trial_reminder.day_3': 'Day 3',
+  'onboarding.trial_reminder.day_3_desc': 'Subscription starts — cancel anytime.',
+  'onboarding.trial_reminder.cancel_note': 'Cancel anytime in iPhone Settings.',
+
+  // What you will get step
+  'onboarding.what_you_get.title': 'What awaits you',
+  'onboarding.what_you_get.benefit_1': 'Your vision in front of you every day',
+  'onboarding.what_you_get.benefit_2': 'Personalized affirmations',
+  'onboarding.what_you_get.benefit_3': 'Home & Lock Screen Widget',
+  'onboarding.what_you_get.benefit_4': 'Motivation style of your choice',
+  'onboarding.what_you_get.benefit_5': '3-day free trial',
+  'onboarding.what_you_get.cta': "Let's go!",
+
+  // Home screen
+  'home.empty_title': 'Create your first Vision',
+  'home.empty_subtitle_pre': 'Tap the',
+  'home.empty_subtitle_post': 'to create your first vision',
+
+  // Vision add screen
+  'vision.add.headline': 'Describe your vision',
+  'vision.add.placeholder': 'A house by the sea, freedom, success…',
+  'vision.add.error': 'Something went wrong. Please try again.',
+  'vision.add.share_instagram': 'Share to Instagram Story',
+  'vision.add.share': 'Share',
+  'vision.add.regenerate': 'Regenerate',
+
+  // Vision actions modal
+  'vision.actions.title': 'Vision Options',
+  'vision.actions.share_instagram': 'Share to Instagram Story',
+  'vision.actions.share': 'Share',
+  'vision.actions.edit_phrase': 'Edit phrase',
+  'vision.actions.regenerate': 'Regenerate image',
+  'vision.actions.delete': 'Delete vision',
+  'vision.actions.delete_confirm_title': 'Delete Vision?',
+  'vision.actions.delete_confirm_message': 'This action cannot be undone.',
+  'vision.actions.delete_confirm_cancel': 'Cancel',
+  'vision.actions.delete_confirm_ok': 'Delete',
+  'vision.actions.regen_confirm_title': 'Regenerate image?',
+  'vision.actions.regen_confirm_message': 'A new image will be created for this vision.',
+  'vision.actions.regen_confirm_cancel': 'Cancel',
+  'vision.actions.regen_confirm_ok': 'Generate',
+  'vision.actions.regen_error': 'Generation failed. Please try again.',
+
+  // Settings screen
+  'settings.section_settings': 'Settings',
+  'settings.section_legal': 'Legal',
+  'settings.self_reference_title': 'Reference Photos',
+  'settings.self_reference_subtitle': 'Photos for personalized visions',
+  'settings.premium_title': 'Veezy Premium',
+  'settings.premium_subtitle': 'Unlock all features',
+  'settings.row_name': 'Name',
+  'settings.row_birthday': 'Birthday',
+  'settings.row_notifications': 'Notifications',
+  'settings.row_subscription': 'Manage Subscription',
+  'settings.row_tutorial': 'Repeat Tutorial',
+  'settings.row_request_feature': 'Request Feature',
+  'settings.row_report_bug': 'Report Bug',
+  'settings.row_haptics': 'Haptics',
+  'settings.row_language': 'Language',
+  'settings.legal_terms': 'Terms of Use',
+  'settings.legal_privacy': 'Privacy Policy',
+  'settings.edit_name_title': 'Name',
+  'settings.edit_name_placeholder': 'Your name',
+
+  // Categories
+  'category.all': 'All',
+  'category.wealth': 'Wealth',
+  'category.body': 'Body',
+  'category.lifestyle': 'Lifestyle',
+  'category.relationships': 'Relationships',
+  'category.mindset': 'Mindset',
+  'category.purpose': 'Purpose',
+  'category_modal.title': 'Category',
+
+  // Edit self-reference screen
+  'edit_self_reference.subtitle': 'These images are used to place you in your visions. Upload a photo from four different angles.',
+  'edit_self_reference.save': 'Save',
+  'edit_self_reference.save_error': 'Error while saving',
+} as const;
+
+export type TranslationKeys = keyof typeof en;
+export default en;

@@ -31,6 +31,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
 import { captureRef } from 'react-native-view-shot';
+import { useTranslation } from 'react-i18next';
 
 type ScreenState = 'input' | 'loading' | 'preview';
 
@@ -44,11 +45,13 @@ type GeneratedResult = {
 };
 
 export default function AddVisionScreen() {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const addVision = useVisionStore((s) => s.addVision);
     const updateImage = useVisionStore((s) => s.updateImage);
     const userId = useUserDataStore((s) => s.userId);
     const motivationStyle = useUserDataStore((s) => s.motivationStyle);
+    const language = useUserDataStore((s) => s.language);
     const { refreshGenerationCount } = useRevenueCat();
 
     const [state, setState] = useState<ScreenState>('input');
@@ -145,7 +148,7 @@ export default function AddVisionScreen() {
 
         try {
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
-            const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle);
+            const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle, language);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmationsAffirmation: generated.affirmationsAffirmation, affirmationsFuel: generated.affirmationsFuel });
             trackerManager.track('vision_created', { category: generated.category, motivation_style: motivationStyle });
@@ -165,7 +168,7 @@ export default function AddVisionScreen() {
             await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
             inputOpacity.setValue(1);
             inputTranslate.setValue(0);
-            setError('Etwas ist schiefgelaufen. Bitte versuche es erneut.');
+            setError(t('vision.add.error'));
             setState('input');
         }
     };
@@ -184,7 +187,7 @@ export default function AddVisionScreen() {
                 .filter((v) => v.id !== savedVisionId)
                 .map((v) => v.phrase)
                 .filter(Boolean);
-            const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases);
+            const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases, language);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(savedVisionId, relativePath);
             trackerManager.track('vision_regenerated');
@@ -199,7 +202,7 @@ export default function AddVisionScreen() {
         } catch {
             trackerManager.track('vision_regeneration_failed');
             await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
-            setError('Etwas ist schiefgelaufen. Bitte versuche es erneut.');
+            setError(t('vision.add.error'));
             setState('preview');
         }
     };
@@ -238,10 +241,10 @@ export default function AddVisionScreen() {
 
                 <View style={styles.innerContainer} pointerEvents="box-none">
                     <Animated.View style={[styles.inputContent, { opacity: inputOpacity, transform: [{ translateY: inputTranslate }, { translateY: focusOffset }] }]}>
-                        <Text style={styles.headline}>Beschreibe deine Vision</Text>
+                        <Text style={styles.headline}>{t('vision.add.headline')}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Ein Haus am Meer, Freiheit, Erfolg…"
+                            placeholder={t('vision.add.placeholder')}
                             placeholderTextColor="rgba(255,255,255,0.35)"
                             value={description}
                             onChangeText={setDescription}
@@ -326,11 +329,11 @@ export default function AddVisionScreen() {
                             </View>
                         )}
                         <Text style={styles.shareText}>
-                            {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
+                            {hasInstagram ? t('vision.add.share_instagram') : t('vision.add.share')}
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleRegenerate} activeOpacity={0.7}>
-                        <Text style={styles.regenText}>Neu generieren</Text>
+                        <Text style={styles.regenText}>{t('vision.add.regenerate')}</Text>
                     </TouchableOpacity>
                 </Animated.View>
             </View>

@@ -2,9 +2,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import Logo from '@/assets/logo.svg';
 import { Cream, Colors, Fonts, Gold } from '@/constants/theme';
+import { changeLanguage } from '@/i18n';
+import { useUserDataStore } from '@/stores/UserDataStore';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
 const BUTTON_W = 200;
@@ -69,6 +72,9 @@ function useFloatAnim(config: { distance: number; duration: number; delay?: numb
 }
 
 export default function StartScreen() {
+    const { t, i18n } = useTranslation();
+    const updateSettings = useUserDataStore((s) => s.updateSettings);
+
     // Blob float animations
     const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
     const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
@@ -106,6 +112,13 @@ export default function StartScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    function handleLanguageToggle(lang: 'de' | 'en') {
+        changeLanguage(lang);
+        updateSettings({ language: lang });
+    }
+
+    const currentLang = i18n.language as 'de' | 'en';
+
     return (
         <View style={styles.container}>
             {/* Background image */}
@@ -116,6 +129,36 @@ export default function StartScreen() {
             <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
             <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
 
+            {/* Language picker — top right corner */}
+            <View style={styles.languagePicker}>
+                <TouchableOpacity
+                    style={[styles.langButton, currentLang === 'de' && styles.langButtonActive]}
+                    onPress={() => handleLanguageToggle('de')}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.langFlag}>🇩🇪</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.langButton, currentLang === 'en' && styles.langButtonActive]}
+                    onPress={() => handleLanguageToggle('en')}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.langFlag}>🇬🇧</Text>
+                </TouchableOpacity>
+            </View>
+
+            {__DEV__ && (
+                <TouchableOpacity
+                    style={styles.debugButton}
+                    onPress={() => {
+                        useUserDataStore.setState({ hasOnboarded: true });
+                        router.replace('/home');
+                    }}
+                >
+                    <Text style={styles.debugButtonText}>⚙ Skip to Home</Text>
+                </TouchableOpacity>
+            )}
+
             {/* Centered content */}
             <View style={styles.content}>
                 <Animated.View style={[styles.logoWrapper, { opacity: logoOpacity }]}>
@@ -123,14 +166,14 @@ export default function StartScreen() {
                 </Animated.View>
 
                 <Animated.Text style={[styles.title, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
-                    Manifest deine{'\n'}Zukunft
+                    {t('start.title')}
                 </Animated.Text>
                 <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity, transform: [{ translateY: subtitleY }] }]}>
-                    Sieh dich selbst dort,{'\n'}wo du hinwillst.
+                    {t('start.subtitle')}
                 </Animated.Text>
                 <Animated.View style={{ opacity: buttonOpacity, transform: [{ translateY: buttonY }, { scale: buttonScale }] }}>
                     <TouchableOpacity style={styles.button} onPress={() => router.replace('/onboarding')} activeOpacity={0.85}>
-                        <Text style={styles.buttonText}>Loslegen</Text>
+                        <Text style={styles.buttonText}>{t('start.cta')}</Text>
                         {/* Shimmer sweep */}
                         <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }, { rotate: '20deg' }] }]}>
                             <LinearGradient
@@ -188,6 +231,29 @@ const styles = StyleSheet.create({
         left: '20%',
         opacity: 0.15,
     },
+    languagePicker: {
+        position: 'absolute',
+        top: 60,
+        right: 20,
+        flexDirection: 'row',
+        gap: 6,
+        zIndex: 10,
+    },
+    langButton: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        borderWidth: 1.5,
+        borderColor: 'transparent',
+    },
+    langButtonActive: {
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderColor: Colors.accent,
+    },
+    langFlag: { fontSize: 18 },
     content: {
         flex: 1,
         justifyContent: 'center',

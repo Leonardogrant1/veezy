@@ -15,14 +15,14 @@ export type RegenerateVisionResult = {
     imageKey: string;
 };
 
-export async function regenerateVision(visionId: string, description: string, userId: string, existingPhrases?: string[]): Promise<RegenerateVisionResult> {
+export async function regenerateVision(visionId: string, description: string, userId: string, existingPhrases?: string[], language: 'de' | 'en' = 'en'): Promise<RegenerateVisionResult> {
     const response = await fetch(`${BACKEND_URL}/vision/regenerate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-rc-user-id': userId,
         },
-        body: JSON.stringify({ visionId, visionDescription: description, existingPhrases }),
+        body: JSON.stringify({ visionId, visionDescription: description, existingPhrases, language }),
     });
 
     if (!response.ok) {
@@ -34,14 +34,14 @@ export async function regenerateVision(visionId: string, description: string, us
     return { imageUrl: data.signedUrl, imageKey: data.imageKey };
 }
 
-export async function generateVision(description: string, userId: string, existingPhrases?: string[], motivationStyle?: string): Promise<GenerateVisionResult> {
+export async function generateVision(description: string, userId: string, existingPhrases?: string[], motivationStyle?: string, language: 'de' | 'en' = 'en'): Promise<GenerateVisionResult> {
     const response = await fetch(`${BACKEND_URL}/vision/generate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-rc-user-id': userId,
         },
-        body: JSON.stringify({ visionDescription: description, existingPhrases, motivationStyle }),
+        body: JSON.stringify({ visionDescription: description, existingPhrases, motivationStyle, language }),
     });
 
     if (!response.ok) {

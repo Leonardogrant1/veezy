@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 type StepState = 'loading' | 'preview' | 'error';
 
@@ -20,6 +21,7 @@ type GeneratedResult = {
 };
 
 export function VisionGenerationStep() {
+    const { t } = useTranslation();
     const { visionDescription, nextStep } = useOnboardingControl();
     const insets = useSafeAreaInsets();
 
@@ -40,9 +42,9 @@ export function VisionGenerationStep() {
 
     async function runGeneration() {
         try {
-            const { userId, motivationStyle } = useUserDataStore.getState();
+            const { userId, motivationStyle, language } = useUserDataStore.getState();
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
-            const generated = await generateVision(visionDescription, userId, existingPhrases, motivationStyle);
+            const generated = await generateVision(visionDescription, userId, existingPhrases, motivationStyle, language);
             const path = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             useVisionStore.getState().addVision({
                 id: generated.visionId,
@@ -95,10 +97,10 @@ export function VisionGenerationStep() {
         return (
             <View style={styles.container}>
                 <View style={styles.errorContainer}>
-                    <Text style={styles.errorTitle}>Etwas ist schiefgelaufen</Text>
-                    <Text style={styles.errorSub}>Deine Vision wird später generiert.</Text>
+                    <Text style={styles.errorTitle}>{t('onboarding.vision_generation.error_title')}</Text>
+                    <Text style={styles.errorSub}>{t('onboarding.vision_generation.error_sub')}</Text>
                     <TouchableOpacity style={styles.continueButton} onPress={nextStep} activeOpacity={0.85}>
-                        <Text style={styles.continueText}>Weiter</Text>
+                        <Text style={styles.continueText}>{t('onboarding.vision_generation.continue')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -131,7 +133,7 @@ export function VisionGenerationStep() {
                 </Animated.View>
                 <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity, transform: [{ translateY: buttonTranslate }] }]}>
                     <TouchableOpacity style={styles.continueButton} onPress={nextStep} activeOpacity={0.85}>
-                        <Text style={styles.continueText}>Weiter</Text>
+                        <Text style={styles.continueText}>{t('onboarding.vision_generation.continue')}</Text>
                     </TouchableOpacity>
                 </Animated.View>
             </View>

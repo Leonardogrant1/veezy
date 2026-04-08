@@ -30,6 +30,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Share from 'react-native-share';
 import { captureRef } from 'react-native-view-shot';
+import { useTranslation } from 'react-i18next';
 
 
 interface VisionActionsModalProps {
@@ -38,6 +39,7 @@ interface VisionActionsModalProps {
 }
 
 export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps) {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const visible = vision !== null;
 
@@ -48,6 +50,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     const updateImage = useVisionStore((s) => s.updateImage);
     const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
+    const language = useUserDataStore((s) => s.language);
     const { refreshGenerationCount } = useRevenueCat();
 
     const [editField, setEditField] = useState<'phrase' | 'regen' | null>(null);
@@ -137,7 +140,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 .filter((v) => v.id !== vision.id)
                 .map((v) => v.phrase)
                 .filter(Boolean);
-            const generated = await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases);
+            const generated = await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases, language);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             updateImage(vision.id, relativePath);
             trackerManager.track('vision_regenerated');
@@ -145,7 +148,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
             refreshGenerationCount().catch(() => { });
         } catch (error) {
             trackerManager.track('vision_regeneration_failed');
-            Alert.alert('Fehler', 'Generierung fehlgeschlagen. Bitte versuche es erneut.');
+            Alert.alert(t('vision.actions.regen_error'));
         } finally {
             setIsGenerating(false);
         }
@@ -154,12 +157,12 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     const handleDelete = () => {
         if (!vision) return;
         Alert.alert(
-            'Vision löschen?',
-            'Diese Aktion kann nicht rückgängig gemacht werden.',
+            t('vision.actions.delete_confirm_title'),
+            t('vision.actions.delete_confirm_message'),
             [
-                { text: 'Abbrechen', style: 'cancel' },
+                { text: t('vision.actions.delete_confirm_cancel'), style: 'cancel' },
                 {
-                    text: 'Löschen',
+                    text: t('vision.actions.delete_confirm_ok'),
                     style: 'destructive',
                     onPress: () => {
                         const imagePath = vision.imagePath;
@@ -188,7 +191,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                         <Pressable onPress={(e) => e.stopPropagation()}>
                             <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
                                 <View style={styles.handle} />
-                                <Text style={styles.title}>Vision Optionen</Text>
+                                <Text style={styles.title}>{t('vision.actions.title')}</Text>
 
                                 {/* Main actions */}
                                 <View style={styles.card}>
@@ -206,7 +209,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                                             )}
                                         </View>
                                         <Text style={styles.rowLabel}>
-                                            {hasInstagram ? 'In Instagram Story teilen' : 'Teilen'}
+                                            {hasInstagram ? t('vision.actions.share_instagram') : t('vision.actions.share')}
                                         </Text>
                                         <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
                                     </TouchableOpacity>
@@ -217,7 +220,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                                         <View style={[styles.iconBadge, { backgroundColor: Colors.borderDivider }]}>
                                             <MaterialIcons name="drive-file-rename-outline" size={18} color={Colors.textMuted} />
                                         </View>
-                                        <Text style={styles.rowLabel}>Phrase bearbeiten</Text>
+                                        <Text style={styles.rowLabel}>{t('vision.actions.edit_phrase')}</Text>
                                         <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
                                     </TouchableOpacity>
 
@@ -225,18 +228,18 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
 
                                     <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => {
                                         Alert.alert(
-                                            'Bild neu generieren?',
-                                            'Ein neues Bild wird für diese Vision erstellt.',
+                                            t('vision.actions.regen_confirm_title'),
+                                            t('vision.actions.regen_confirm_message'),
                                             [
-                                                { text: 'Abbrechen', style: 'cancel' },
-                                                { text: 'Generieren', onPress: () => handleRegenerate(vision?.phrase ?? '') },
+                                                { text: t('vision.actions.regen_confirm_cancel'), style: 'cancel' },
+                                                { text: t('vision.actions.regen_confirm_ok'), onPress: () => handleRegenerate(vision?.phrase ?? '') },
                                             ]
                                         );
                                     }}>
                                         <View style={[styles.iconBadge, { backgroundColor: Colors.borderDivider }]}>
                                             <MaterialIcons name="autorenew" size={18} color={Colors.textMuted} />
                                         </View>
-                                        <Text style={styles.rowLabel}>Bild neu generieren</Text>
+                                        <Text style={styles.rowLabel}>{t('vision.actions.regenerate')}</Text>
                                         <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
                                     </TouchableOpacity>
                                 </View>
@@ -247,7 +250,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                                         <View style={[styles.iconBadge, { backgroundColor: '#FF453A22' }]}>
                                             <MaterialIcons name="delete-outline" size={18} color="#FF453A" />
                                         </View>
-                                        <Text style={[styles.rowLabel, styles.destructiveText]}>Vision löschen</Text>
+                                        <Text style={[styles.rowLabel, styles.destructiveText]}>{t('vision.actions.delete')}</Text>
                                         <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
                                     </TouchableOpacity>
                                 </View>
@@ -263,7 +266,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 )}
                 <EditFieldModal
                     visible={editField === 'phrase'}
-                    title="Phrase bearbeiten"
+                    title={t('vision.actions.edit_phrase')}
                     type="text"
                     value={vision?.phrase}
                     onSave={handleSavePhrase}

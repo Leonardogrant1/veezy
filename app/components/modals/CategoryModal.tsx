@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts } from '@/constants/theme';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
@@ -11,15 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type CategoryFilter = 'all' | VisionCategory;
 
-export const CATEGORIES: { key: CategoryFilter; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'wealth', label: 'Wealth' },
-    { key: 'body', label: 'Body' },
-    { key: 'lifestyle', label: 'Lifestyle' },
-    { key: 'relationships', label: 'Relationships' },
-    { key: 'mindset', label: 'Mindset' },
-    { key: 'purpose', label: 'Purpose' },
-];
+export const CATEGORY_KEYS: CategoryFilter[] = ['all', 'wealth', 'body', 'lifestyle', 'relationships', 'mindset', 'purpose'];
 
 interface CategoryModalProps {
     visible: boolean;
@@ -29,7 +22,10 @@ interface CategoryModalProps {
 }
 
 export function CategoryModal({ visible, onClose, selectedCategory, onSelectCategory }: CategoryModalProps) {
+    const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+
+    const CATEGORIES = CATEGORY_KEYS.map((key) => ({ key, label: t(`category.${key}`) }));
     const overlayOpacity = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(300)).current;
     const { hasEntitlement } = useRevenueCat();
@@ -64,7 +60,7 @@ export function CategoryModal({ visible, onClose, selectedCategory, onSelectCate
                     <Pressable onPress={(e) => e.stopPropagation()}>
                         <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
                             <View style={styles.handle} />
-                            <Text style={styles.title}>Kategorie</Text>
+                            <Text style={styles.title}>{t('category_modal.title')}</Text>
                             {CATEGORIES.map((cat) => {
                                 const locked = !isPremium && cat.key !== 'all';
                                 return (

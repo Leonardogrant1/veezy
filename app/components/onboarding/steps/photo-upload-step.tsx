@@ -1,6 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import body from '@/assets/face-photo-icons/body.svg';
 import face_front from '@/assets/face-photo-icons/face_front.svg';
@@ -16,17 +17,18 @@ import { pickFromCamera, pickFromGallery } from '@/utils/image-picker';
 
 type Slot = keyof SelfReferenceImages;
 
-const SLOTS: { key: Slot; label: string; hint: string; wide?: boolean; icon: any }[] = [
-    { key: 'face_front', label: 'Frontal', hint: 'Gerade in die Kamera', icon: face_front },
-    { key: 'face_smile', label: 'Lächelnd', hint: 'Natürliches Lächeln', icon: face_smile },
-    { key: 'face_left', label: 'Links', hint: 'Kopf leicht links', icon: face_left },
-    { key: 'face_right', label: 'Rechts', hint: 'Kopf leicht rechts', icon: face_right },
-    { key: 'body', label: 'Körper', hint: 'Ganzkörper sichtbar', wide: true, icon: body },
-];
-
 export function PhotoUploadStep() {
+    const { t } = useTranslation();
     const { setCanContinue } = useOnboardingControl();
     const updateSelfReferenceImages = useUserDataStore((s) => s.updateSelfReferenceImages);
+
+    const SLOTS: { key: Slot; label: string; hint: string; wide?: boolean; icon: any }[] = [
+        { key: 'face_front', label: t('onboarding.photo_upload.slot_front'), hint: t('onboarding.photo_upload.slot_front_hint'), icon: face_front },
+        { key: 'face_smile', label: t('onboarding.photo_upload.slot_smile'), hint: t('onboarding.photo_upload.slot_smile_hint'), icon: face_smile },
+        { key: 'face_left', label: t('onboarding.photo_upload.slot_left'), hint: t('onboarding.photo_upload.slot_left_hint'), icon: face_left },
+        { key: 'face_right', label: t('onboarding.photo_upload.slot_right'), hint: t('onboarding.photo_upload.slot_right_hint'), icon: face_right },
+        { key: 'body', label: t('onboarding.photo_upload.slot_body'), hint: t('onboarding.photo_upload.slot_body_hint'), wide: true, icon: body },
+    ];
 
     const [uris, setUris] = useState<SelfReferenceImages>({
         face_front: null, face_smile: null, face_left: null, face_right: null, body: null,
@@ -66,10 +68,8 @@ export function PhotoUploadStep() {
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
-                <Text style={styles.title}>Deine Fotos</Text>
-                <Text style={styles.subtitle}>
-                    Diese Bilder werden genutzt, um dich in deiner Vision darzustellen. Lade Fotos aus verschiedenen Perspektiven hoch.
-                </Text>
+                <Text style={styles.title}>{t('onboarding.photo_upload.title')}</Text>
+                <Text style={styles.subtitle}>{t('onboarding.photo_upload.subtitle')}</Text>
 
                 <View style={styles.slots}>
                     {SLOTS.map((slot) => {

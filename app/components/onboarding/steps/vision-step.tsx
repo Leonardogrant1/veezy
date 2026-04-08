@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react';
 import { Animated, Easing, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
 export function VisionStep() {
+    const { t } = useTranslation();
     const { setCanContinue, setVisionDescription } = useOnboardingControl();
     const updateSettings = useUserDataStore((s) => s.updateSettings);
     const name = useUserDataStore((s) => s.name);
@@ -42,11 +44,11 @@ export function VisionStep() {
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>
             <View style={styles.inner} pointerEvents="box-none">
                 <Animated.View style={[styles.content, { transform: [{ translateY: focusOffset }] }]}>
-                    <Text style={styles.headline}>{name ? `${name}, was ist deine Vision?` : 'Was ist deine Vision?'}</Text>
-                    <Text style={styles.subtext}>Beschreibe kurz, wo du in ein paar Jahren stehst.</Text>
+                    <Text style={styles.headline}>{name ? t('onboarding.vision.headline_with_name', { name }) : t('onboarding.vision.headline')}</Text>
+                    <Text style={styles.subtext}>{t('onboarding.vision.subtitle')}</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder="Ein Haus am Meer, finanzielle Freiheit…"
+                        placeholder={t('onboarding.vision.placeholder')}
                         placeholderTextColor="rgba(255,255,255,0.3)"
                         value={text}
                         onChangeText={handleChange}

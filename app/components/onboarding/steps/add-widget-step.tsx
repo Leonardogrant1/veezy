@@ -1,6 +1,7 @@
 import LottieView from 'lottie-react-native';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts } from '@/constants/theme';
 
@@ -23,6 +24,7 @@ function useFadeSlide(delay: number) {
 }
 
 export function AddWidgetStep() {
+    const { t } = useTranslation();
     const titleAnim = useFadeSlide(200);
     const subtitleAnim = useFadeSlide(450);
     const lottieAnim = useFadeSlide(700);
@@ -31,11 +33,11 @@ export function AddWidgetStep() {
         <View style={styles.container}>
             <View style={styles.content}>
                 <Animated.Text style={[styles.title, titleAnim]}>
-                    Deine Visionen. Jeden Tag vor Augen.
+                    {t('onboarding.widget.title')}
                 </Animated.Text>
 
                 <Animated.Text style={[styles.subtitle, subtitleAnim]}>
-                    Füge veezy zu deinem Home-Screen hinzu, um deine Ziele immer im Blick zu haben.
+                    {t('onboarding.widget.subtitle')}
                 </Animated.Text>
 
                 <Animated.View style={[styles.lottieWrapper, lottieAnim]}>

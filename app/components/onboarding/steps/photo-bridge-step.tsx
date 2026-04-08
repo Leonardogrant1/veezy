@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts } from '@/constants/theme';
 
 export function PhotoBridgeStep() {
+    const { t } = useTranslation();
     const line1Opacity = useRef(new Animated.Value(0)).current;
     const line1Y = useRef(new Animated.Value(14)).current;
     const line2Opacity = useRef(new Animated.Value(0)).current;
@@ -33,13 +35,13 @@ export function PhotoBridgeStep() {
         <View style={styles.container}>
             <View style={styles.inner}>
                 <Animated.Text style={[styles.prelude, { opacity: line1Opacity, transform: [{ translateY: line1Y }] }]}>
-                    Stell dir vor…
+                    {t('onboarding.photo_bridge.teaser')}
                 </Animated.Text>
                 <Animated.Text style={[styles.headline, { opacity: line2Opacity, transform: [{ translateY: line2Y }] }]}>
-                    du siehst dich selbst{'\n'}genau dort.
+                    {t('onboarding.photo_bridge.headline')}
                 </Animated.Text>
                 <Animated.Text style={[styles.sub, { opacity: line3Opacity, transform: [{ translateY: line3Y }] }]}>
-                    Nicht irgendein Bild.{'\n'}Sondern dich.
+                    {t('onboarding.photo_bridge.subtext')}
                 </Animated.Text>
             </View>
         </View>
