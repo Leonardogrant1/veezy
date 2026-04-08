@@ -14,5 +14,6 @@ export type Vision = {
     imagePath: string
     createdAt: string
     imageVersion: number
-    affirmations?: string[]
+    affirmationsAffirmation?: string[]
+    affirmationsFuel?: string[]
 }

@@ -5,7 +5,7 @@ import { RCCustomer } from '@/lib/revenuecat/types.js';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { describePersonFromImages } from '@/prompts/describe-person.js';
 import { generateSceneDescription } from '@/prompts/generate-scene.js';
-import { generatePhrase } from '@/prompts/phrase.js';
+import { generateBothPhrases } from '@/prompts/phrase.js';
 import { getSelfReferenceKey } from '@/utils/get-self-reference-key.js';
 import { logger } from '@/utils/logger.js';
 import { Hono } from 'hono';
@@ -42,8 +42,8 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const cachedDescBuffer = await R2Storage.downloadBuffer(getSelfReferenceKey(userId, 'description'));
         const cachedPersonDesc = cachedDescBuffer?.toString('utf8') ?? null;
 
-        // Phrase runs in parallel with the image pipeline
-        const phrasePromise = generatePhrase(visionDescription, motivationStyle === 'fuel' ? 'fuel' : 'affirmation');
+        // Both phrase styles run in parallel with the image pipeline
+        const phrasePromise = generateBothPhrases(visionDescription, motivationStyle === 'fuel' ? 'fuel' : 'affirmation');
 
         const imagePipeline = (async () => {
             let personDesc = cachedPersonDesc;
@@ -68,7 +68,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
 
         deductGeneration(userId, count); // fire-and-forget
 
-        return c.json({ phrase: phraseResult.phrase, category: phraseResult.category, affirmations: phraseResult.affirmations, signedUrl, imageKey, visionId });
+        return c.json({ phrase: phraseResult.phrase, category: phraseResult.category, affirmationsAffirmation: phraseResult.affirmationsAffirmation, affirmationsFuel: phraseResult.affirmationsFuel, signedUrl, imageKey, visionId });
     } catch (error: any) {
         logger.error({ error: error.message }, 'Vision generate failed');
         return c.json({ error: 'Vision generation failed' }, 500);

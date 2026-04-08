@@ -6,6 +6,8 @@ type OnboardingControlContextValue = {
     setCanContinue: (value: boolean) => void;
     nextStep: () => void;
     finishOnboarding: () => void;
+    visionDescription: string;
+    setVisionDescription: (value: string) => void;
 };
 
 export const OnboardingControlContext = createContext<OnboardingControlContextValue | null>(null);

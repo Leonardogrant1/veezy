@@ -18,10 +18,11 @@ import { pickFromCamera, pickFromGallery } from '@/utils/image-picker';
 type Slot = keyof SelfReferenceImages;
 
 const SLOTS: { key: Slot; label: string; hint: string }[] = [
-    { key: 'face_front', label: 'Frontal', hint: 'Gerade in die Kamera' },
-    { key: 'face_left', label: 'Links', hint: 'Kopf leicht links' },
-    { key: 'face_right', label: 'Rechts', hint: 'Kopf leicht rechts' },
-    { key: 'body', label: 'Körper', hint: 'Ganzkörper sichtbar' },
+    { key: 'face_front',  label: 'Frontal',   hint: 'Gerade in die Kamera' },
+    { key: 'face_smile',  label: 'Lächelnd',  hint: 'Natürliches Lächeln' },
+    { key: 'face_left',   label: 'Links',      hint: 'Kopf leicht links' },
+    { key: 'face_right',  label: 'Rechts',     hint: 'Kopf leicht rechts' },
+    { key: 'body',        label: 'Körper',     hint: 'Ganzkörper sichtbar' },
 ];
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'http://localhost:8080';
@@ -35,6 +36,7 @@ export default function EditSelfReferenceScreen() {
 
     const [uris, setUris] = useState<SelfReferenceImages>({
         face_front: null,
+        face_smile: null,
         face_left: null,
         face_right: null,
         body: null,
@@ -46,18 +48,11 @@ export default function EditSelfReferenceScreen() {
     useEffect(() => {
         const resolve = async () => {
             setUris({
-                face_front: storedImages.face_front
-                    ? await MediaHandler.resolveUri(storedImages.face_front)
-                    : null,
-                face_left: storedImages.face_left
-                    ? await MediaHandler.resolveUri(storedImages.face_left)
-                    : null,
-                face_right: storedImages.face_right
-                    ? await MediaHandler.resolveUri(storedImages.face_right)
-                    : null,
-                body: storedImages.body
-                    ? await MediaHandler.resolveUri(storedImages.body)
-                    : null,
+                face_front:  storedImages.face_front  ? await MediaHandler.resolveUri(storedImages.face_front)  : null,
+                face_smile:  storedImages.face_smile  ? await MediaHandler.resolveUri(storedImages.face_smile)  : null,
+                face_left:   storedImages.face_left   ? await MediaHandler.resolveUri(storedImages.face_left)   : null,
+                face_right:  storedImages.face_right  ? await MediaHandler.resolveUri(storedImages.face_right)  : null,
+                body:        storedImages.body        ? await MediaHandler.resolveUri(storedImages.body)        : null,
             });
         };
         resolve().catch(() => { });

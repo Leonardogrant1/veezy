@@ -7,7 +7,7 @@ import { getSelfReferenceKey } from '../utils/get-self-reference-key.js';
 
 const selfReferenceRoute = new Hono();
 
-const VALID_TYPES = ['face_front', 'face_left', 'face_right', 'body'] as const;
+const VALID_TYPES = ['face_front', 'face_smile', 'face_left', 'face_right', 'body'] as const;
 type ValidType = typeof VALID_TYPES[number];
 
 selfReferenceRoute.post('/presign', revenuecatAuth, async (c) => {
@@ -77,9 +77,9 @@ selfReferenceRoute.post('/composite', revenuecatAuth, async (c) => {
     const compositeKey = getSelfReferenceKey(userId, 'composite');
     await R2Storage.uploadBuffer(compositeKey, composite);
 
-    // Regenerate cached person description in the background (fire-and-forget)
+    // Regenerate cached person description (awaited so frontend can proceed after description is ready)
     const compositeBase64 = composite.toString('base64');
-    describePersonFromImages([compositeBase64])
+    await describePersonFromImages([compositeBase64])
         .then((description) =>
             R2Storage.uploadBuffer(
                 getSelfReferenceKey(userId, 'description'),
@@ -87,7 +87,7 @@ selfReferenceRoute.post('/composite', revenuecatAuth, async (c) => {
                 'text/plain',
             )
         )
-        .catch(() => {}); // non-critical, vision-route has fallback
+        .catch(() => {}); // non-critical fallback
 
     return c.json({ ok: true });
 });

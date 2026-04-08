@@ -1,8 +1,9 @@
 export type SelfReferenceImages = {
-    face_front: string | null
-    face_left:  string | null
-    face_right: string | null
-    body:       string | null
+    face_front:  string | null
+    face_left:   string | null
+    face_right:  string | null
+    face_smile:  string | null
+    body:        string | null
 }
 
 export type MotivationStyle = 'affirmation' | 'fuel'
@@ -26,6 +27,7 @@ export type UserData = {
     selfReferenceImages: SelfReferenceImages
     motivationStyle: MotivationStyle
     primaryCategory: PrimaryCategory | null
+    visionDescription: string
 }
 
 export function calculateAge(birthday: string): number {

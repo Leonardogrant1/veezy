@@ -26,6 +26,26 @@ import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/Re
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useVisionStore } from '@/stores/VisionStore';
+import { devLog } from '@/utils/dev-log';
+import * as Notifications from 'expo-notifications';
+
+
+
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    devLog('🔔 handleNotification triggered:', JSON.stringify(notification))
+    return {
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }
+  },
+  handleSuccess: (id) => devLog('✅ handleSuccess:', id),
+  handleError: (id, error) => devLog('❌ handleError:', id, error),
+})
+
+
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

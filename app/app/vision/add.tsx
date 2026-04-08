@@ -146,7 +146,7 @@ export default function AddVisionScreen() {
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
             const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle);
             const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
-            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmations: generated.affirmations });
+            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmationsAffirmation: generated.affirmationsAffirmation, affirmationsFuel: generated.affirmationsFuel });
             WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
             refreshGenerationCount().catch(() => { });
             setResult(generated);

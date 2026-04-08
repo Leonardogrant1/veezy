@@ -1,19 +1,28 @@
 import { useRef, useState } from 'react';
 import { Animated, Easing, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
-export function NameStep() {
-    const { setCanContinue } = useOnboardingControl();
+export function VisionStep() {
+    const { setCanContinue, setVisionDescription } = useOnboardingControl();
     const updateSettings = useUserDataStore((s) => s.updateSettings);
-    const [name, setName] = useState('');
+    const name = useUserDataStore((s) => s.name);
+    const [text, setText] = useState('');
 
     const focusOffset = useRef(new Animated.Value(0)).current;
 
+    function handleChange(value: string) {
+        setText(value);
+        setCanContinue(value.trim().length >= 5);
+        setVisionDescription(value);
+        updateSettings({ visionDescription: value });
+    }
+
     function handleFocus() {
         Animated.timing(focusOffset, {
-            toValue: -130,
+            toValue: -120,
             duration: 300,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
@@ -29,35 +38,26 @@ export function NameStep() {
         }).start();
     }
 
-    function handleChange(value: string) {
-        setName(value);
-        setCanContinue(value.trim().length >= 2);
-        if (value.trim().length >= 2) {
-            updateSettings({ name: value.trim() });
-        }
-    }
-
     return (
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>
             <View style={styles.inner} pointerEvents="box-none">
                 <Animated.View style={[styles.content, { transform: [{ translateY: focusOffset }] }]}>
-                    <Text style={styles.headline}>Wie sollen wir{'\n'}dich nennen?</Text>
+                    <Text style={styles.headline}>{name ? `${name}, was ist deine Vision?` : 'Was ist deine Vision?'}</Text>
+                    <Text style={styles.subtext}>Beschreibe kurz, wo du in ein paar Jahren stehst.</Text>
                     <TextInput
                         style={styles.input}
-                        value={name}
+                        placeholder="Ein Haus am Meer, finanzielle Freiheit…"
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                        value={text}
                         onChangeText={handleChange}
-                        placeholder="Dein Name"
-                        placeholderTextColor={Colors.textPlaceholder}
-                        autoCapitalize="words"
+                        multiline
                         autoFocus
+                        submitBehavior="blurAndSubmit"
                         returnKeyType="done"
-                        onSubmitEditing={Keyboard.dismiss}
+                        selectionColor={Colors.accent}
                         onFocus={handleFocus}
                         onBlur={handleBlur}
-                        selectionColor={Colors.accent}
-                        textAlign="center"
                     />
-                    <View style={styles.underline} />
                 </Animated.View>
             </View>
         </Pressable>
@@ -75,30 +75,30 @@ const styles = StyleSheet.create({
     },
     content: {
         width: '100%',
-        paddingHorizontal: 32,
+        paddingHorizontal: 28,
+        gap: 14,
         alignItems: 'center',
-        gap: 8,
     },
     headline: {
+        color: 'white',
         fontFamily: Fonts.serifBold,
-        fontSize: 38,
-        lineHeight: 50,
-        color: Colors.textHeadline,
+        fontSize: 26,
         textAlign: 'center',
-        marginBottom: 28,
+    },
+    subtext: {
+        color: 'rgba(255,255,255,0.45)',
+        fontFamily: Fonts.sans,
+        fontSize: 14,
+        lineHeight: 20,
+        textAlign: 'center',
     },
     input: {
-        fontFamily: Fonts.serifBold,
-        fontSize: 32,
-        color: Colors.textHeadline,
-        paddingVertical: 8,
         width: '100%',
+        color: 'white',
+        fontFamily: Fonts.sans,
+        fontSize: 17,
+        lineHeight: 26,
         textAlign: 'center',
-    },
-    underline: {
-        width: '100%',
-        height: 2,
-        backgroundColor: Colors.textHeadline,
-        borderRadius: 1,
+        minHeight: 80,
     },
 });

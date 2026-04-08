@@ -60,13 +60,20 @@ export type PhraseResult = {
     affirmations: string[];
 };
 
+export type BothPhrasesResult = {
+    phrase: string;
+    category: 'wealth' | 'body' | 'lifestyle' | 'relationships' | 'mindset' | 'purpose';
+    affirmationsAffirmation: string[];
+    affirmationsFuel: string[];
+};
+
 const PhraseResultSchema = z.object({
     phrase: z.string(),
     category: z.enum(['wealth', 'body', 'lifestyle', 'relationships', 'mindset', 'purpose']),
     affirmations: z.array(z.string()).length(5),
 });
 
-export async function generatePhrase(description: string, motivationStyle: 'affirmation' | 'fuel' = 'affirmation'): Promise<PhraseResult> {
+async function generatePhrase(description: string, motivationStyle: 'affirmation' | 'fuel' = 'affirmation'): Promise<PhraseResult> {
     const systemPrompt = motivationStyle === 'fuel' ? SYSTEM_PROMPT_FUEL : SYSTEM_PROMPT_AFFIRMATION;
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-5.1',
@@ -85,4 +92,19 @@ export async function generatePhrase(description: string, motivationStyle: 'affi
     const parsed = JSON.parse(raw) as PhraseResult;
     if (!parsed.phrase || !parsed.category || !Array.isArray(parsed.affirmations)) throw new Error('Invalid phrase response structure');
     return parsed;
+}
+
+export async function generateBothPhrases(description: string, preferredStyle: 'affirmation' | 'fuel' = 'affirmation'): Promise<BothPhrasesResult> {
+    const [affirmationResult, fuelResult] = await Promise.all([
+        generatePhrase(description, 'affirmation'),
+        generatePhrase(description, 'fuel'),
+    ]);
+
+    const primary = preferredStyle === 'fuel' ? fuelResult : affirmationResult;
+    return {
+        phrase: primary.phrase,
+        category: primary.category,
+        affirmationsAffirmation: affirmationResult.affirmations,
+        affirmationsFuel: fuelResult.affirmations,
+    };
 }

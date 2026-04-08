@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Gold } from '@/constants/theme';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
+import { useUserDataStore } from '@/stores/UserDataStore';
+import { router } from 'expo-router';
+import { OnboardingControlContext } from './onboarding-control-context';
+import { OnboardingStep } from './types';
+
+type Props = {
+    steps: OnboardingStep[];
+};
+
+function bgForStep(step: OnboardingStep) {
+    return step.theme === 'light' ? '#f5f0e6' : '#0d0d0d';
+}
 
 function useFloatAnim(config: { distance: number; duration: number; delay?: number }) {
     const anim = useRef(new Animated.Value(0)).current;
@@ -19,28 +33,15 @@ function useFloatAnim(config: { distance: number; duration: number; delay?: numb
     return anim;
 }
 
-import { trackerManager } from '@/lib/tracking/tracker-manager';
-import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
-import { useUserDataStore } from '@/stores/UserDataStore';
-import { router } from 'expo-router';
-import { OnboardingControlContext } from './onboarding-control-context';
-import { OnboardingStep } from './types';
-
-type Props = {
-    steps: OnboardingStep[];
-};
-
-function bgForStep(step: OnboardingStep) {
-    return step.theme === 'light' ? '#f5f0e6' : '#0d0d0d';
-}
-
 export function OnboardingProgressWrapper({ steps }: Props) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [canContinue, setCanContinue] = useState(steps[0].initialCanContinue ?? true);
     const [isLoading, setIsLoading] = useState(false);
-    const [containerBg, setContainerBg] = useState(() => bgForStep(steps[0]));
+    // prevBg = background of the outgoing step, stays visible underneath during fade
+    const [prevBg, setPrevBg] = useState(() => bgForStep(steps[0]));
+    const [visionDescription, setVisionDescription] = useState('');
     const inFlightRef = useRef(false);
-    const { openWithPlacement } = useSuperwallFunctions()
+    const { openWithPlacement } = useSuperwallFunctions();
 
     const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
     const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
@@ -53,28 +54,19 @@ export function OnboardingProgressWrapper({ steps }: Props) {
 
     const step = steps[currentIndex];
     const StepComponent = step.component;
-
+    const isLight = step.theme === 'light';
     const showProgress = step.showProgressIndicator ?? true;
     const showContinue = step.showContinueButton ?? true;
     const continueText = step.continueButtonText ?? 'Continue';
-    const isLight = step.theme === 'light';
 
-    function animateIn(bgColor: string) {
+    function animateIn() {
         opacity.setValue(0);
         translateX.setValue(20);
         Animated.parallel([
-            Animated.timing(opacity, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-            Animated.timing(translateX, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }),
+            Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.timing(translateX, { toValue: 0, duration: 300, useNativeDriver: true }),
         ]).start(() => {
-            setContainerBg(bgColor);
+            setPrevBg(bgForStep(step));
         });
     }
 
@@ -83,7 +75,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
         useUserDataStore.getState().completeOnboarding();
         await openWithPlacement('onboarding_completed', () => {
             router.replace('/home');
-        })
+        });
     }
 
     function advance() {
@@ -92,13 +84,12 @@ export function OnboardingProgressWrapper({ steps }: Props) {
             setCurrentIndex(nextIndex);
             setCanContinue(steps[nextIndex].initialCanContinue ?? true);
         } else {
-            finishOnboarding()
+            finishOnboarding();
         }
     }
 
     function nextStep() {
         if (inFlightRef.current) return;
-
         if (step.preContinue) {
             inFlightRef.current = true;
             setIsLoading(true);
@@ -113,58 +104,63 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     }
 
     useEffect(() => {
-        animateIn(bgForStep(step));
+        animateIn();
         trackerManager.track('onboarding_step', { step: step.component.name });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex]);
 
     return (
-        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, nextStep }}>
-            <View style={[styles.container, { backgroundColor: containerBg }]}>
-                {isLight && (
-                    <>
-                        <Animated.View style={[styles.blob, styles.blobTop, { transform: [{ translateY: blob1Y }, { translateX: blob1X }] }]} />
-                        <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
-                        <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
-                    </>
-                )}
-                {showProgress && (
-                    <View style={styles.progressBar}>
-                        {steps.map((_, i) => (
-                            <View
-                                key={i}
+        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, nextStep, visionDescription, setVisionDescription }}>
+            {/* Outer view holds the PREVIOUS step's bg — visible during crossfade */}
+            <View style={[styles.container, { backgroundColor: prevBg }]}>
+                {/* Animated view brings the NEW step's bg + all content */}
+                <Animated.View style={[styles.screen, { backgroundColor: bgForStep(step), opacity, transform: [{ translateX }] }]}>
+                    {isLight && (
+                        <>
+                            <Animated.View style={[styles.blob, styles.blobTop, { transform: [{ translateY: blob1Y }, { translateX: blob1X }] }]} />
+                            <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
+                            <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
+                        </>
+                    )}
+
+                    {showProgress && (
+                        <View style={styles.progressBar}>
+                            {steps.map((_, i) => (
+                                <View
+                                    key={i}
+                                    style={[
+                                        styles.progressSegment,
+                                        i <= currentIndex && (isLight ? styles.progressSegmentActiveLight : styles.progressSegmentActive),
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    )}
+
+                    <View style={styles.stepContainer}>
+                        <StepComponent />
+                    </View>
+
+                    {showContinue && (
+                        <View style={styles.footer}>
+                            <TouchableOpacity
                                 style={[
-                                    styles.progressSegment,
-                                    i <= currentIndex && styles.progressSegmentActive,
+                                    styles.continueButton,
+                                    isLight && styles.continueButtonLight,
+                                    (!canContinue || isLoading) && styles.continueButtonDisabled,
                                 ]}
-                            />
-                        ))}
-                    </View>
-                )}
-
-                <Animated.View style={[styles.stepContainer, { opacity, transform: [{ translateX }] }]}>
-                    <StepComponent />
+                                onPress={nextStep}
+                                disabled={!canContinue || isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color={isLight ? 'white' : '#0d0d0d'} />
+                                ) : (
+                                    <Text style={[styles.continueButtonText, isLight && styles.continueButtonTextLight]}>{continueText}</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </Animated.View>
-
-                {showContinue && (
-                    <View style={styles.footer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.continueButton,
-                                isLight && styles.continueButtonLight,
-                                (!canContinue || isLoading) && styles.continueButtonDisabled,
-                            ]}
-                            onPress={nextStep}
-                            disabled={!canContinue || isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color={isLight ? 'white' : '#0d0d0d'} />
-                            ) : (
-                                <Text style={[styles.continueButtonText, isLight && styles.continueButtonTextLight]}>{continueText}</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                )}
             </View>
         </OnboardingControlContext.Provider>
     );
@@ -173,7 +169,9 @@ export function OnboardingProgressWrapper({ steps }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0d0d0d',
+    },
+    screen: {
+        flex: 1,
     },
     blob: {
         position: 'absolute',
@@ -217,6 +215,9 @@ const styles = StyleSheet.create({
     },
     progressSegmentActive: {
         backgroundColor: 'white',
+    },
+    progressSegmentActiveLight: {
+        backgroundColor: '#1a1a1a',
     },
     stepContainer: {
         flex: 1,

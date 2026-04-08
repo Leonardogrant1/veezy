@@ -14,7 +14,7 @@ const mmkvStorage = createJSONStorage(() => ({
 type UserDataStore = UserData & {
     completeOnboarding: () => void;
     completeTutorial: () => void;
-    updateSettings: (patch: Partial<Pick<UserData, 'name' | 'birthday' | 'gender' | 'notifications' | 'notificationsPerDay' | 'notificationStartHour' | 'notificationEndHour' | 'haptics' | 'motivationStyle' | 'primaryCategory'>>) => void;
+    updateSettings: (patch: Partial<Pick<UserData, 'name' | 'birthday' | 'gender' | 'notifications' | 'notificationsPerDay' | 'notificationStartHour' | 'notificationEndHour' | 'haptics' | 'motivationStyle' | 'primaryCategory' | 'visionDescription'>>) => void;
     updateSelfReferenceImages: (patch: Partial<SelfReferenceImages>) => void;
 };
 
@@ -35,9 +35,10 @@ export const useUserDataStore = create<UserDataStore>()(
             haptics: true,
             motivationStyle: 'affirmation' as const,
             primaryCategory: null,
+            visionDescription: '',
             imagesUsed: 0,
             isPremium: false,
-            selfReferenceImages: { face_front: null, face_left: null, face_right: null, body: null },
+            selfReferenceImages: { face_front: null, face_left: null, face_right: null, face_smile: null, body: null },
             completeOnboarding: () => set({ hasOnboarded: true }),
             completeTutorial: () => set({ hasSeenTutorial: true }),
             updateSettings: (patch) => set((s) => ({ ...s, ...patch })),

@@ -20,6 +20,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const notificationsPerDay = useUserDataStore((s) => s.notificationsPerDay);
     const notificationStartHour = useUserDataStore((s) => s.notificationStartHour);
     const notificationEndHour = useUserDataStore((s) => s.notificationEndHour);
+    const motivationStyle = useUserDataStore((s) => s.motivationStyle);
     const isPremium = useUserDataStore((s) => s.isPremium);
     const visions = useVisionStore((s) => s.visions);
     const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
@@ -46,7 +47,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
 
         const sourceVisions = isPremium ? visions : visions.slice(0, 3);
-        const visionAffirmations = sourceVisions.flatMap((v) => v.affirmations ?? []);
+        const visionAffirmations = sourceVisions.flatMap((v) =>
+            motivationStyle === 'fuel' ? (v.affirmationsFuel ?? []) : (v.affirmationsAffirmation ?? [])
+        );
 
         checkAndReschedule({
             notificationsEnabled: true,
@@ -57,7 +60,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             selectedCategories: ['all'],
             visionAffirmations,
         });
-    }, [notifications, isPremium, visions, notificationsPerDay, notificationStartHour, notificationEndHour]);
+    }, [notifications, isPremium, visions, notificationsPerDay, notificationStartHour, notificationEndHour, motivationStyle]);
 
     const registerPushNotificationsAndSaveToken = async () => {
         const { status, pushTokenString } = await registerPushNotifications();

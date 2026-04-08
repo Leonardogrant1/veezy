@@ -34,7 +34,7 @@ export async function generateImageWithGeminiVertex(
 ): Promise<string> {
     const client = getClient();
 
-    const prompt = `Create a photorealistic image of the following scene.
+    const prompt = `Create a single photorealistic photograph of the following scene. One unified image — no collage, no grid, no split-screen, no multiple panels, no before/after.
 
 PERSON (use the reference image to accurately depict this person):
 ${personDescription}
@@ -44,7 +44,7 @@ ${sceneDescription}
 
 STYLE: ${CAMERA_SETTINGS}
 
-Important: The person in the image must closely match the reference photo provided.`;
+Critical: One scene, one frame. The person must closely match the reference photo provided.`;
 
     const contents = [
         { text: prompt },
