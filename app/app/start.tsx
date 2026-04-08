@@ -302,4 +302,19 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         letterSpacing: 0.3,
     },
+    debugButton: {
+        position: 'absolute',
+        top: 60,
+        left: 16,
+        backgroundColor: 'rgba(255,59,48,0.85)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        zIndex: 10,
+    },
+    debugButtonText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
+    },
 });
