@@ -113,3 +113,25 @@ export async function checkAndReschedule(settings: NotificationSettings): Promis
         await scheduleNotifications(settings);
     }
 }
+
+export async function scheduleTrialEndReminder(
+    trialEndDateISO: string,
+    language: 'de' | 'en' = 'en',
+): Promise<void> {
+    const trialEndDate = new Date(trialEndDateISO);
+    const reminderDate = new Date(trialEndDate.getTime() - 24 * 60 * 60 * 1000);
+
+    if (reminderDate <= new Date()) return; // bereits vergangen, überspringen
+
+    const content = language === 'de'
+        ? { title: '⏰ veezy', body: 'Dein kostenloser Testzeitraum endet morgen.' }
+        : { title: '⏰ veezy', body: 'Your free trial ends tomorrow.' };
+
+    await Notifications.scheduleNotificationAsync({
+        content,
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: reminderDate,
+        },
+    });
+}

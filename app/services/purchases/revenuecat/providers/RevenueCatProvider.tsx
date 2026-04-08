@@ -1,5 +1,6 @@
 import { MediaHandler } from '@/lib/media-handler';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { scheduleTrialEndReminder } from '@/services/notifications';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from "@/stores/UserDataStore";
@@ -97,10 +98,30 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
     };
 
     const refreshUserInfo = async () => {
+        // Snapshot vor dem Refresh
+        const wasOnTrial = customerInfo?.entitlements.active[PREMIUM_IDENTIFIER]?.periodType === 'TRIAL';
+
         const info = await Purchases.getCustomerInfo();
         setCustomerInfo(info);
         useUserDataStore.setState({ isPremium: info.entitlements.active[PREMIUM_IDENTIFIER] !== undefined });
         await fetchGenerationCount();
+
+        // Neuer Trial erkannt (vorher kein Trial, jetzt Trial aktiv)
+        const isNowOnTrial = info.entitlements.active[PREMIUM_IDENTIFIER]?.periodType === 'TRIAL';
+        if (!wasOnTrial && isNowOnTrial) {
+            trackerManager.track('trial_started');
+
+            const entitlement = info.entitlements.active[PREMIUM_IDENTIFIER];
+            const trialEndISO = entitlement?.expirationDate
+                ?? (entitlement?.latestPurchaseDate
+                    ? new Date(new Date(entitlement.latestPurchaseDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString()
+                    : null);
+
+            if (trialEndISO) {
+                const language = useUserDataStore.getState().language;
+                scheduleTrialEndReminder(trialEndISO, language).catch(() => { });
+            }
+        }
     };
 
     const presentPaywall = async () => {
