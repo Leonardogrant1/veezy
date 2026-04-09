@@ -4,9 +4,11 @@ import { Vision } from '@/types/vision';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 export function VisionSlide({ item, width, height, locked }: { item: Vision; width: number; height: number; locked?: boolean }) {
+    const { t } = useTranslation();
     const [uri, setUri] = useState<string | null>(null);
 
     useEffect(() => {
@@ -26,7 +28,7 @@ export function VisionSlide({ item, width, height, locked }: { item: Vision; wid
                         <View style={styles.lockBadge}>
                             <MaterialCommunityIcons name="crown" size={28} color={Colors.accent} />
                         </View>
-                        <Text style={styles.lockText}>Premium freischalten</Text>
+                        <Text style={styles.lockText}>{t('vision.slide.premium_unlock')}</Text>
                     </View>
                 </BlurView>
             )}

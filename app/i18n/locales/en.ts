@@ -128,6 +128,9 @@ const en = {
   'home.empty_subtitle_pre': 'Tap the',
   'home.empty_subtitle_post': 'to create your first vision',
 
+  // Vision slide
+  'vision.slide.premium_unlock': 'Unlock Premium',
+
   // Vision add screen
   'vision.add.headline': 'Describe your vision',
   'vision.add.placeholder': 'A house by the sea, freedom, success…',

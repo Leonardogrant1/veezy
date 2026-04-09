@@ -9,7 +9,7 @@ import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { VisionCategory } from '@/types/vision';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
-import { generateVision, regenerateVision } from '@/utils/generateVision';
+import { generateVision, regenerateVision, type GenerateVisionResult } from '@/utils/generateVision';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -35,14 +35,7 @@ import { useTranslation } from 'react-i18next';
 
 type ScreenState = 'input' | 'loading' | 'preview';
 
-type GeneratedResult = {
-    phrase: string;
-    imageUrl: string;
-    imageKey: string;
-    visionId: string;
-    category: string;
-    affirmations: string[];
-};
+type GeneratedResult = GenerateVisionResult;
 
 export default function AddVisionScreen() {
     const { t } = useTranslation();

@@ -128,6 +128,9 @@ const de: Record<string, string> = {
   'home.empty_subtitle_pre': 'Tippe auf das',
   'home.empty_subtitle_post': 'um deine erste Vision zu erstellen',
 
+  // Vision slide
+  'vision.slide.premium_unlock': 'Premium freischalten',
+
   // Vision add screen
   'vision.add.headline': 'Beschreibe deine Vision',
   'vision.add.placeholder': 'Ein Haus am Meer, Freiheit, Erfolg…',
