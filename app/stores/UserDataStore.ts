@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { detectLanguage } from '@/i18n';
 import { storage, StorageKeys } from '@/lib/storage';
 import { SelfReferenceImages, UserData } from '@/types/user-data';
 
@@ -36,7 +37,7 @@ export const useUserDataStore = create<UserDataStore>()(
             motivationStyle: 'affirmation' as const,
             primaryCategory: null,
             visionDescription: '',
-            language: 'en' as const,
+            language: detectLanguage(),
             imagesUsed: 0,
             isPremium: false,
             selfReferenceImages: { face_front: null, face_left: null, face_right: null, face_smile: null, body: null },

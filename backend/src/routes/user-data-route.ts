@@ -27,6 +27,33 @@ userDataRoute.get('/backup', revenuecatAuth, async (c) => {
 userDataRoute.put('/backup', revenuecatAuth, async (c) => {
     const userId = c.var.rcUserId;
     const body = await c.req.text();
+
+    // Validate incoming data is non-empty JSON
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(body);
+    } catch {
+        logger.warn({ userId }, 'Backup rejected: invalid JSON');
+        return c.json({ error: 'Invalid JSON' }, 400);
+    }
+
+    const isEmpty =
+        parsed === null ||
+        parsed === undefined ||
+        (typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed as object).length === 0) ||
+        (Array.isArray(parsed) && (parsed as unknown[]).length === 0);
+
+    if (isEmpty) {
+        // Check if existing backup exists in R2 — if so, refuse to overwrite with empty data
+        const existing = await R2Storage.downloadBuffer(`user-data/${userId}.json`);
+        if (existing && existing.length > 0) {
+            logger.warn({ userId }, 'Backup rejected: attempted to overwrite existing data with empty payload');
+            return c.json({ error: 'Cannot overwrite existing backup with empty data' }, 409);
+        }
+        logger.warn({ userId }, 'Backup rejected: empty payload, no existing data to protect');
+        return c.json({ error: 'Empty backup not allowed' }, 400);
+    }
+
     await R2Storage.uploadBuffer(
         `user-data/${userId}.json`,
         Buffer.from(body, 'utf8'),

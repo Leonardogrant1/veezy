@@ -3,7 +3,7 @@ import { logger } from '@/utils/logger.js';
 import { Hono } from 'hono';
 
 const GENERATIONS_BY_PRODUCT: Record<string, number> = {
-    veezy_premium_weekly: 10,
+    veezy_premium_weekly: 15,
     veezy_premium_yearly: 180,
 };
 

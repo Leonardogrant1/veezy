@@ -63,8 +63,19 @@ const AffirmationsSchema = z.object({
 
 type Category = BothPhrasesResult['category'];
 
+function buildPhrasePrompt(language: 'de' | 'en'): string {
+    const lang = language === 'de' ? 'Deutsch' : 'English';
+    return SYSTEM_PROMPT_PHRASE.replace(/Auf Deutsch/g, `In ${lang}`);
+}
+
+function buildAffirmationPrompt(style: 'affirmation' | 'fuel', language: 'de' | 'en'): string {
+    const base = style === 'fuel' ? SYSTEM_PROMPT_FUEL : SYSTEM_PROMPT_AFFIRMATION;
+    const lang = language === 'de' ? 'Deutsch' : 'English';
+    return base.replace(/Auf Deutsch/g, `In ${lang}`);
+}
+
 async function generatePhraseAndCategory(description: string, language: 'de' | 'en' = 'en'): Promise<{ phrase: string; category: Category }> {
-    const systemPrompt = SYSTEM_PROMPT_PHRASE + `\n\nRespond in ${language === 'de' ? 'German' : 'English'}.`;
+    const systemPrompt = buildPhrasePrompt(language);
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-5.1',
         messages: [
@@ -85,8 +96,7 @@ async function generatePhraseAndCategory(description: string, language: 'de' | '
 }
 
 async function generateAffirmationsForStyle(description: string, style: 'affirmation' | 'fuel', language: 'de' | 'en' = 'en'): Promise<string[]> {
-    const basePrompt = style === 'fuel' ? SYSTEM_PROMPT_FUEL : SYSTEM_PROMPT_AFFIRMATION;
-    const systemPrompt = basePrompt + `\n\nRespond in ${language === 'de' ? 'German' : 'English'}.`;
+    const systemPrompt = buildAffirmationPrompt(style, language);
     const response = await getOpenAIClient().chat.completions.create({
         model: 'gpt-5.1',
         messages: [

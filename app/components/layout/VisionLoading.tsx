@@ -1,30 +1,33 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { GlowPulse } from '@/components/layout/GlowPulse';
 import { Fonts, Neutrals } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
-const MESSAGES = [
-    'Deine Vision wird erschaffen...',
-    'KI analysiert deine Zukunft...',
-    'Das Universum arbeitet für dich...',
-    'Dein Bild nimmt Form an...',
-    'Visualisiere. Manifestiere. Lebe.',
-    'Deine Zukunft existiert bereits...',
-];
-
 const SIZE = 320;
+const MESSAGE_COUNT = 6;
 
 export default function VisionLoading() {
+    const { t } = useTranslation();
     const [messageIndex, setMessageIndex] = useState(0);
     const textOpacity = useRef(new Animated.Value(1)).current;
+
+    const messages = [
+        t('vision_loading.message_1'),
+        t('vision_loading.message_2'),
+        t('vision_loading.message_3'),
+        t('vision_loading.message_4'),
+        t('vision_loading.message_5'),
+        t('vision_loading.message_6'),
+    ];
 
     useEffect(() => {
         const interval = setInterval(() => {
             Animated.timing(textOpacity, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
-                setMessageIndex((prev) => (prev + 1) % MESSAGES.length);
+                setMessageIndex((prev) => (prev + 1) % MESSAGE_COUNT);
                 Animated.timing(textOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();
             });
         }, 2800);
@@ -39,10 +42,10 @@ export default function VisionLoading() {
             </View>
 
             <Animated.Text style={[styles.message, { opacity: textOpacity }]}>
-                {MESSAGES[messageIndex]}
+                {messages[messageIndex]}
             </Animated.Text>
 
-            <Text style={styles.subtext}>Das kann einige Sekunden dauern</Text>
+            <Text style={styles.subtext}>{t('vision_loading.subtext')}</Text>
         </View>
     );
 }

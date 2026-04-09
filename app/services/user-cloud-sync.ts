@@ -29,6 +29,8 @@ export class UserCloudSync {
 
         console.log(JSON.stringify(backup));
 
+        if (Object.keys(backup).length === 0) return;
+
         await fetch(`${BACKEND_URL}/user-data/backup`, {
             method: 'PUT',
             headers: {
@@ -74,6 +76,7 @@ export class UserCloudSync {
                 face_front: string | null;
                 face_left: string | null;
                 face_right: string | null;
+                face_smile: string | null;
                 body: string | null;
             };
         };
@@ -85,10 +88,10 @@ export class UserCloudSync {
         // the predictable R2 key pattern so images aren't orphaned after a
         // corrupted backup restore.
         const slots = ['face_front', 'face_left', 'face_right', 'body'] as const;
-        const restoredSelfRef = userData.selfReferenceImages ?? { face_front: null, face_left: null, face_right: null, body: null };
+        const restoredSelfRef = userData.selfReferenceImages ?? { face_front: null, face_left: null, face_right: null, face_smile: null, body: null };
         const allNull = slots.every((s) => restoredSelfRef[s] == null);
         const selfReferenceImages = allNull
-            ? { face_front: `self-reference/${userId}/face_front`, face_left: `self-reference/${userId}/face_left`, face_right: `self-reference/${userId}/face_right`, body: `self-reference/${userId}/body` }
+            ? { face_front: `self-reference/${userId}/face_front`, face_left: `self-reference/${userId}/face_left`, face_smile: `self-reference/${userId}/face_smile`, face_right: `self-reference/${userId}/face_right`, body: `self-reference/${userId}/body` }
             : restoredSelfRef;
 
         useUserDataStore.setState({

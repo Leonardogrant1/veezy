@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "veezy",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon-contain.png",
       "resizeMode": "contain"
@@ -28,6 +27,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Veezy needs access to your photos to upload reference images.",
         "NSCameraUsageDescription": "Veezy needs access to your camera to take a photo.",
+        "NSUserTrackingUsageDescription": "We use tracking to improve the app and show you relevant content.",
         "LSApplicationQueriesSchemes": [
           "instagram"
         ]
@@ -94,15 +94,6 @@
           "experimental": {
             "ios": {
               "appExtensions": [
-                {
-                  "bundleIdentifier": "studio.northbyte.veezy.widget",
-                  "targetName": "widget",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.studio.northbyte.veezy"
-                    ]
-                  }
-                },
                 {
                   "bundleIdentifier": "studio.northbyte.veezy.widget",
                   "targetName": "widget",

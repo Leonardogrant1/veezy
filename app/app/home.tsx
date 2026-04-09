@@ -58,12 +58,13 @@ export default function HomeScreen() {
 
     const activeVision: Vision | undefined = filtered[activeIndex];
 
-    const lockedIndex = isPremium ? -1 : filtered.length - 1;
     useEffect(() => {
-        if (activeIndex !== lockedIndex) return;
+        if (isPremium) return;
+        if (activeIndex !== 3) return;
+        if (filtered.length <= 3) return; // index 3 exists but is not the locked slot
         const timer = setTimeout(() => openWithPlacement('feed_end_reached'), 800);
         return () => clearTimeout(timer);
-    }, [activeIndex, lockedIndex]);
+    }, [activeIndex, isPremium, filtered.length]);
 
     const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
         const first = viewableItems[0];
@@ -214,7 +215,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.fabWrapper}>
-                    {generationCount !== null && (
+                    {generationCount !== null && generationCount <= 5 && (
                         <View style={styles.countBadge}>
                             <Text style={styles.countText}>{generationCount}</Text>
                         </View>

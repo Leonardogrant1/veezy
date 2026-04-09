@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
+import { useTranslation } from 'react-i18next';
 
 interface EmotionSlideConfig {
     label: string;
@@ -13,6 +14,7 @@ interface EmotionSlideConfig {
 export function makeEmotionSlide(config: EmotionSlideConfig): ComponentType {
     function EmotionSlide() {
         const { nextStep } = useOnboardingControl();
+        const { t } = useTranslation();
 
         const labelOpacity = useRef(new Animated.Value(0)).current;
         const labelY = useRef(new Animated.Value(12)).current;
@@ -63,7 +65,7 @@ export function makeEmotionSlide(config: EmotionSlideConfig): ComponentType {
                     )}
 
                     <Animated.Text style={[styles.hint, { opacity: hintOpacity, transform: [{ translateY: hintY }] }]}>
-                        Tippe um fortzufahren
+                        {t('tutorial.tap_to_continue')}
                     </Animated.Text>
                 </View>
             </TouchableOpacity>

@@ -74,7 +74,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
         trackerManager.track('onboarding_completed');
         useUserDataStore.getState().completeOnboarding();
         await openWithPlacement('onboarding_completed', () => {
-            router.replace('/home');
+            router.replace('/');
         });
     }
 

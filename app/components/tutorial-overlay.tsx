@@ -1,5 +1,6 @@
 import LottieView from 'lottie-react-native';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,38 +8,14 @@ import Logo from '@/assets/logo.svg';
 import { Colors, Fonts } from '@/constants/theme';
 import { useTutorial } from '@/contexts/TutorialContext';
 
-// Steps 1–6: tooltip card content
-const CARD_STEPS: Record<number, { title: string; body: string; cta: string }> = {
-    1: {
-        title: 'Deine Vision',
-        body: 'Sieh dein zukünftiges Leben — nicht als Idee, sondern als Realität. Deine Vision, jeden Tag vor deinen Augen.',
-        cta: 'Weiter',
-    },
-    2: {
-        title: 'Bearbeite deine Vision',
-        body: 'Tippe auf deine Vision, um sie zu bearbeiten, zu teilen oder eine neue Version deines Lebens zu erschaffen.',
-        cta: 'Weiter',
-    },
-    3: {
-        title: 'Wische durch deine Visionen',
-        body: 'Ein Swipe nach oben und du tauchst in dein nächstes Zukunftsbild ein — Schritt für Schritt näher an dein Ziel.',
-        cta: 'Weiter',
-    },
-    4: {
-        title: 'Bringe deine Vision zum Leben',
-        body: 'Beschreibe, was du willst — und sieh dich selbst genau dort. Deine Zukunft beginnt hier.',
-        cta: 'Weiter',
-    },
-    5: {
-        title: 'Wähle eine Kategorie',
-        body: 'Wähle, worauf du dich konzentrierst — Erfolg, Körper, Mindset. Dein Fokus bestimmt dein Leben.',
-        cta: 'Weiter',
-    },
-    6: {
-        title: 'Dein System',
-        body: 'Gestalte deine Umgebung so, dass sie dich jeden Tag daran erinnert, wer du werden willst.',
-        cta: 'Weiter',
-    },
+// Steps 1–6 translation key prefixes
+const CARD_STEP_KEYS: Record<number, string> = {
+    1: 'tutorial.step1',
+    2: 'tutorial.step2',
+    3: 'tutorial.step3',
+    4: 'tutorial.step4',
+    5: 'tutorial.step5',
+    6: 'tutorial.step6',
 };
 
 // Reusable stagger animation
@@ -67,6 +44,7 @@ function animStyle(anim: Animated.Value, offset = 20) {
 
 function WelcomeStep({ nextStep }: { nextStep: () => void }) {
     const { anims, play } = useStaggerAnims(4);
+    const { t } = useTranslation();
     useEffect(() => { play(); }, []);
 
     return (
@@ -75,14 +53,14 @@ function WelcomeStep({ nextStep }: { nextStep: () => void }) {
                 <Logo width={80} height={80} />
             </Animated.View>
             <Animated.Text style={[styles.fullTitle, animStyle(anims[1])]}>
-                Willkommen bei veezy
+                {t('tutorial.welcome.title')}
             </Animated.Text>
             <Animated.Text style={[styles.fullBody, animStyle(anims[2])]}>
-                Dein persönliches Vision Board. KI-generierte Bilder, die dich täglich an deine Ziele erinnern.
+                {t('tutorial.welcome.body')}
             </Animated.Text>
             <Animated.View style={animStyle(anims[3])}>
                 <TouchableOpacity style={styles.ctaButton} onPress={nextStep} activeOpacity={0.85}>
-                    <Text style={styles.ctaText}>Los geht's</Text>
+                    <Text style={styles.ctaText}>{t('tutorial.welcome.cta')}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -91,6 +69,7 @@ function WelcomeStep({ nextStep }: { nextStep: () => void }) {
 
 function NotificationsStep({ nextStep }: { nextStep: () => void }) {
     const { anims, play } = useStaggerAnims(4);
+    const { t } = useTranslation();
     useEffect(() => { play(); }, []);
 
     return (
@@ -104,14 +83,14 @@ function NotificationsStep({ nextStep }: { nextStep: () => void }) {
                 />
             </Animated.View>
             <Animated.Text style={[styles.fullTitle, animStyle(anims[1])]}>
-                Tägliche Erinnerungen
+                {t('tutorial.notifications.title')}
             </Animated.Text>
             <Animated.Text style={[styles.fullBody, animStyle(anims[2])]}>
-                Wir halten dich auf Kurs mit täglichen Erinnerungen an deine Visionen.
+                {t('tutorial.notifications.body')}
             </Animated.Text>
             <Animated.View style={animStyle(anims[3])}>
                 <TouchableOpacity style={styles.ctaButton} onPress={nextStep} activeOpacity={0.85}>
-                    <Text style={styles.ctaText}>Weiter</Text>
+                    <Text style={styles.ctaText}>{t('tutorial.notifications.cta')}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -120,6 +99,7 @@ function NotificationsStep({ nextStep }: { nextStep: () => void }) {
 
 function WidgetStep({ nextStep }: { nextStep: () => void }) {
     const { anims, play } = useStaggerAnims(4);
+    const { t } = useTranslation();
     useEffect(() => { play(); }, []);
 
     return (
@@ -133,14 +113,14 @@ function WidgetStep({ nextStep }: { nextStep: () => void }) {
                 />
             </Animated.View>
             <Animated.Text style={[styles.fullTitle, animStyle(anims[1])]}>
-                Dein veezy Widget
+                {t('tutorial.widget.title')}
             </Animated.Text>
             <Animated.Text style={[styles.fullBody, animStyle(anims[2])]}>
-                Füge das Widget deinem Homescreen hinzu — so hast du deine Vision immer im Blick, auch ohne die App zu öffnen.
+                {t('tutorial.widget.body')}
             </Animated.Text>
             <Animated.View style={animStyle(anims[3])}>
                 <TouchableOpacity style={styles.ctaButton} onPress={nextStep} activeOpacity={0.85}>
-                    <Text style={styles.ctaText}>Weiter</Text>
+                    <Text style={styles.ctaText}>{t('tutorial.widget.cta')}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -149,19 +129,20 @@ function WidgetStep({ nextStep }: { nextStep: () => void }) {
 
 function ReadyStep({ nextStep }: { nextStep: () => void }) {
     const { anims, play } = useStaggerAnims(3);
+    const { t } = useTranslation();
     useEffect(() => { play(); }, []);
 
     return (
         <View style={styles.fullScreen}>
             <Animated.Text style={[styles.readyTitle, animStyle(anims[0])]}>
-                Du bist bereit.
+                {t('tutorial.ready.title')}
             </Animated.Text>
             <Animated.Text style={[styles.fullBody, animStyle(anims[1])]}>
-                Erstelle jetzt deine erste Vision und starte durch.
+                {t('tutorial.ready.body')}
             </Animated.Text>
             <Animated.View style={animStyle(anims[2])}>
                 <TouchableOpacity style={styles.ctaButtonLarge} onPress={nextStep} activeOpacity={0.85}>
-                    <Text style={styles.ctaTextLarge}>Erste Vision erstellen</Text>
+                    <Text style={styles.ctaTextLarge}>{t('tutorial.ready.cta')}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -172,7 +153,8 @@ function ReadyStep({ nextStep }: { nextStep: () => void }) {
 
 function TooltipCard({ step, nextStep }: { step: number; nextStep: () => void }) {
     const insets = useSafeAreaInsets();
-    const data = CARD_STEPS[step];
+    const { t } = useTranslation();
+    const prefix = CARD_STEP_KEYS[step];
 
     const cardAnim = useRef(new Animated.Value(0)).current;
 
@@ -181,7 +163,7 @@ function TooltipCard({ step, nextStep }: { step: number; nextStep: () => void })
         Animated.timing(cardAnim, { toValue: 1, duration: 320, useNativeDriver: true }).start();
     }, [step]);
 
-    if (!data) return null;
+    if (!prefix) return null;
 
     const totalSteps = 9;
     return (
@@ -202,10 +184,10 @@ function TooltipCard({ step, nextStep }: { step: number; nextStep: () => void })
                         <View key={i} style={[styles.dot, i + 1 === step && styles.dotActive]} />
                     ))}
                 </View>
-                <Text style={styles.cardTitle}>{data.title}</Text>
-                <Text style={styles.cardBody}>{data.body}</Text>
-                <TouchableOpacity style={styles.ctaButton} onPress={nextStep} activeOpacity={0.85}>
-                    <Text style={styles.ctaText}>{data.cta}</Text>
+                <Text style={styles.cardTitle}>{t(`${prefix}.title` as any)}</Text>
+                <Text style={styles.cardBody}>{t(`${prefix}.body` as any)}</Text>
+                <TouchableOpacity style={[styles.ctaButton, styles.ctaButtonCard]} onPress={nextStep} activeOpacity={0.85}>
+                    <Text style={styles.ctaText}>{t(`${prefix}.cta` as any)}</Text>
                 </TouchableOpacity>
             </View>
         </Animated.View>
@@ -275,15 +257,21 @@ const styles = StyleSheet.create({
         height: 220,
     },
     // CTA buttons
+    ctaButtonCard: {
+        alignSelf: 'flex-start',
+        paddingHorizontal: 28,
+        paddingVertical: 10,
+        marginTop: 2,
+    },
     ctaButton: {
-        backgroundColor: 'white',
+        backgroundColor: Colors.accent,
         paddingHorizontal: 40,
         paddingVertical: 14,
         borderRadius: 999,
         marginTop: 4,
     },
     ctaText: {
-        color: '#111',
+        color: 'white',
         fontFamily: Fonts.sansBold,
         fontSize: 16,
     },

@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { createMMKV } from 'react-native-mmkv';
 
-import AFFIRMATIONS from '@/assets/affirmations.json';
 import { devLog } from '@/utils/dev-log';
 
 type NotificationSettings = {
@@ -25,9 +24,34 @@ function shuffle<T>(arr: T[]): T[] {
 
 const storage = createMMKV({ id: 'notification-storage' });
 const LAST_SCHEDULED_KEY = 'lastScheduled';
+const TRIAL_END_KEY = 'trialEndISO';
 
 function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
+}
+
+async function restoreTrialReminder(): Promise<void> {
+    const trialEndISO = storage.getString(TRIAL_END_KEY);
+    if (!trialEndISO) return;
+
+    const trialEndDate = new Date(trialEndISO);
+    const reminderDate = new Date(trialEndDate.getTime() - 24 * 60 * 60 * 1000);
+    if (reminderDate <= new Date()) return;
+
+    const langRaw = storage.getString('trialReminderLanguage');
+    const language = langRaw === 'de' ? 'de' : 'en';
+    const content = language === 'de'
+        ? { title: '⏰ veezy', body: 'Dein kostenloser Testzeitraum endet morgen.' }
+        : { title: '⏰ veezy', body: 'Your free trial ends tomorrow.' };
+
+    await Notifications.scheduleNotificationAsync({
+        identifier: 'trial-end-reminder',
+        content,
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: reminderDate,
+        },
+    });
 }
 
 export async function scheduleNotifications(settings: NotificationSettings): Promise<void> {
@@ -35,28 +59,22 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
 
     if (!settings.notificationsEnabled) return;
     if (!settings.selectedCategories || settings.selectedCategories.length === 0) return;
+    if (!settings.visionAffirmations || settings.visionAffirmations.length === 0) return;
 
     const {
         notificationsPerDay,
         notificationStartHour,
         notificationEndHour,
         randomizeNotificationTimes,
-        selectedCategories,
     } = settings;
 
     const MAX_NOTIFICATIONS = 60;
     const days = Math.floor(MAX_NOTIFICATIONS / notificationsPerDay);
     const totalNeeded = days * notificationsPerDay;
 
-    // Use vision-specific affirmations if available, otherwise fall back to generic pool
-    const sourceAffirmations = settings.visionAffirmations && settings.visionAffirmations.length > 0
-        ? settings.visionAffirmations
-        : AFFIRMATIONS;
-
-    // Shuffle affirmations and repeat until we have enough
     let pool: string[] = [];
     while (pool.length < totalNeeded) {
-        pool = [...pool, ...shuffle(sourceAffirmations)];
+        pool = [...pool, ...shuffle(settings.visionAffirmations)];
     }
 
     let affirmationIndex = 0;
@@ -96,6 +114,7 @@ export async function scheduleNotifications(settings: NotificationSettings): Pro
     }
 
     await Promise.all(scheduled);
+    await restoreTrialReminder();
     storage.set(LAST_SCHEDULED_KEY, new Date().toISOString());
     devLog(`Scheduled ${totalNeeded} notifications over ${days} days`);
 }
@@ -121,13 +140,17 @@ export async function scheduleTrialEndReminder(
     const trialEndDate = new Date(trialEndDateISO);
     const reminderDate = new Date(trialEndDate.getTime() - 24 * 60 * 60 * 1000);
 
-    if (reminderDate <= new Date()) return; // bereits vergangen, überspringen
+    if (reminderDate <= new Date()) return;
+
+    storage.set(TRIAL_END_KEY, trialEndDateISO);
+    storage.set('trialReminderLanguage', language);
 
     const content = language === 'de'
         ? { title: '⏰ veezy', body: 'Dein kostenloser Testzeitraum endet morgen.' }
         : { title: '⏰ veezy', body: 'Your free trial ends tomorrow.' };
 
     await Notifications.scheduleNotificationAsync({
+        identifier: 'trial-end-reminder',
         content,
         trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
