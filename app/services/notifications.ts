@@ -133,6 +133,31 @@ export async function checkAndReschedule(settings: NotificationSettings): Promis
     }
 }
 
+const PAYWALL_ABANDON_ID = 'paywall-abandon-reminder';
+
+const PAYWALL_ABANDON_CONTENT: Record<'de' | 'en', { title: string; body: string }> = {
+    de: { title: '🔓 veezy', body: 'Veezy ist freigeschaltet! Schaue dich um.' },
+    en: { title: '🔓 veezy', body: 'Veezy is unlocked! Take a look around.' },
+};
+
+export async function schedulePaywallAbandonNotification(language: 'de' | 'en' = 'en'): Promise<void> {
+    await Notifications.cancelScheduledNotificationAsync(PAYWALL_ABANDON_ID).catch(() => { });
+    const triggerDate = new Date(Date.now() + 30 * 1000); // 30s later
+    await Notifications.scheduleNotificationAsync({
+        identifier: PAYWALL_ABANDON_ID,
+        content: PAYWALL_ABANDON_CONTENT[language],
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: triggerDate,
+        },
+    });
+    devLog('Scheduled paywall abandon notification for', triggerDate.toISOString());
+}
+
+export async function cancelPaywallAbandonNotification(): Promise<void> {
+    await Notifications.cancelScheduledNotificationAsync(PAYWALL_ABANDON_ID).catch(() => { });
+}
+
 export async function scheduleTrialEndReminder(
     trialEndDateISO: string,
     language: 'de' | 'en' = 'en',

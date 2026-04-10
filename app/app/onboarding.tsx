@@ -14,10 +14,12 @@ import { VisionStep } from '@/components/onboarding/steps/vision-step';
 import { WhatYouWillGetStep } from '@/components/onboarding/steps/what-you-will-get-step';
 import { OnboardingStep } from '@/components/onboarding/types';
 import { MediaHandler } from '@/lib/media-handler';
+import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { SelfReferenceImages } from '@/types/user-data';
 import { registerPushNotifications } from '@/utils/register-push-notifications';
 import { File } from 'expo-file-system';
+import * as TrackingTransparency from "expo-tracking-transparency";
 import { fetch } from 'expo/fetch';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -67,6 +69,14 @@ export default function OnboardingScreen() {
         }
     }, []);
 
+    const handleRequestTracking = useCallback(async () => {
+
+        const { status } = await TrackingTransparency.requestTrackingPermissionsAsync();
+        trackerManager.track('tracking_permission', {
+            status: status === 'granted' ? 'authorized' : 'declined',
+        });
+    }, [])
+
     const ONBOARDING_STEPS = useMemo<OnboardingStep[]>(() => {
         const HookSlide = makeEmotionSlide({
             label: t('onboarding.hook.label'),
@@ -94,7 +104,7 @@ export default function OnboardingScreen() {
 
         return [
             { component: HookSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-            { component: TrackingStep, showProgressIndicator: false, continueButtonText: t('common.continue'), theme: 'light' },
+            { component: TrackingStep, showProgressIndicator: false, continueButtonText: t('common.continue'), theme: 'light', preContinue: handleRequestTracking },
             { component: NameStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
             { component: VisionStep, showProgressIndicator: false, continueButtonText: t('common.continue'), initialCanContinue: false },
             { component: IdentityShiftSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },

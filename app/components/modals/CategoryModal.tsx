@@ -8,6 +8,7 @@ import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { VisionCategory } from '@/types/vision';
+import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export type CategoryFilter = 'all' | VisionCategory;
@@ -68,7 +69,7 @@ export function CategoryModal({ visible, onClose, selectedCategory, onSelectCate
                                         key={cat.key}
                                         style={[styles.option, selectedCategory === cat.key && styles.optionActive, locked && styles.optionLocked]}
                                         activeOpacity={0.7}
-                                        onPress={() => locked ? openWithPlacement('select_category') : onSelectCategory(cat.key)}
+                                        onPress={() => locked ? openPlacementWithImage(openWithPlacement, 'select_category') : onSelectCategory(cat.key)}
                                     >
                                         <Text style={[styles.optionText, selectedCategory === cat.key && styles.optionTextActive, locked && styles.optionTextLocked]}>
                                             {cat.label}

@@ -1,12 +1,17 @@
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } from '@/services/notifications';
+import { useUserDataStore } from '@/stores/UserDataStore';
 import { devError, devLog } from "@/utils/dev-log";
-import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useUser } from "expo-superwall";
-import { createContext, useContext } from "react";
+
+export const paywallOpenRef = { current: false };
+export const dismissPaywallRef = { current: () => Promise.resolve() as Promise<void> };
+import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useSuperwall, useUser } from "expo-superwall";
+import { createContext, useContext, useRef } from "react";
 
 
 const SuperwallFunctionsContext = createContext<{
-    openWithPlacement: (placement: string, onFeature?: () => void) => Promise<void>;
+    openWithPlacement: (placement: string, onFeature?: () => void, params?: Record<string, any>, onDismiss?: () => void) => Promise<void>;
     placementState: PaywallState;
     identify: (userId: string) => Promise<void>;
     signOut: () => Promise<void>;
@@ -41,29 +46,40 @@ export const useSuperwallFunctions = () => {
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
     const { refreshUserInfo } = useRevenueCat();
+    const { dismiss } = useSuperwall();
+    const pendingDismissRef = useRef<(() => void) | null>(null);
+    dismissPaywallRef.current = dismiss;
 
     const { registerPlacement, state: placementState } = usePlacement({
         onError: (err) => devError("Placement Error:", err),
         onPresent: (info) => {
             devLog("Paywall Presented:", info);
+            paywallOpenRef.current = true;
             trackerManager.track('paywall_presented', { paywall_name: info?.name ?? 'unknown' });
         },
         onDismiss: (info, result) => {
             devLog("Paywall Dismissed:", info, "Result:", result);
+            paywallOpenRef.current = false;
+            cancelPaywallAbandonNotification().catch(() => {});
             const eventName = result?.type === 'purchased' ? 'paywall_purchased'
                 : result?.type === 'restored' ? 'paywall_restored'
                     : 'paywall_declined';
             trackerManager.track(eventName, { paywall_name: info?.name ?? 'unknown', result: result?.type });
             if (result?.type === 'purchased' || result?.type === 'restored') {
-                refreshUserInfo().catch(() => {});
+                setTimeout(() => refreshUserInfo().catch(() => { }), 2000);
             }
+            const cb = pendingDismissRef.current;
+            pendingDismissRef.current = null;
+            cb?.();
         },
     });
-    const openWithPlacement = async (placement: string, onFeature?: () => void) => {
+    const openWithPlacement = async (placement: string, onFeature?: () => void, params?: Record<string, any>, onDismiss?: () => void) => {
         trackerManager.track('paywall_opened', { placement });
+        pendingDismissRef.current = onDismiss ?? null;
         await registerPlacement({
             placement: placement,
-            feature: onFeature
+            feature: onFeature,
+            params: params,
         });
     };
 

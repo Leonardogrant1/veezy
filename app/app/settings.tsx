@@ -16,6 +16,7 @@ import { changeLanguage } from '@/i18n';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
+import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { calculateAge } from '@/types/user-data';
 
@@ -89,7 +90,7 @@ export default function SettingsScreen() {
 
                 {/* Premium card */}
                 {!isPremium && (
-                    <TouchableOpacity style={styles.premiumCard} activeOpacity={0.85} onPress={() => openWithPlacement('add_premium_settings')}>
+                    <TouchableOpacity style={styles.premiumCard} activeOpacity={0.85} onPress={() => openPlacementWithImage(openWithPlacement, 'add_premium_settings')}>
                         <View style={styles.premiumLeft}>
                             <View style={styles.premiumIconBadge}>
                                 <MaterialCommunityIcons name="crown" size={20} color={Colors.accent} />

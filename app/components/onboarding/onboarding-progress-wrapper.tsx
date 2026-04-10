@@ -5,6 +5,7 @@ import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { router } from 'expo-router';
+import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
 import { OnboardingControlContext } from './onboarding-control-context';
 import { OnboardingStep } from './types';
 
@@ -73,9 +74,8 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     async function finishOnboarding() {
         trackerManager.track('onboarding_completed');
         useUserDataStore.getState().completeOnboarding();
-        await openWithPlacement('onboarding_completed', () => {
-            router.replace('/');
-        });
+        const navigate = () => router.replace('/');
+        await openPlacementWithImage(openWithPlacement, 'onboarding_completed', navigate, undefined, navigate);
     }
 
     function advance() {

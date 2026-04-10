@@ -29,6 +29,9 @@ import { PostHogTracker } from '@/lib/tracking/trackers/posthog-tracker';
 import { initPosthog } from '@/services/posthog/init';
 import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
 import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
+import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } from '@/services/notifications';
+import { dismissPaywallRef, paywallOpenRef } from '@/services/purchases/superwall/useSuperwall';
+import { useUserDataStore } from '@/stores/UserDataStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useVisionStore } from '@/stores/VisionStore';
@@ -97,6 +100,14 @@ export default function RootLayout() {
         console.log('Backgrounding app, syncing data...');
         UserCloudSync.upload().catch(() => { });
         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
+        if (paywallOpenRef.current) {
+          const language = useUserDataStore.getState().language;
+          schedulePaywallAbandonNotification(language).catch(() => {});
+        }
+      }
+      if (nextState === 'active' && paywallOpenRef.current) {
+        cancelPaywallAbandonNotification().catch(() => {});
+        dismissPaywallRef.current().catch(() => {});
       }
     });
     return () => {

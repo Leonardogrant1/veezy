@@ -13,6 +13,7 @@ import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
 import { devLog } from '@/utils/dev-log';
+import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
@@ -62,7 +63,7 @@ export default function HomeScreen() {
         if (isPremium) return;
         if (activeIndex !== 3) return;
         if (filtered.length <= 3) return; // index 3 exists but is not the locked slot
-        const timer = setTimeout(() => openWithPlacement('feed_end_reached'), 800);
+        const timer = setTimeout(() => openPlacementWithImage(openWithPlacement, 'feed_end_reached'), 800);
         return () => clearTimeout(timer);
     }, [activeIndex, isPremium, filtered.length]);
 
@@ -175,7 +176,7 @@ export default function HomeScreen() {
                 <Text style={styles.logo}>veezy</Text>
                 <View style={styles.topBarRight}>
                     {!hasEntitlement(PREMIUM_IDENTIFIER) && (
-                        <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openWithPlacement('add_premium_top')}>
+                        <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openPlacementWithImage(openWithPlacement, 'add_premium_top')}>
                             <MaterialCommunityIcons name="crown" size={18} color={Colors.accent} />
                         </TouchableOpacity>
                     )}
@@ -225,7 +226,7 @@ export default function HomeScreen() {
                         activeOpacity={0.85}
                         onPress={() => {
                             if (generationCount !== null && generationCount <= 0) {
-                                openWithPlacement('generate_vision');
+                                openPlacementWithImage(openWithPlacement, 'generate_vision');
                             } else {
                                 router.push('/vision/add');
                             }
