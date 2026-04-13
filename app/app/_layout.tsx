@@ -31,6 +31,7 @@ import { PurchaseWrapper } from '@/services/purchases/PurchasesWrapper';
 import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } from '@/services/notifications';
 import { dismissPaywallRef, paywallOpenRef } from '@/services/purchases/superwall/useSuperwall';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
@@ -126,6 +127,7 @@ export default function RootLayout() {
       <KeyboardProvider>
         <RevenueCatProvider>
           <PurchaseWrapper>
+            <NotificationProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="start" options={{ animation: 'fade' }} />
@@ -139,6 +141,7 @@ export default function RootLayout() {
               </Stack>
               <StatusBar style="auto" />
             </ThemeProvider>
+            </NotificationProvider>
           </PurchaseWrapper>
         </RevenueCatProvider>
       </KeyboardProvider>
