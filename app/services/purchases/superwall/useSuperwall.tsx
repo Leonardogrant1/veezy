@@ -1,13 +1,14 @@
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { showPremiumWelcomeRef } from '@/components/modals/PremiumWelcomeModal';
+import { cancelPaywallAbandonNotification } from '@/services/notifications';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
-import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } from '@/services/notifications';
-import { useUserDataStore } from '@/stores/UserDataStore';
 import { devError, devLog } from "@/utils/dev-log";
+import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useSuperwall, useUser } from "expo-superwall";
+import { createContext, useContext, useRef } from "react";
+import { PREMIUM_IDENTIFIER } from '../revenuecat/constants';
 
 export const paywallOpenRef = { current: false };
 export const dismissPaywallRef = { current: () => Promise.resolve() as Promise<void> };
-import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useSuperwall, useUser } from "expo-superwall";
-import { createContext, useContext, useRef } from "react";
 
 
 const SuperwallFunctionsContext = createContext<{
@@ -45,7 +46,7 @@ export const useSuperwallFunctions = () => {
 };
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
-    const { refreshUserInfo } = useRevenueCat();
+    const { refreshUserInfoWithRetry } = useRevenueCat();
     const { dismiss } = useSuperwall();
     const pendingDismissRef = useRef<(() => void) | null>(null);
     dismissPaywallRef.current = dismiss;
@@ -57,16 +58,17 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
             paywallOpenRef.current = true;
             trackerManager.track('paywall_presented', { paywall_name: info?.name ?? 'unknown' });
         },
-        onDismiss: (info, result) => {
+        onDismiss: async (info, result) => {
             devLog("Paywall Dismissed:", info, "Result:", result);
             paywallOpenRef.current = false;
-            cancelPaywallAbandonNotification().catch(() => {});
+            cancelPaywallAbandonNotification().catch(() => { });
             const eventName = result?.type === 'purchased' ? 'paywall_purchased'
                 : result?.type === 'restored' ? 'paywall_restored'
                     : 'paywall_declined';
             trackerManager.track(eventName, { paywall_name: info?.name ?? 'unknown', result: result?.type });
             if (result?.type === 'purchased' || result?.type === 'restored') {
-                setTimeout(() => refreshUserInfo().catch(() => { }), 2000);
+                await refreshUserInfoWithRetry(PREMIUM_IDENTIFIER);
+                showPremiumWelcomeRef.current();
             }
             const cb = pendingDismissRef.current;
             pendingDismissRef.current = null;

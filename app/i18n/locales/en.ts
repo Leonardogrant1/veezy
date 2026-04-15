@@ -55,6 +55,11 @@ const en = {
   'onboarding.photo_upload.slot_body': 'Full Body',
   'onboarding.photo_upload.slot_body_hint': 'Full body visible',
   'onboarding.photo_upload.continue': 'Create my Vision!',
+  'onboarding.photo_upload.consent_label': 'I agree to ',
+  'onboarding.photo_upload.consent_link': 'AI image processing',
+  'onboarding.photo_upload.ai_info_title': 'AI Image Processing',
+  'onboarding.photo_upload.ai_info_body': 'To generate your personalized vision board images, Veezy securely sends:\n\n• Your uploaded photos\n• Your vision descriptions\n\nto Google Vertex AI for AI image generation.\n\nYour data is used only to provide this feature and is never sold or used for advertising.',
+  'onboarding.photo_upload.ai_info_close': 'Got it',
 
   // Tracking step
   'onboarding.tracking.label': 'PRIVACY',
@@ -228,6 +233,11 @@ const en = {
   'vision_loading.message_5': 'Visualize. Manifest. Live.',
   'vision_loading.message_6': 'Your future already exists...',
   'vision_loading.subtext': 'This may take a few seconds',
+
+  // Premium welcome modal
+  'premium_welcome.title': 'Welcome to Premium',
+  'premium_welcome.subtitle': 'Create your future and start visualizing it every day.',
+  'premium_welcome.cta': 'Continue',
 
   // Edit self-reference screen
   'edit_self_reference.subtitle': 'These images are used to place you in your visions. Upload a photo from four different angles.',

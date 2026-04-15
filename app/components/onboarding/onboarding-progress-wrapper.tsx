@@ -38,6 +38,8 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [canContinue, setCanContinue] = useState(steps[0].initialCanContinue ?? true);
     const [isLoading, setIsLoading] = useState(false);
+    const onDisabledPressRef = useRef<(() => void) | null>(null);
+    function setOnDisabledPress(fn: () => void) { onDisabledPressRef.current = fn; }
     // prevBg = background of the outgoing step, stays visible underneath during fade
     const [prevBg, setPrevBg] = useState(() => bgForStep(steps[0]));
     const [visionDescription, setVisionDescription] = useState('');
@@ -110,7 +112,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     }, [currentIndex]);
 
     return (
-        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, nextStep, visionDescription, setVisionDescription }}>
+        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, setOnDisabledPress, nextStep, visionDescription, setVisionDescription }}>
             {/* Outer view holds the PREVIOUS step's bg — visible during crossfade */}
             <View style={[styles.container, { backgroundColor: prevBg }]}>
                 {/* Animated view brings the NEW step's bg + all content */}
@@ -149,8 +151,13 @@ export function OnboardingProgressWrapper({ steps }: Props) {
                                     isLight && styles.continueButtonLight,
                                     (!canContinue || isLoading) && styles.continueButtonDisabled,
                                 ]}
-                                onPress={nextStep}
-                                disabled={!canContinue || isLoading}
+                                onPress={() => {
+                                    if (!canContinue || isLoading) {
+                                        onDisabledPressRef.current?.();
+                                        return;
+                                    }
+                                    nextStep();
+                                }}
                             >
                                 {isLoading ? (
                                     <ActivityIndicator color={isLight ? 'white' : '#0d0d0d'} />

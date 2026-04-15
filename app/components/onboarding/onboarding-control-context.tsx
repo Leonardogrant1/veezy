@@ -4,6 +4,7 @@ type OnboardingControlContextValue = {
     currentIndex: number;
     canContinue: boolean;
     setCanContinue: (value: boolean) => void;
+    setOnDisabledPress: (fn: () => void) => void;
     nextStep: () => void;
     finishOnboarding: () => void;
     visionDescription: string;

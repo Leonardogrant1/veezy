@@ -55,6 +55,11 @@ const de: Record<string, string> = {
   'onboarding.photo_upload.slot_body': 'Körper',
   'onboarding.photo_upload.slot_body_hint': 'Ganzkörper sichtbar',
   'onboarding.photo_upload.continue': 'Kreiere meine Vision!',
+  'onboarding.photo_upload.consent_label': 'Ich stimme zu ',
+  'onboarding.photo_upload.consent_link': 'KI-Bildverarbeitung',
+  'onboarding.photo_upload.ai_info_title': 'KI-Bildverarbeitung',
+  'onboarding.photo_upload.ai_info_body': 'Um dein personalisiertes Vision Board zu erstellen, sendet Veezy sicher:\n\n• Deine hochgeladenen Fotos\n• Deine Vision-Beschreibungen\n\nan Google Vertex AI zur KI-Bildgenerierung.\n\nDeine Daten werden ausschließlich für diese Funktion verwendet und niemals verkauft oder für Werbung genutzt.',
+  'onboarding.photo_upload.ai_info_close': 'Verstanden',
 
   // Tracking step
   'onboarding.tracking.label': 'DATENSCHUTZ',
@@ -228,6 +233,11 @@ const de: Record<string, string> = {
   'vision_loading.message_5': 'Visualisiere. Manifestiere. Lebe.',
   'vision_loading.message_6': 'Deine Zukunft existiert bereits...',
   'vision_loading.subtext': 'Das kann einige Sekunden dauern',
+
+  // Premium welcome modal
+  'premium_welcome.title': 'Willkommen bei Premium',
+  'premium_welcome.subtitle': 'Gestalte deine Zukunft und fange an, sie jeden Tag zu visualisieren.',
+  'premium_welcome.cta': 'Weiter',
 
   // Edit self-reference screen
   'edit_self_reference.subtitle': 'Diese Bilder werden genutzt, um dich in deinen Visionen darzustellen. Lade ein Foto aus vier Perspektiven hoch.',

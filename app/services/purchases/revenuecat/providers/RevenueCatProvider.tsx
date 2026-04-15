@@ -6,7 +6,8 @@ import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from "@/stores/UserDataStore";
 import { useVisionStore } from "@/stores/VisionStore";
 import { getOrCreateAnonymousId } from "@/utils/anonymous-id";
-import { devLog } from '@/utils/dev-log';
+import { devError, devLog } from '@/utils/dev-log';
+import { wait } from '@/utils/wait';
 import { createContext, useContext, useEffect, useState } from "react";
 import { AppState, Platform } from "react-native";
 import Purchases, { type CustomerInfo, PurchasesPackage } from "react-native-purchases";
@@ -21,6 +22,7 @@ interface RevenueCatContextType {
     refreshUserInfo: () => Promise<void>;
     refreshGenerationCount: () => Promise<void>;
     hasEntitlement: (entitlement: string) => boolean;
+    refreshUserInfoWithRetry: (entitlement: string) => Promise<boolean>;
 }
 
 const RevenueCatContext = createContext<RevenueCatContextType | null>(null);
@@ -101,6 +103,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
         // Snapshot vor dem Refresh
         const wasOnTrial = customerInfo?.entitlements.active[PREMIUM_IDENTIFIER]?.periodType === 'TRIAL';
 
+        await Purchases.invalidateCustomerInfoCache();
         const info = await Purchases.getCustomerInfo();
         setCustomerInfo(info);
         useUserDataStore.setState({ isPremium: info.entitlements.active[PREMIUM_IDENTIFIER] !== undefined });
@@ -124,6 +127,34 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
         }
     };
 
+
+    const refreshUserInfoWithRetry = async (entitlement: string) => {
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            try {
+                const customerInfo = await Purchases.getCustomerInfo();
+
+                const hasActiveEntitlement =
+                    customerInfo != null &&
+                    customerInfo.entitlements != null &&
+                    customerInfo.entitlements.active[entitlement] !== undefined;
+
+                devLog(`Refresh attempt ${attempt}: active entitlement =`, hasActiveEntitlement);
+
+                if (hasActiveEntitlement) {
+                    return true;
+                }
+            } catch (error) {
+                devError(`Refresh attempt ${attempt} failed:`, error);
+            }
+
+            if (attempt < 5) {
+                await wait(2000);
+            }
+        }
+
+        return false;
+    };
+
     const presentPaywall = async () => {
         const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywallIfNeeded({
             requiredEntitlementIdentifier: PREMIUM_IDENTIFIER
@@ -132,7 +163,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
     };
 
     return (
-        <RevenueCatContext.Provider value={{ packages, customerInfo, generationCount, presentPaywall, refreshUserInfo, refreshGenerationCount: fetchGenerationCount, hasEntitlement }}>
+        <RevenueCatContext.Provider value={{ packages, customerInfo, generationCount, presentPaywall, refreshUserInfo, refreshGenerationCount: fetchGenerationCount, hasEntitlement, refreshUserInfoWithRetry }}>
             {children}
         </RevenueCatContext.Provider>
     );

@@ -1,7 +1,8 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import body from '@/assets/face-photo-icons/body.svg';
 import face_front from '@/assets/face-photo-icons/face_front.svg';
@@ -19,8 +20,11 @@ type Slot = keyof SelfReferenceImages;
 
 export function PhotoUploadStep() {
     const { t } = useTranslation();
-    const { setCanContinue } = useOnboardingControl();
+    const { setCanContinue, setOnDisabledPress } = useOnboardingControl();
     const updateSelfReferenceImages = useUserDataStore((s) => s.updateSelfReferenceImages);
+    const insets = useSafeAreaInsets();
+    const scrollRef = useRef<import('react-native').ScrollView>(null);
+    const shakeAnim = useRef(new Animated.Value(0)).current;
 
     const SLOTS: { key: Slot; label: string; hint: string; wide?: boolean; icon: any }[] = [
         { key: 'face_front', label: t('onboarding.photo_upload.slot_front'), hint: t('onboarding.photo_upload.slot_front_hint'), icon: face_front },
@@ -34,12 +38,58 @@ export function PhotoUploadStep() {
         face_front: null, face_smile: null, face_left: null, face_right: null, body: null,
     });
     const [pickerTarget, setPickerTarget] = useState<Slot | null>(null);
+    const [consentGiven, setConsentGiven] = useState(false);
+    const consentGivenRef = useRef(false);
+    const [aiInfoVisible, setAiInfoVisible] = useState(false);
+
+    const overlayOpacity = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(300)).current;
+
+    useEffect(() => {
+        if (aiInfoVisible) {
+            Animated.parallel([
+                Animated.timing(overlayOpacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+                Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+            ]).start();
+        } else {
+            Animated.parallel([
+                Animated.timing(overlayOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+                Animated.timing(slideAnim, { toValue: 300, duration: 200, useNativeDriver: true }),
+            ]).start();
+        }
+    }, [aiInfoVisible]);
+
+    function closeAiInfo() {
+        Animated.parallel([
+            Animated.timing(overlayOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+            Animated.timing(slideAnim, { toValue: 300, duration: 200, useNativeDriver: true }),
+        ]).start(() => setAiInfoVisible(false));
+    }
+
+    useEffect(() => {
+        setCanContinue(Object.values(uris).every(Boolean) && consentGiven);
+    }, [uris, consentGiven]);
+
+    useEffect(() => {
+        setOnDisabledPress(() => {
+            if (consentGivenRef.current) return;
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+            setTimeout(() => {
+                Animated.sequence([
+                    Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: 6, duration: 60, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: -6, duration: 60, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+                ]).start();
+            }, 300);
+        });
+    }, []);
 
     function applyUri(slot: Slot, uri: string) {
         const updated = { ...uris, [slot]: uri };
         setUris(updated);
         updateSelfReferenceImages({ [slot]: uri });
-        setCanContinue(Object.values(updated).some(Boolean));
     }
 
     async function handleCamera(slot: Slot) {
@@ -58,18 +108,39 @@ export function PhotoUploadStep() {
         const updated = { ...uris, [slot]: null };
         setUris(updated);
         updateSelfReferenceImages({ [slot]: null });
-        setCanContinue(Object.values(updated).some(Boolean));
     }
 
     return (
         <>
             <ScrollView
+                ref={scrollRef}
                 style={styles.scroll}
                 contentContainerStyle={styles.container}
                 showsVerticalScrollIndicator={false}
             >
                 <Text style={styles.title}>{t('onboarding.photo_upload.title')}</Text>
                 <Text style={styles.subtitle}>{t('onboarding.photo_upload.subtitle')}</Text>
+
+                <TouchableOpacity
+                    style={styles.consentRow}
+                    onPress={() => setConsentGiven((v) => { consentGivenRef.current = !v; return !v; })}
+                    activeOpacity={0.7}
+                >
+                    <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
+                    <View style={[styles.checkbox, consentGiven && styles.checkboxChecked]}>
+                        {consentGiven && <MaterialIcons name="check" size={13} color={Colors.surface} />}
+                    </View>
+                    </Animated.View>
+                    <Text style={styles.consentText}>
+                        {t('onboarding.photo_upload.consent_label')}
+                        <Text
+                            style={styles.consentLink}
+                            onPress={(e) => { e.stopPropagation(); setAiInfoVisible(true); }}
+                        >
+                            {t('onboarding.photo_upload.consent_link')}
+                        </Text>
+                    </Text>
+                </TouchableOpacity>
 
                 <View style={styles.slots}>
                     {SLOTS.map((slot) => {
@@ -111,6 +182,23 @@ export function PhotoUploadStep() {
                 </View>
             </ScrollView>
 
+            <Modal visible={aiInfoVisible} animationType="none" transparent onRequestClose={closeAiInfo}>
+                <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
+                    <Pressable style={styles.backdropPressable} onPress={closeAiInfo}>
+                        <Pressable onPress={(e) => e.stopPropagation()}>
+                            <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }], paddingBottom: insets.bottom + 24 }]}>
+                                <View style={styles.handle} />
+                                <Text style={styles.sheetTitle}>{t('onboarding.photo_upload.ai_info_title')}</Text>
+                                <Text style={styles.sheetBody}>{t('onboarding.photo_upload.ai_info_body')}</Text>
+                                <TouchableOpacity style={styles.sheetButton} onPress={closeAiInfo} activeOpacity={0.7}>
+                                    <Text style={styles.sheetButtonText}>{t('onboarding.photo_upload.ai_info_close')}</Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        </Pressable>
+                    </Pressable>
+                </Animated.View>
+            </Modal>
+
             <ImagePickerModal
                 visible={pickerTarget !== null}
                 onCamera={() => handleCamera(pickerTarget!)}
@@ -141,7 +229,36 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: Colors.textMuted,
         lineHeight: 21,
-        marginBottom: 32,
+        marginBottom: 16,
+    },
+    consentRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 24,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 5,
+        borderWidth: 1.5,
+        borderColor: Colors.textMuted,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkboxChecked: {
+        backgroundColor: Colors.textHeadline,
+        borderColor: Colors.textHeadline,
+    },
+    consentText: {
+        fontFamily: Fonts.sans,
+        fontSize: 13,
+        color: Colors.textMuted,
+        flexShrink: 1,
+    },
+    consentLink: {
+        textDecorationLine: 'underline',
+        color: Colors.text,
     },
     slots: {
         flexDirection: 'row',
@@ -199,5 +316,53 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.5)',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    // AI info bottom sheet
+    backdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    backdropPressable: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    sheet: {
+        backgroundColor: Colors.surface,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 12,
+        paddingHorizontal: 20,
+        gap: 12,
+    },
+    handle: {
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: Colors.borderDivider,
+        alignSelf: 'center',
+        marginBottom: 8,
+    },
+    sheetTitle: {
+        fontFamily: Fonts.serifBold,
+        fontSize: 20,
+        color: Colors.textHeadline,
+    },
+    sheetBody: {
+        fontFamily: Fonts.sans,
+        fontSize: 14,
+        color: Colors.textMuted,
+        lineHeight: 22,
+    },
+    sheetButton: {
+        marginTop: 8,
+        paddingVertical: 16,
+        borderRadius: 14,
+        backgroundColor: Colors.textHeadline,
+        alignItems: 'center',
+    },
+    sheetButtonText: {
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 15,
+        color: Colors.surface,
     },
 });

@@ -32,6 +32,7 @@ import { RevenueCatProvider } from '@/services/purchases/revenuecat/providers/Re
 import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } from '@/services/notifications';
 import { dismissPaywallRef, paywallOpenRef } from '@/services/purchases/superwall/useSuperwall';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { PremiumWelcomeModal } from '@/components/modals/PremiumWelcomeModal';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
@@ -140,6 +141,7 @@ export default function RootLayout() {
                 <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
               </Stack>
               <StatusBar style="auto" />
+              <PremiumWelcomeModal />
             </ThemeProvider>
             </NotificationProvider>
           </PurchaseWrapper>

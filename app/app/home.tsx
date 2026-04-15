@@ -2,7 +2,7 @@ import PlusIcon from '@/assets/icons/plus.svg';
 import ProfileIcon from '@/assets/icons/profile.svg';
 import { GlowPulse } from '@/components/layout/GlowPulse';
 import { VisionSlide } from '@/components/layout/VisionSlide';
-import { CATEGORY_KEYS, CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
+import { CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal';
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
@@ -14,13 +14,14 @@ import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
 import { devLog } from '@/utils/dev-log';
 import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
+import { showPremiumWelcomeRef } from '@/components/modals/PremiumWelcomeModal';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Animated,
     FlatList,
@@ -150,6 +151,12 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.debugButton}
+                        onPress={() => showPremiumWelcomeRef.current()}
+                    >
+                        <Text style={styles.debugButtonText}>⭐ Premium Welcome</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
                         onPress={async () => {
                             const scheduleId = await Notifications.scheduleNotificationAsync({
                                 content: {
@@ -171,9 +178,11 @@ export default function HomeScreen() {
                 </View>
             )}
 
+
             {/* Fixed topbar */}
             <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
                 <Text style={styles.logo}>veezy</Text>
+
                 <View style={styles.topBarRight}>
                     {!hasEntitlement(PREMIUM_IDENTIFIER) && (
                         <TouchableOpacity style={styles.crownButton} activeOpacity={0.8} onPress={() => openPlacementWithImage(openWithPlacement, 'add_premium_top')}>

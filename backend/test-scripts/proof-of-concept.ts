@@ -13,7 +13,7 @@ import { getSelfReferenceKey } from "@/utils/get-self-reference-key.js";
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const USER_ID = "cb00c367-4f22-47d6-baa5-ed77436dd541";
-const GOAL = "Ich will in Brasilien leben und ein Haus am Strand haben";
+const GOAL = "Ich will einen roten ferrari fahren";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 

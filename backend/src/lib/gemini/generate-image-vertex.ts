@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-const GEMINI_MODEL = 'gemini-3-pro-image-preview';
+const GEMINI_MODEL = 'gemini-3.1-flash-image-preview';
 
 const CAMERA_SETTINGS = `Shot on Sony A7R V, 85mm f/1.4 lens, natural light, photorealistic, ultra-detailed, 8K resolution, candid photography style`;
 
@@ -69,6 +69,7 @@ Critical: One scene, one frame. The person must closely match the reference phot
             imageConfig: {
                 aspectRatio
             }
+
         },
     });
 
