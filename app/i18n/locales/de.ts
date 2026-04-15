@@ -234,6 +234,20 @@ const de: Record<string, string> = {
   'vision_loading.message_6': 'Deine Zukunft existiert bereits...',
   'vision_loading.subtext': 'Das kann einige Sekunden dauern',
 
+  // Support ticket modal
+  'support.section_label': 'Support',
+  'support.row_create_ticket': 'Support-Ticket erstellen',
+  'support.modal_title': 'Support',
+  'support.field_title': 'Betreff',
+  'support.field_title_placeholder': 'Worum geht es?',
+  'support.field_description': 'Beschreibung',
+  'support.field_description_placeholder': 'Beschreibe dein Anliegen ausführlich...',
+  'support.submit': 'Ticket erstellen',
+  'support.close': 'Schließen',
+  'support.error': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
+  'support.success_title': 'Ticket erstellt',
+  'support.success_subtitle': 'Wir haben deine Nachricht erhalten und melden uns so schnell wie möglich.',
+
   // Premium welcome modal
   'premium_welcome.title': 'Willkommen bei Premium',
   'premium_welcome.subtitle': 'Gestalte deine Zukunft und fange an, sie jeden Tag zu visualisieren.',

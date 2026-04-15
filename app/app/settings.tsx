@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import UserPhotoIcon from '@/assets/icons/user_square.svg';
 import { BirthdayPickerModal } from '@/components/modals/BirthdayPickerModal';
+import { SupportTicketModal } from '@/components/modals/SupportTicketModal';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { NotificationSettingsModal } from '@/components/modals/NotificationSettingsModal';
 import { Colors, Fonts } from '@/constants/theme';
@@ -35,6 +36,7 @@ export default function SettingsScreen() {
 
     const [editField, setEditField] = useState<'name' | 'birthday' | null>(null);
     const [showNotificationModal, setShowNotificationModal] = useState(false);
+    const [showSupportModal, setShowSupportModal] = useState(false);
 
     const ageDisplay = birthday
         ? (() => {
@@ -155,6 +157,15 @@ export default function SettingsScreen() {
                     </View>
                 </View>
 
+                {/* Support */}
+                <Text style={styles.sectionLabel}>{t('support.section_label')}</Text>
+                <View style={styles.rowGroup}>
+                    <TouchableOpacity style={styles.row} onPress={() => setShowSupportModal(true)} activeOpacity={0.6}>
+                        <Text style={styles.rowLabel}>{t('support.row_create_ticket')}</Text>
+                        <MaterialIcons name="chevron-right" size={20} color={Colors.textPlaceholder} />
+                    </TouchableOpacity>
+                </View>
+
                 {/* Legal */}
                 <Text style={styles.sectionLabel}>{t('settings.section_legal')}</Text>
                 <View style={styles.rowGroup}>
@@ -192,6 +203,11 @@ export default function SettingsScreen() {
             <NotificationSettingsModal
                 visible={showNotificationModal}
                 onClose={() => setShowNotificationModal(false)}
+            />
+
+            <SupportTicketModal
+                visible={showSupportModal}
+                onClose={() => setShowSupportModal(false)}
             />
         </View>
     );

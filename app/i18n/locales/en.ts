@@ -234,6 +234,20 @@ const en = {
   'vision_loading.message_6': 'Your future already exists...',
   'vision_loading.subtext': 'This may take a few seconds',
 
+  // Support ticket modal
+  'support.section_label': 'Support',
+  'support.row_create_ticket': 'Create Support Ticket',
+  'support.modal_title': 'Support',
+  'support.field_title': 'Subject',
+  'support.field_title_placeholder': 'What is your issue about?',
+  'support.field_description': 'Description',
+  'support.field_description_placeholder': 'Describe your issue in detail...',
+  'support.submit': 'Create Ticket',
+  'support.close': 'Close',
+  'support.error': 'Something went wrong. Please try again.',
+  'support.success_title': 'Ticket Created',
+  'support.success_subtitle': "We've received your message and will get back to you as soon as possible.",
+
   // Premium welcome modal
   'premium_welcome.title': 'Welcome to Premium',
   'premium_welcome.subtitle': 'Create your future and start visualizing it every day.',
