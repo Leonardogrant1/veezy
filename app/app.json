@@ -25,9 +25,8 @@
         "AppGroup": "group.studio.northbyte.veezy",
         "AppGroupIdentifier": "group.studio.northbyte.veezy",
         "ITSAppUsesNonExemptEncryption": false,
-        "CFBundleAllowMixedLocalizations": true,
-        "NSPhotoLibraryUsageDescription": "Veezy needs access to your photos to upload reference images.",
-        "NSCameraUsageDescription": "Veezy needs access to your camera to take a photo.",
+        "NSPhotoLibraryUsageDescription": "Veezy uses photos from your library as reference images. Your face and body are composited into AI-generated scenes to show your future self.",
+        "NSCameraUsageDescription": "Veezy uses your camera to take a reference photo. Your face and body are used to generate personalized AI images showing your future self achieving your goals.",
         "NSUserTrackingUsageDescription": "We use tracking to measure marketing performance and improve the app experience.",
         "LSApplicationQueriesSchemes": [
           "instagram"

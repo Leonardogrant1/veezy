@@ -97,19 +97,28 @@ export default function RootLayout() {
     // Sync widget on app start for existing users
     WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
 
+    let paywallBackgroundedAt: number | null = null;
+    const PAYWALL_DISMISS_AFTER_MS = 30_000;
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background') {
         console.log('Backgrounding app, syncing data...');
         UserCloudSync.upload().catch(() => { });
         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
         if (paywallOpenRef.current) {
+          paywallBackgroundedAt = Date.now();
           const language = useUserDataStore.getState().language;
           schedulePaywallAbandonNotification(language).catch(() => {});
         }
       }
-      if (nextState === 'active' && paywallOpenRef.current) {
-        cancelPaywallAbandonNotification().catch(() => {});
-        dismissPaywallRef.current().catch(() => {});
+      if (nextState === 'active') {
+        if (paywallOpenRef.current && paywallBackgroundedAt !== null) {
+          cancelPaywallAbandonNotification().catch(() => {});
+          const elapsed = Date.now() - paywallBackgroundedAt;
+          if (elapsed >= PAYWALL_DISMISS_AFTER_MS) {
+            dismissPaywallRef.current().catch(() => {});
+          }
+          paywallBackgroundedAt = null;
+        }
       }
     });
     return () => {
