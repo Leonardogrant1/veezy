@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import Logo from '@/assets/logo.svg';
 import { Cream, Colors, Fonts, Gold } from '@/constants/theme';
 import { changeLanguage } from '@/i18n';
+import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
+import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
@@ -69,6 +71,15 @@ function useFloatAnim(config: { distance: number; duration: number; delay?: numb
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return anim;
+}
+
+function SubscriptionStatus() {
+    const { hasEntitlement } = useRevenueCat();
+    return (
+        <Text style={styles.debugStatusText}>
+            💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}
+        </Text>
+    );
 }
 
 export default function StartScreen() {
@@ -148,15 +159,18 @@ export default function StartScreen() {
             </View>
 
             {__DEV__ && (
-                <TouchableOpacity
-                    style={styles.debugButton}
-                    onPress={() => {
-                        useUserDataStore.setState({ hasOnboarded: true });
-                        router.replace('/home');
-                    }}
-                >
-                    <Text style={styles.debugButtonText}>⚙ Skip to Home</Text>
-                </TouchableOpacity>
+                <View style={styles.debugContainer}>
+                    <SubscriptionStatus />
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={() => {
+                            useUserDataStore.setState({ hasOnboarded: true });
+                            router.replace('/home');
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>⚙ Skip to Home</Text>
+                    </TouchableOpacity>
+                </View>
             )}
 
             {/* Centered content */}
@@ -302,19 +316,33 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         letterSpacing: 0.3,
     },
-    debugButton: {
+    debugContainer: {
         position: 'absolute',
         top: 60,
         left: 16,
+        gap: 8,
+        alignItems: 'flex-start',
+        zIndex: 10,
+    },
+    debugButton: {
         backgroundColor: 'rgba(255,59,48,0.85)',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
-        zIndex: 10,
     },
     debugButtonText: {
         color: 'white',
         fontSize: 12,
         fontWeight: '600',
+    },
+    debugStatusText: {
+        color: 'white',
+        fontSize: 11,
+        fontWeight: '700',
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
 });

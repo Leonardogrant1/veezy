@@ -8,6 +8,7 @@ import { useVisionStore } from "@/stores/VisionStore";
 import { getOrCreateAnonymousId } from "@/utils/anonymous-id";
 import { devError, devLog } from '@/utils/dev-log';
 import { wait } from '@/utils/wait';
+import { useAppReadyStore } from "@/stores/AppReadyStore";
 import { createContext, useContext, useEffect, useState } from "react";
 import { AppState, Platform } from "react-native";
 import Purchases, { type CustomerInfo, PurchasesPackage } from "react-native-purchases";
@@ -71,6 +72,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
                 Purchases.getCustomerInfo(),
                 UserCloudSync.restore().catch((e) => { console.log(e); return false; }),
             ]);
+            useAppReadyStore.setState({ cloudSyncReady: true });
             setCustomerInfo(info);
             useUserDataStore.setState({ isPremium: info.entitlements.active[PREMIUM_IDENTIFIER] !== undefined });
 

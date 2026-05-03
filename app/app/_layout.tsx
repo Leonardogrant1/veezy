@@ -39,8 +39,9 @@ import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useVisionStore } from '@/stores/VisionStore';
 import { devLog } from '@/utils/dev-log';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 
-
+SplashScreen.preventAutoHideAsync();
 
 trackerManager.register(new PostHogTracker());
 trackerManager.register(new AppsFlyerTracker());

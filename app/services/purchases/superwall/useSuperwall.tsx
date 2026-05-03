@@ -4,7 +4,7 @@ import { cancelPaywallAbandonNotification } from '@/services/notifications';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { devError, devLog } from "@/utils/dev-log";
 import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useSuperwall, useUser } from "expo-superwall";
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { PREMIUM_IDENTIFIER } from '../revenuecat/constants';
 import { SUPERWALL_ENTITLEMENTS } from './constants';
 
@@ -47,7 +47,7 @@ export const useSuperwallFunctions = () => {
 };
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
-    const { refreshUserInfoWithRetry, refreshUserInfo } = useRevenueCat();
+    const { refreshUserInfoWithRetry, refreshUserInfo, customerInfo } = useRevenueCat();
     const { dismiss } = useSuperwall();
     const pendingDismissRef = useRef<(() => void) | null>(null);
     dismissPaywallRef.current = dismiss;
@@ -109,6 +109,17 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
 
     // Keep ref in sync so onDismiss always calls the latest version
     setSwSubscriptionStatusRef.current = superwallSetSubscriptionStatus;
+
+    // Sync Superwall whenever RevenueCat customerInfo changes (e.g. after refreshUserInfo)
+    useEffect(() => {
+        if (!customerInfo) return;
+        const isPremium = customerInfo.entitlements.active[PREMIUM_IDENTIFIER] !== undefined;
+        superwallSetSubscriptionStatus(
+            isPremium
+                ? { entitlements: [SUPERWALL_ENTITLEMENTS["premium"]], status: "ACTIVE" }
+                : { status: "INACTIVE" }
+        );
+    }, [customerInfo]);
 
     const identify = async (userId: string) => {
         await superwallIdentify(userId);

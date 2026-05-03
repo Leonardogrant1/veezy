@@ -131,6 +131,9 @@ export default function HomeScreen() {
 
             {__DEV__ && (
                 <View style={styles.debugContainer}>
+                    <Text style={styles.debugStatusText}>
+                        💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}
+                    </Text>
                     <TouchableOpacity
                         style={styles.debugButton}
                         onPress={() => {
@@ -437,6 +440,16 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 12,
         fontWeight: '600',
+    },
+    debugStatusText: {
+        color: 'white',
+        fontSize: 11,
+        fontWeight: '700',
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
 
 
