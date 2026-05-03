@@ -6,6 +6,7 @@ import { devError, devLog } from "@/utils/dev-log";
 import { type PaywallState, type SubscriptionStatus, type UserAttributes, usePlacement, useSuperwall, useUser } from "expo-superwall";
 import { createContext, useContext, useRef } from "react";
 import { PREMIUM_IDENTIFIER } from '../revenuecat/constants';
+import { SUPERWALL_ENTITLEMENTS } from './constants';
 
 export const paywallOpenRef = { current: false };
 export const dismissPaywallRef = { current: () => Promise.resolve() as Promise<void> };
@@ -46,10 +47,13 @@ export const useSuperwallFunctions = () => {
 };
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
-    const { refreshUserInfoWithRetry } = useRevenueCat();
+    const { refreshUserInfoWithRetry, refreshUserInfo } = useRevenueCat();
     const { dismiss } = useSuperwall();
     const pendingDismissRef = useRef<(() => void) | null>(null);
     dismissPaywallRef.current = dismiss;
+
+    // Ref so onDismiss (captured at mount) can always call the latest setter from useUser()
+    const setSwSubscriptionStatusRef = useRef<(status: SubscriptionStatus) => Promise<void>>(async () => { });
 
     const { registerPlacement, state: placementState } = usePlacement({
         onError: (err) => devError("Placement Error:", err),
@@ -68,6 +72,12 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
             trackerManager.track(eventName, { paywall_name: info?.name ?? 'unknown', result: result?.type });
             if (result?.type === 'purchased' || result?.type === 'restored') {
                 await refreshUserInfoWithRetry(PREMIUM_IDENTIFIER);
+                // Update RevenueCat context state (customerInfo + isPremium) and Superwall status
+                await refreshUserInfo();
+                await setSwSubscriptionStatusRef.current({
+                    entitlements: [SUPERWALL_ENTITLEMENTS["premium"]],
+                    status: "ACTIVE"
+                });
                 showPremiumWelcomeRef.current();
             }
             const cb = pendingDismissRef.current;
@@ -96,6 +106,9 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
         getEntitlements: superwallGetEntitlements,
         setSubscriptionStatus: superwallSetSubscriptionStatus
     } = useUser();
+
+    // Keep ref in sync so onDismiss always calls the latest version
+    setSwSubscriptionStatusRef.current = superwallSetSubscriptionStatus;
 
     const identify = async (userId: string) => {
         await superwallIdentify(userId);
