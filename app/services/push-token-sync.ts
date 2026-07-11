@@ -7,15 +7,17 @@ import { registerPushNotifications } from '@/utils/register-push-notifications';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? '';
 
-// Uploads the Expo push token to the backend — only when permission is
-// granted and the token differs from the last one we sent.
+// Uploads the Expo push token to the backend. If the user was never asked
+// for notification permission, this prompts (via registerPushNotifications);
+// an explicit denial is respected and never re-prompted.
 export async function syncPushToken(): Promise<void> {
     const { userId, lastSentPushToken, setLastSentPushToken } = useUserDataStore.getState();
     if (!userId) return;
 
     const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') return;
+    if (status === 'denied') return;
 
+    // 'granted' → token is fetched silently; 'undetermined' → registerPushNotifications prompts
     const { pushTokenString } = await registerPushNotifications();
     if (!pushTokenString || pushTokenString === lastSentPushToken) return;
 
