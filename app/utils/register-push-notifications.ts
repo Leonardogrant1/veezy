@@ -1,8 +1,7 @@
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { devLog } from "./dev-log";
-
-
 
 export async function registerPushNotifications() {
     if (Platform.OS == "android") {
@@ -28,10 +27,23 @@ export async function registerPushNotifications() {
         }
     }
 
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
-    devLog("Expo push token:", token);
-    return {
-        status: finalStatus,
-        pushTokenString: token
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+
+    try {
+        const token = (await Notifications.getExpoPushTokenAsync({
+            projectId: projectId,
+        })).data;
+
+        devLog("Expo push token:", token);
+        return {
+            status: finalStatus,
+            pushTokenString: token
+        }
+    } catch (err) {
+        devLog("Failed to get push token:", err);
+        return {
+            status: finalStatus,
+            pushTokenString: null
+        }
     }
 }

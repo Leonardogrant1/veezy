@@ -17,6 +17,7 @@ import { MediaHandler } from '@/lib/media-handler';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { SelfReferenceImages } from '@/types/user-data';
+import { syncPushToken } from '@/services/push-token-sync';
 import { registerPushNotifications } from '@/utils/register-push-notifications';
 import { File } from 'expo-file-system';
 import * as TrackingTransparency from "expo-tracking-transparency";
@@ -66,6 +67,7 @@ export default function OnboardingScreen() {
         const { status } = await registerPushNotifications();
         if (status === 'granted') {
             useUserDataStore.getState().updateSettings({ notifications: true });
+            syncPushToken().catch(() => { });
         }
     }, []);
 

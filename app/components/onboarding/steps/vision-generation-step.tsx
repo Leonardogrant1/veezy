@@ -5,7 +5,7 @@ import { MediaHandler } from '@/lib/media-handler';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { VisionCategory } from '@/types/vision';
-import { generateVision } from '@/utils/generateVision';
+import { generateVisionSync } from '@/utils/generateVision';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -44,7 +44,7 @@ export function VisionGenerationStep() {
         try {
             const { userId, motivationStyle, language } = useUserDataStore.getState();
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
-            const generated = await generateVision(visionDescription, userId, existingPhrases, motivationStyle, language);
+            const generated = await generateVisionSync(visionDescription, userId, existingPhrases, motivationStyle, language);
             const path = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
             useVisionStore.getState().addVision({
                 id: generated.visionId,

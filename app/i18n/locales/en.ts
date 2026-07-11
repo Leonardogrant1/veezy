@@ -134,6 +134,9 @@ const en = {
   'home.empty_subtitle_post': 'to create your first vision',
 
   // Vision slide
+  'vision.slide.generating': 'Your image is being created…',
+  'vision.slide.generating_update': 'Creating a new image…',
+  'vision.slide.failed': "Image couldn't be created. Try again from the menu.",
   'vision.slide.premium_unlock': 'Unlock Premium',
 
   // Vision add screen

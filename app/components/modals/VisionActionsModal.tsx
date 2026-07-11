@@ -5,7 +5,6 @@ import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { EditFieldModal } from '@/components/modals/EditFieldModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { MediaHandler } from '@/lib/media-handler';
-import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -47,11 +46,9 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
     const slideAnim = useRef(new Animated.Value(400)).current;
 
     const updatePhrase = useVisionStore((s) => s.updatePhrase);
-    const updateImage = useVisionStore((s) => s.updateImage);
     const deleteVision = useVisionStore((s) => s.deleteVision);
     const userId = useUserDataStore((s) => s.userId);
     const language = useUserDataStore((s) => s.language);
-    const { refreshGenerationCount } = useRevenueCat();
 
     const [editField, setEditField] = useState<'phrase' | 'regen' | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -140,12 +137,10 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                 .filter((v) => v.id !== vision.id)
                 .map((v) => v.phrase)
                 .filter(Boolean);
-            const generated = await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases, language);
-            const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
-            updateImage(vision.id, relativePath);
+            await regenerateVision(vision.id, prompt.trim() || vision.phrase, userId, existingPhrases, language);
+            useVisionStore.getState().setVisionStatus(vision.id, 'pending');
             trackerManager.track('vision_regenerated');
-            WidgetBridge.updateImage(relativePath, vision.id).catch(() => { });
-            refreshGenerationCount().catch(() => { });
+            handleClose();
         } catch (error) {
             trackerManager.track('vision_regeneration_failed');
             Alert.alert(t('vision.actions.regen_error'));
@@ -167,7 +162,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
                     onPress: () => {
                         const imagePath = vision.imagePath;
                         deleteVision(vision.id);
-                        MediaHandler.delete(imagePath);
+                        if (imagePath) MediaHandler.delete(imagePath);
                         UserCloudSync.deleteVisionImage(vision.id).catch(() => { });
                         WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
                         handleClose();
@@ -182,7 +177,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
             <Modal visible={visible} animationType="none" transparent onRequestClose={handleClose}>
 
                 <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]}>
-                    {vision && (
+                    {vision && vision.imagePath && (
                         <View style={styles.offScreen}>
                             <WatermarkedShareView ref={shareViewRef} imageUri={MediaHandler.toUri(vision.imagePath)} />
                         </View>

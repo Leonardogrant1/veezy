@@ -1,26 +1,17 @@
-import ShareIcon from '@/assets/icons/share.svg';
 import VisionLoading from '@/components/layout/VisionLoading';
-import { WatermarkedShareView } from '@/components/layout/WatermarkedShareView';
 import { Colors, Fonts } from '@/constants/theme';
-import { MediaHandler } from '@/lib/media-handler';
-import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
-import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { VisionCategory } from '@/types/vision';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
-import { generateVision, regenerateVision, type GenerateVisionResult } from '@/utils/generateVision';
+import { generateVision } from '@/utils/generateVision';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import LottieView from 'lottie-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
     Animated,
     Easing,
     Keyboard,
-    Linking,
-    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -29,32 +20,21 @@ import {
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Share from 'react-native-share';
-import { captureRef } from 'react-native-view-shot';
 import { useTranslation } from 'react-i18next';
 
-type ScreenState = 'input' | 'loading' | 'preview';
-
-type GeneratedResult = GenerateVisionResult;
+type ScreenState = 'input' | 'loading';
 
 export default function AddVisionScreen() {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const addVision = useVisionStore((s) => s.addVision);
-    const updateImage = useVisionStore((s) => s.updateImage);
     const userId = useUserDataStore((s) => s.userId);
     const motivationStyle = useUserDataStore((s) => s.motivationStyle);
     const language = useUserDataStore((s) => s.language);
-    const { refreshGenerationCount } = useRevenueCat();
 
     const [state, setState] = useState<ScreenState>('input');
     const [description, setDescription] = useState('');
-    const [result, setResult] = useState<GeneratedResult | null>(null);
-    const [savedPath, setSavedPath] = useState<string | null>(null);
-    const [savedVisionId, setSavedVisionId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [hasInstagram, setHasInstagram] = useState(false);
-    const shareViewRef = useRef<View>(null);
 
     const focusOffset = useRef(new Animated.Value(0)).current;
 
@@ -76,17 +56,6 @@ export default function AddVisionScreen() {
         }).start();
     };
 
-    useEffect(() => {
-        if (Platform.OS === 'ios') {
-            Linking.canOpenURL('instagram://').then(setHasInstagram);
-        } else {
-            Share.isPackageInstalled('com.instagram.android').then(
-                ({ isInstalled }) => setHasInstagram(isInstalled)
-            );
-        }
-    }, []);
-
-    // Preview animations
     // Input animations
     const inputOpacity = useRef(new Animated.Value(1)).current;
     const inputTranslate = useRef(new Animated.Value(0)).current;
@@ -94,47 +63,21 @@ export default function AddVisionScreen() {
     // Loading animations
     const loadingOpacity = useRef(new Animated.Value(0)).current;
 
-    // Preview animations
-    const imageOpacity = useRef(new Animated.Value(0)).current;
-    const phraseOpacity = useRef(new Animated.Value(0)).current;
-    const phraseTranslate = useRef(new Animated.Value(20)).current;
-    const buttonsOpacity = useRef(new Animated.Value(0)).current;
-    const buttonsTranslate = useRef(new Animated.Value(16)).current;
-
     const animate = (anim: Animated.CompositeAnimation) =>
         new Promise<void>((resolve) => anim.start(() => resolve()));
-
-    const animatePreviewIn = () => {
-        imageOpacity.setValue(0);
-        phraseOpacity.setValue(0);
-        phraseTranslate.setValue(20);
-        buttonsOpacity.setValue(0);
-        buttonsTranslate.setValue(16);
-        Animated.sequence([
-            Animated.timing(imageOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            Animated.parallel([
-                Animated.timing(phraseOpacity, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                Animated.timing(phraseTranslate, { toValue: 0, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-                Animated.timing(buttonsOpacity, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                Animated.timing(buttonsTranslate, { toValue: 0, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-            ]),
-        ]).start();
-    };
 
     const handleGenerate = async () => {
         if (!description.trim()) return;
         setError(null);
 
-        // 1. Keyboard schließen + Input wegfaden
+        // 1. Keyboard schließen + Input wegfaden (unverändert)
         Keyboard.dismiss();
         await animate(Animated.parallel([
             Animated.timing(inputOpacity, { toValue: 0, duration: 220, easing: Easing.in(Easing.ease), useNativeDriver: true }),
             Animated.timing(inputTranslate, { toValue: -12, duration: 220, easing: Easing.in(Easing.ease), useNativeDriver: true }),
         ]));
 
-        // 2. Loading einblenden
+        // 2. Loading einblenden (unverändert) — überbrückt die Phrase-Generierung (~2-5s)
         loadingOpacity.setValue(0);
         setState('loading');
         await animate(Animated.timing(loadingOpacity, { toValue: 1, duration: 350, easing: Easing.out(Easing.ease), useNativeDriver: true }));
@@ -142,20 +85,21 @@ export default function AddVisionScreen() {
         try {
             const existingPhrases = useVisionStore.getState().visions.map((v) => v.phrase).filter(Boolean);
             const generated = await generateVision(description.trim(), userId, existingPhrases, motivationStyle, language);
-            const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
-            addVision({ id: generated.visionId, title: '', phrase: generated.phrase, category: generated.category as VisionCategory, imagePath: relativePath, imageVersion: 1, affirmationsAffirmation: generated.affirmationsAffirmation, affirmationsFuel: generated.affirmationsFuel });
+            addVision({
+                id: generated.visionId,
+                title: '',
+                phrase: generated.phrase,
+                category: generated.category as VisionCategory,
+                imagePath: null,
+                imageVersion: 1,
+                status: 'pending',
+                pendingSince: Date.now(),
+                affirmationsAffirmation: generated.affirmationsAffirmation,
+                affirmationsFuel: generated.affirmationsFuel,
+            });
             trackerManager.track('vision_created', { category: generated.category, motivation_style: motivationStyle });
-            WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
-            refreshGenerationCount().catch(() => { });
-            setResult(generated);
-            setSavedPath(relativePath);
-            setSavedVisionId(generated.visionId);
-
-            // 3. Loading ausblenden → Preview
-            await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 300, easing: Easing.in(Easing.ease), useNativeDriver: true }));
             if (useUserDataStore.getState().haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setState('preview');
-            animatePreviewIn();
+            router.back();
         } catch {
             trackerManager.track('vision_creation_failed');
             await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
@@ -163,58 +107,6 @@ export default function AddVisionScreen() {
             inputTranslate.setValue(0);
             setError(t('vision.add.error'));
             setState('input');
-        }
-    };
-
-    const handleRegenerate = async () => {
-        if (!savedVisionId) return;
-        setError(null);
-
-        // Loading einblenden
-        loadingOpacity.setValue(0);
-        setState('loading');
-        await animate(Animated.timing(loadingOpacity, { toValue: 1, duration: 350, easing: Easing.out(Easing.ease), useNativeDriver: true }));
-
-        try {
-            const existingPhrases = useVisionStore.getState().visions
-                .filter((v) => v.id !== savedVisionId)
-                .map((v) => v.phrase)
-                .filter(Boolean);
-            const generated = await regenerateVision(savedVisionId, description.trim(), userId, existingPhrases, language);
-            const relativePath = await MediaHandler.saveFromRemote(generated.imageUrl, generated.imageKey);
-            updateImage(savedVisionId, relativePath);
-            trackerManager.track('vision_regenerated');
-            WidgetBridge.updateImage(relativePath, savedVisionId).catch(() => { });
-            refreshGenerationCount().catch(() => { });
-            setSavedPath(relativePath);
-
-            // Loading ausblenden → Preview
-            await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 300, easing: Easing.in(Easing.ease), useNativeDriver: true }));
-            setState('preview');
-            animatePreviewIn();
-        } catch {
-            trackerManager.track('vision_regeneration_failed');
-            await animate(Animated.timing(loadingOpacity, { toValue: 0, duration: 200, useNativeDriver: true }));
-            setError(t('vision.add.error'));
-            setState('preview');
-        }
-    };
-
-    const handleShare = async () => {
-        if (!savedPath || !shareViewRef.current) return;
-        const watermarkedUri = await captureRef(shareViewRef, { format: 'png', quality: 1 });
-        if (hasInstagram) {
-            await Share.shareSingle({
-                appId: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID ?? '',
-                stickerImage: watermarkedUri,
-                social: Share.Social.INSTAGRAM_STORIES as any,
-                backgroundBottomColor: '#0a0a0a',
-                backgroundTopColor: '#0a0a0a',
-            });
-            trackerManager.track('instagram_story_vision_shared');
-        } else {
-            await Share.open({ url: watermarkedUri });
-            trackerManager.track('vision_shared');
         }
     };
 
@@ -258,79 +150,10 @@ export default function AddVisionScreen() {
     }
 
     // ─── Loading state ─────────────────────────────────────────────
-    if (state === 'loading') {
-        return (
-            <Animated.View style={[styles.darkContainer, { opacity: loadingOpacity }]}>
-                <VisionLoading />
-            </Animated.View>
-        );
-    }
-
-    // ─── Preview state ─────────────────────────────────────────────
     return (
-        <View style={styles.darkContainer}>
-            {/* Off-screen watermarked view for capture */}
-            {savedPath && (
-                <View style={styles.offScreen}>
-                    <WatermarkedShareView ref={shareViewRef} imageUri={MediaHandler.toUri(savedPath)} />
-                </View>
-            )}
-            {savedPath && (
-                <Animated.Image
-                    source={{ uri: MediaHandler.toUri(savedPath) }}
-                    style={[StyleSheet.absoluteFill, { opacity: imageOpacity }]}
-                    resizeMode="cover"
-                />
-            )}
-
-            {/* Top gradient */}
-            <LinearGradient
-                colors={['rgba(0,0,0,0.35)', 'transparent']}
-                style={[StyleSheet.absoluteFill, { bottom: undefined, height: 180 }]}
-            />
-            {/* Bottom gradient */}
-            <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.75)']}
-                style={[StyleSheet.absoluteFill, { top: undefined, height: 500 }]}
-            />
-
-            <TouchableOpacity
-                style={[styles.closeButton, { top: insets.top + 12 }]}
-                onPress={() => router.back()}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.closeText}>✕</Text>
-            </TouchableOpacity>
-
-            <View style={[styles.previewBottom, { paddingBottom: insets.bottom + 32 }]}>
-                <Animated.View style={[styles.phraseCard, { opacity: phraseOpacity, transform: [{ translateY: phraseTranslate }] }]}>
-                    <Text style={styles.category}>{(result?.category ?? '').toUpperCase()}</Text>
-                    <Text style={styles.phrase}>{result?.phrase}</Text>
-                </Animated.View>
-                <Animated.View style={[styles.buttonsContainer, { opacity: buttonsOpacity, transform: [{ translateY: buttonsTranslate }] }]}>
-                    <TouchableOpacity style={styles.shareButton} onPress={handleShare} activeOpacity={0.85}>
-                        {hasInstagram ? (
-                            <LottieView
-                                source={require('@/assets/animations/instagram.json')}
-                                autoPlay
-                                loop={false}
-                                style={styles.shareIcon}
-                            />
-                        ) : (
-                            <View style={{ width: 22, height: 22, backgroundColor: 'white', borderRadius: 11, justifyContent: 'center', alignItems: 'center' }}>
-                                <ShareIcon width={14} height={14} />
-                            </View>
-                        )}
-                        <Text style={styles.shareText}>
-                            {hasInstagram ? t('vision.add.share_instagram') : t('vision.add.share')}
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleRegenerate} activeOpacity={0.7}>
-                        <Text style={styles.regenText}>{t('vision.add.regenerate')}</Text>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-        </View>
+        <Animated.View style={[styles.darkContainer, { opacity: loadingOpacity }]}>
+            <VisionLoading />
+        </Animated.View>
     );
 }
 
@@ -338,12 +161,6 @@ const styles = StyleSheet.create({
     darkContainer: {
         flex: 1,
         backgroundColor: '#0a0a0a',
-    },
-    offScreen: {
-        position: 'absolute',
-        top: -9999,
-        left: -9999,
-        opacity: 0,
     },
     innerContainer: {
         flex: 1,
@@ -392,62 +209,5 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.sans,
         fontSize: 13,
         textAlign: 'center',
-    },
-    // Preview
-    previewBottom: {
-        position: 'absolute',
-        bottom: 0,
-        left: 16,
-        right: 16,
-        alignItems: 'center',
-        gap: 16,
-    },
-    phraseCard: {
-        width: '100%',
-        borderRadius: 18,
-        paddingHorizontal: 18,
-        paddingVertical: 16,
-        gap: 5,
-    },
-    category: {
-        color: Colors.accent,
-        fontFamily: Fonts.sansSemiBold,
-        fontSize: 10,
-        letterSpacing: 2.5,
-    },
-    phrase: {
-        color: 'rgba(255,255,255,0.92)',
-        fontFamily: Fonts.serifBold,
-        fontSize: 22,
-        lineHeight: 30,
-    },
-    buttonsContainer: {
-        width: '100%',
-        alignItems: 'center',
-        gap: 16,
-    },
-    shareButton: {
-        width: '100%',
-        backgroundColor: Colors.accent,
-        borderRadius: 999,
-        paddingVertical: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    shareIcon: {
-        width: 22,
-        height: 22,
-    },
-    shareText: {
-        color: 'white',
-        fontFamily: Fonts.sansSemiBold,
-        fontSize: 16,
-    },
-    regenText: {
-        color: 'rgba(255,255,255,0.55)',
-        fontFamily: Fonts.sansMedium,
-        fontSize: 14,
     },
 });

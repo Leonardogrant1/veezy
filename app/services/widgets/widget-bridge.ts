@@ -21,6 +21,7 @@ export class WidgetBridge {
      * Only writes images that don't exist yet — use updateImage() when a vision's image changes.
      */
     static async sync(visions: Vision[]): Promise<void> {
+        visions = visions.filter((v) => !!v.imagePath && v.status !== 'pending');
         const appGroupDir = Paths.appleSharedContainers[APP_GROUP];
         if (!appGroupDir) return;
 
@@ -28,12 +29,12 @@ export class WidgetBridge {
         if (!isPremium) visions = visions.slice(0, 3);
 
         // Remove widget images that no longer have a corresponding vision
-        const activeWidgetPaths = new Set(visions.map((v) => `${v.imagePath}.jpg`));
+        const activeWidgetPaths = new Set(visions.map((v) => `${v.imagePath!}.jpg`));
         for (const vision of visions) {
-            const dir = new Directory(appGroupDir, `vision-images/${vision.imagePath.split('/')[1]}`);
+            const dir = new Directory(appGroupDir, `vision-images/${vision.imagePath!.split('/')[1]}`);
             if (!dir.exists) continue;
             for (const file of dir.list()) {
-                const relativePath = `vision-images/${vision.imagePath.split('/')[1]}/${file.name}`;
+                const relativePath = `vision-images/${vision.imagePath!.split('/')[1]}/${file.name}`;
                 if (!activeWidgetPaths.has(relativePath)) file.delete();
             }
         }
@@ -42,12 +43,12 @@ export class WidgetBridge {
 
         const entries: WidgetEntry[] = await Promise.all(
             visions.map(async (vision) => {
-                const widgetPath = `${vision.imagePath}.jpg`;
+                const widgetPath = `${vision.imagePath!}.jpg`;
                 const dest = new File(appGroupDir, widgetPath);
 
                 if (!dest.exists) {
                     if (!dest.parentDirectory.exists) dest.parentDirectory.create({ intermediates: true });
-                    const compressedUri = await prepareForWidget(MediaHandler.toUri(vision.imagePath), vision.id);
+                    const compressedUri = await prepareForWidget(MediaHandler.toUri(vision.imagePath!), vision.id);
                     new File(compressedUri).copy(dest);
                 }
 

@@ -134,6 +134,9 @@ const de: Record<string, string> = {
   'home.empty_subtitle_post': 'um deine erste Vision zu erstellen',
 
   // Vision slide
+  'vision.slide.generating': 'Dein Bild wird erstellt…',
+  'vision.slide.generating_update': 'Neues Bild wird erstellt…',
+  'vision.slide.failed': 'Bild konnte nicht erstellt werden. Versuch es über das Menü erneut.',
   'vision.slide.premium_unlock': 'Premium freischalten',
 
   // Vision add screen

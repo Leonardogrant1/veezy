@@ -79,7 +79,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
             fetchGenerationCount();
 
             const visions = useVisionStore.getState().visions;
-            await Promise.all(visions.map((v) => MediaHandler.resolveUri(v.imagePath).catch(() => { })));
+            await Promise.all(visions.filter((v) => !!v.imagePath).map((v) => MediaHandler.resolveUri(v.imagePath!).catch(() => { })));
             WidgetBridge.sync(visions).catch(() => { });
 
             loadOfferings();

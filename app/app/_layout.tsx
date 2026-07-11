@@ -38,9 +38,12 @@ import { useAppReadyStore } from '@/stores/AppReadyStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useVisionStore } from '@/stores/VisionStore';
+import { PendingVisionWatcher } from '@/services/pending-vision-watcher';
+import { syncPushToken } from '@/services/push-token-sync';
 import { devLog } from '@/utils/dev-log';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+import { router } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -107,9 +110,24 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    const notificationSub = Notifications.addNotificationResponseReceivedListener(() => {
+    const notificationSub = Notifications.addNotificationResponseReceivedListener((response) => {
       trackerManager.track('notification_opened');
+      const data = response.notification.request.content.data as Record<string, string> | undefined;
+      if (data?.visionId) {
+        useVisionStore.getState().setFocusVisionId(data.visionId);
+        PendingVisionWatcher.checkNow().catch(() => { });
+        router.push('/home');
+      }
     });
+
+    const receivedSub = Notifications.addNotificationReceivedListener(() => {
+      PendingVisionWatcher.checkNow().catch(() => { });
+    });
+
+    PendingVisionWatcher.start();
+    if (useUserDataStore.getState().hasOnboarded) {
+      syncPushToken().catch(() => { });
+    }
 
     // Sync widget on app start for existing users
     WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
@@ -140,6 +158,7 @@ export default function RootLayout() {
     });
     return () => {
       notificationSub.remove();
+      receivedSub.remove();
       sub.remove();
     };
   }, []);

@@ -6,6 +6,7 @@ import { CategoryFilter, CategoryModal } from '@/components/modals/CategoryModal
 import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { PendingVisionWatcher } from '@/services/pending-vision-watcher';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
@@ -16,6 +17,7 @@ import { devLog } from '@/utils/dev-log';
 import { openPlacementWithImage } from '@/utils/openPlacementWithImage';
 import { showPremiumWelcomeRef } from '@/components/modals/PremiumWelcomeModal';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
@@ -39,15 +41,18 @@ export default function HomeScreen() {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const visions = useVisionStore((s) => s.visions);
-    const { generationCount, hasEntitlement } = useRevenueCat();
+    const { generationCount, hasEntitlement, customerInfo, refreshGenerationCount } = useRevenueCat();
     const { openWithPlacement } = useSuperwallFunctions();
 
     const [activeIndex, setActiveIndex] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [actionsVision, setActionsVision] = useState<Vision | null>(null);
+    const [userIdCopied, setUserIdCopied] = useState(false);
 
     const phraseOpacity = useRef(new Animated.Value(1)).current;
+    const listRef = useRef<FlatList<Vision>>(null);
+    const focusVisionId = useVisionStore((s) => s.focusVisionId);
 
     const isPremium = hasEntitlement(PREMIUM_IDENTIFIER);
 
@@ -59,6 +64,19 @@ export default function HomeScreen() {
     }, [visions, selectedCategory, isPremium]);
 
     const activeVision: Vision | undefined = filtered[activeIndex];
+
+    useEffect(() => {
+        PendingVisionWatcher.setOnCompleted(() => { refreshGenerationCount().catch(() => { }); });
+    }, []);
+
+    useEffect(() => {
+        if (!focusVisionId) return;
+        const index = filtered.findIndex((v) => v.id === focusVisionId);
+        if (index >= 0) {
+            listRef.current?.scrollToIndex({ index, animated: true });
+        }
+        useVisionStore.getState().setFocusVisionId(null);
+    }, [focusVisionId, filtered]);
 
     useEffect(() => {
         if (isPremium) return;
@@ -106,12 +124,14 @@ export default function HomeScreen() {
                 </View>
             ) : (
                 <FlatList
+                    ref={listRef}
                     data={filtered}
                     keyExtractor={(item) => item.id}
                     pagingEnabled
                     showsVerticalScrollIndicator={false}
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
+                    onScrollToIndexFailed={() => { }}
                     renderItem={({ item, index }) => (
                         <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />
                     )}
@@ -134,6 +154,19 @@ export default function HomeScreen() {
                     <Text style={styles.debugStatusText}>
                         💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}
                     </Text>
+                    <TouchableOpacity
+                        onPress={async () => {
+                            const userId = customerInfo?.originalAppUserId;
+                            if (!userId) return;
+                            await Clipboard.setStringAsync(userId);
+                            setUserIdCopied(true);
+                            setTimeout(() => setUserIdCopied(false), 1500);
+                        }}
+                    >
+                        <Text style={styles.debugStatusText}>
+                            🆔 {userIdCopied ? '✓ kopiert' : customerInfo?.originalAppUserId ?? '–'}
+                        </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.debugButton}
                         onPress={() => {
