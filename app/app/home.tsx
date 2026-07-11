@@ -22,7 +22,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -100,9 +100,17 @@ export default function HomeScreen() {
         // Direct attempt covers the case where the item is already laid out (push tap)
         requestAnimationFrame(scrollToPendingFocus);
         // Stop retrying after the scroll window has clearly passed
-        const clear = setTimeout(() => { pendingFocusId.current = null; }, 2000);
+        const clear = setTimeout(() => { pendingFocusId.current = null; }, 5000);
         return () => clearTimeout(clear);
     }, [focusVisionId, scrollToPendingFocus]);
+
+    // Route listener: when home regains focus (add/generate screen closed),
+    // execute the pending scroll — this is the moment the feed is visible again.
+    useFocusEffect(
+        useCallback(() => {
+            requestAnimationFrame(scrollToPendingFocus);
+        }, [scrollToPendingFocus])
+    );
 
     useEffect(() => {
         if (isPremium) return;
@@ -260,26 +268,32 @@ export default function HomeScreen() {
                     <TouchableOpacity
                         style={styles.debugButton}
                         onPress={() => {
-                            // Simulates the post-generate flow (pending placeholder + focus
-                            // scroll) without hitting the backend. Tap again to remove.
+                            // Simulates the REAL post-generate flow without the backend:
+                            // open the add screen, then after 800ms act exactly like a
+                            // finished generation (addVision -> setFocus -> back).
+                            // Tap again (with a fake present) to remove it.
                             const store = useVisionStore.getState();
                             const existing = store.visions.filter((v) => v.id.startsWith('dev-fake-'));
                             if (existing.length > 0) {
                                 existing.forEach((v) => store.deleteVision(v.id));
                                 return;
                             }
-                            const id = `dev-fake-${Date.now()}`;
-                            store.addVision({
-                                id,
-                                title: '',
-                                phrase: 'DEV: Simulierte Vision für Ladeansicht & Scroll',
-                                category: 'lifestyle',
-                                imagePath: null,
-                                imageVersion: 1,
-                                status: 'pending',
-                                pendingSince: Date.now(),
-                            });
-                            store.setFocusVisionId(id);
+                            router.push('/vision/add');
+                            setTimeout(() => {
+                                const id = `dev-fake-${Date.now()}`;
+                                useVisionStore.getState().addVision({
+                                    id,
+                                    title: '',
+                                    phrase: 'DEV: Simulierte Vision für Ladeansicht & Scroll',
+                                    category: 'lifestyle',
+                                    imagePath: null,
+                                    imageVersion: 1,
+                                    status: 'pending',
+                                    pendingSince: Date.now(),
+                                });
+                                useVisionStore.getState().setFocusVisionId(id);
+                                router.back();
+                            }, 800);
                         }}
                     >
                         <Text style={styles.debugButtonText}>🧪 Fake Pending Vision</Text>
