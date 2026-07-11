@@ -28,7 +28,6 @@ import { useTranslation } from 'react-i18next';
 import {
     Animated,
     FlatList,
-    InteractionManager,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -80,19 +79,30 @@ export default function HomeScreen() {
         PendingVisionWatcher.setOnCompleted(() => { refreshGenerationCount().catch(() => { }); });
     }, []);
 
+    // Scroll to a focused vision (new pending vision or push-notification tap).
+    // A one-shot scroll races the back-navigation and list update, so we keep the
+    // target in a ref and (re)try whenever the list reports new content — that is
+    // the moment the FlatList is guaranteed to know the added item.
+    const pendingFocusId = useRef<string | null>(null);
+
+    const scrollToPendingFocus = useCallback(() => {
+        const id = pendingFocusId.current;
+        if (!id) return;
+        const index = filtered.findIndex((v) => v.id === id);
+        if (index < 0) return;
+        listRef.current?.scrollToIndex({ index, animated: true });
+    }, [filtered]);
+
     useEffect(() => {
         if (!focusVisionId) return;
-        const index = filtered.findIndex((v) => v.id === focusVisionId);
-        if (index >= 0) {
-            // Defer until the back-navigation transition is done, otherwise the scroll gets swallowed
-            const task = InteractionManager.runAfterInteractions(() => {
-                listRef.current?.scrollToIndex({ index, animated: true });
-            });
-            useVisionStore.getState().setFocusVisionId(null);
-            return () => task.cancel();
-        }
+        pendingFocusId.current = focusVisionId;
         useVisionStore.getState().setFocusVisionId(null);
-    }, [focusVisionId, filtered]);
+        // Direct attempt covers the case where the item is already laid out (push tap)
+        requestAnimationFrame(scrollToPendingFocus);
+        // Stop retrying after the scroll window has clearly passed
+        const clear = setTimeout(() => { pendingFocusId.current = null; }, 2000);
+        return () => clearTimeout(clear);
+    }, [focusVisionId, scrollToPendingFocus]);
 
     useEffect(() => {
         if (isPremium) return;
@@ -148,6 +158,7 @@ export default function HomeScreen() {
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
                     getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+                    onContentSizeChange={scrollToPendingFocus}
                     onScrollToIndexFailed={() => { }}
                     renderItem={({ item, index }) => (
                         <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />
