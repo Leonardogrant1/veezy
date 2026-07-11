@@ -49,8 +49,9 @@ export class R2Storage {
             }
             return Buffer.concat(chunks);
         } catch (err: any) {
-            console.log(err);
+            // Missing keys are an expected code path (status polling, cache misses) — don't log them
             if (err.name === 'NoSuchKey') return null;
+            console.log(err);
             throw err;
         }
     }
