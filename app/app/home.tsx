@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Animated,
     FlatList,
+    InteractionManager,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -83,7 +84,12 @@ export default function HomeScreen() {
         if (!focusVisionId) return;
         const index = filtered.findIndex((v) => v.id === focusVisionId);
         if (index >= 0) {
-            listRef.current?.scrollToIndex({ index, animated: true });
+            // Defer until the back-navigation transition is done, otherwise the scroll gets swallowed
+            const task = InteractionManager.runAfterInteractions(() => {
+                listRef.current?.scrollToIndex({ index, animated: true });
+            });
+            useVisionStore.getState().setFocusVisionId(null);
+            return () => task.cancel();
         }
         useVisionStore.getState().setFocusVisionId(null);
     }, [focusVisionId, filtered]);
