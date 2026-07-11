@@ -110,19 +110,25 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    const notificationSub = Notifications.addNotificationResponseReceivedListener((response) => {
+    const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
       trackerManager.track('notification_opened');
       const data = response.notification.request.content.data as Record<string, string> | undefined;
       if (data?.visionId) {
         useVisionStore.getState().setFocusVisionId(data.visionId);
         PendingVisionWatcher.checkNow().catch(() => { });
-        router.push('/home');
+        router.navigate('/home');
       }
-    });
+    };
+
+    const notificationSub = Notifications.addNotificationResponseReceivedListener(handleNotificationResponse);
 
     const receivedSub = Notifications.addNotificationReceivedListener(() => {
       PendingVisionWatcher.checkNow().catch(() => { });
     });
+
+    Notifications.getLastNotificationResponseAsync()
+      .then((response) => { if (response) handleNotificationResponse(response); })
+      .catch(() => { });
 
     PendingVisionWatcher.start();
     if (useUserDataStore.getState().hasOnboarded) {

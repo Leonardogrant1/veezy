@@ -26,23 +26,30 @@ async function checkNow(): Promise<void> {
         if (!userId) return;
 
         await Promise.all(pending.map(async (v) => {
-            if (v.pendingSince && Date.now() - v.pendingSince > PENDING_TIMEOUT_MS) {
-                devLog('Pending vision timed out:', v.id);
-                setVisionStatus(v.id, 'failed');
-                return;
-            }
             try {
                 const res = await fetchVisionStatus(v.id, userId);
                 if (res.status === 'done' && res.signedUrl && res.imageKey) {
                     const path = await MediaHandler.saveFromRemote(res.signedUrl, res.imageKey);
                     updateImage(v.id, path);
+                    WidgetBridge.updateImage(path, v.id).catch(() => { });
                     WidgetBridge.sync(useVisionStore.getState().visions).catch(() => { });
                     onCompleted?.();
-                } else if (res.status === 'failed') {
+                    return;
+                }
+                if (res.status === 'failed') {
+                    setVisionStatus(v.id, 'failed');
+                    return;
+                }
+                // Still pending server-side — client timeout is only the fallback
+                if (v.pendingSince && Date.now() - v.pendingSince > PENDING_TIMEOUT_MS) {
+                    devLog('Pending vision timed out:', v.id);
                     setVisionStatus(v.id, 'failed');
                 }
             } catch {
-                // transient error — try again next tick
+                // Status fetch failed — apply the timeout so visions don't hang forever
+                if (v.pendingSince && Date.now() - v.pendingSince > PENDING_TIMEOUT_MS) {
+                    setVisionStatus(v.id, 'failed');
+                }
             }
         }));
     } finally {

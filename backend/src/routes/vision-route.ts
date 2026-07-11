@@ -52,14 +52,22 @@ function getWorkerSecret(): string {
     return secret;
 }
 
-function fireWorker(origin: string, payload: WorkerPayload): void {
-    fetch(`${origin}/vision/worker`, {
+function fireWorker(origin: string, payload: WorkerPayload): Promise<void> {
+    logger.info({ origin, visionId: payload.visionId }, 'Dispatching vision worker');
+    return fetch(`${origin}/vision/worker`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-internal-secret': getWorkerSecret(),
         },
         body: JSON.stringify(payload),
+    }).then(async (res) => {
+        if (!res.ok) {
+            logger.error({ status: res.status, visionId: payload.visionId }, 'Worker self-call returned error status');
+            await writeStatus(payload.userId, payload.visionId, 'failed');
+            return;
+        }
+        void res.body?.cancel();
     }).catch((err) => {
         logger.error({ err: err?.message, visionId: payload.visionId }, 'Worker self-call failed');
         writeStatus(payload.userId, payload.visionId, 'failed').catch(() => { });
@@ -142,13 +150,18 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const visionId = crypto.randomUUID();
         await writeStatus(userId, visionId, 'pending');
 
-        fireWorker(new URL(c.req.url).origin, {
+        const proto = c.req.header('x-forwarded-proto') ?? 'http';
+        const origin = `${proto}://${new URL(c.req.url).host}`;
+        const workerPromise = fireWorker(origin, {
             userId,
             visionId,
             visionDescription,
             existingPhrases: Array.isArray(existingPhrases) ? existingPhrases : undefined,
             language: lang,
         });
+        // Cloud Run throttles CPU after the response is sent — give the outbound
+        // worker request time to be flushed before returning.
+        await Promise.race([workerPromise, new Promise((resolve) => setTimeout(resolve, 1500))]);
 
         return c.json({
             visionId,
@@ -191,13 +204,18 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
 
         await writeStatus(userId, visionId, 'pending');
 
-        fireWorker(new URL(c.req.url).origin, {
+        const proto = c.req.header('x-forwarded-proto') ?? 'http';
+        const origin = `${proto}://${new URL(c.req.url).host}`;
+        const workerPromise = fireWorker(origin, {
             userId,
             visionId,
             visionDescription,
             existingPhrases: Array.isArray(existingPhrases) ? existingPhrases : undefined,
             language: lang,
         });
+        // Cloud Run throttles CPU after the response is sent — give the outbound
+        // worker request time to be flushed before returning.
+        await Promise.race([workerPromise, new Promise((resolve) => setTimeout(resolve, 1500))]);
 
         return c.json({ visionId, status: 'pending' as const });
     } catch (error: any) {
