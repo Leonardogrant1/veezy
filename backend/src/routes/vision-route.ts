@@ -248,6 +248,9 @@ visionRoute.post('/worker', async (c) => {
     const lang: 'de' | 'en' = payload.language === 'de' ? 'de' : 'en';
 
     const pushToken = await getPushToken(userId).catch(() => null);
+    if (!pushToken) {
+        logger.info({ userId, visionId }, 'No push token stored for user — completion push will be skipped');
+    }
 
     try {
         const composite = await R2Storage.downloadBuffer(getSelfReferenceKey(userId, 'composite'));
