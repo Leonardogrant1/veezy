@@ -47,7 +47,7 @@ export const useSuperwallFunctions = () => {
 };
 
 export const SuperwallFunctionsProvider = ({ children }: { children: React.ReactNode }) => {
-    const { refreshUserInfoWithRetry, refreshUserInfo, customerInfo } = useRevenueCat();
+    const { refreshUserInfoWithRetry, refreshUserInfo, refreshGenerationCountUntilPositive, customerInfo } = useRevenueCat();
     const { dismiss } = useSuperwall();
     const pendingDismissRef = useRef<(() => void) | null>(null);
     dismissPaywallRef.current = dismiss;
@@ -74,6 +74,9 @@ export const SuperwallFunctionsProvider = ({ children }: { children: React.React
                 await refreshUserInfoWithRetry(PREMIUM_IDENTIFIER);
                 // Update RevenueCat context state (customerInfo + isPremium) and Superwall status
                 await refreshUserInfo();
+                // The generation grant arrives via webhook and can lag behind the
+                // entitlement — poll in the background until the count is positive.
+                refreshGenerationCountUntilPositive().catch(() => { });
                 await setSwSubscriptionStatusRef.current({
                     entitlements: [SUPERWALL_ENTITLEMENTS["premium"]],
                     status: "ACTIVE"

@@ -21,7 +21,8 @@ interface RevenueCatContextType {
     generationCount: number | null;
     presentPaywall: () => Promise<PAYWALL_RESULT>;
     refreshUserInfo: () => Promise<void>;
-    refreshGenerationCount: () => Promise<void>;
+    refreshGenerationCount: () => Promise<number | null>;
+    refreshGenerationCountUntilPositive: () => Promise<void>;
     hasEntitlement: (entitlement: string) => boolean;
     refreshUserInfoWithRetry: (entitlement: string) => Promise<boolean>;
 }
@@ -37,19 +38,33 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
     const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
     const [generationCount, setGenerationCount] = useState<number | null>(null);
 
-    const fetchGenerationCount = async () => {
+    const fetchGenerationCount = async (): Promise<number | null> => {
         const userId = useUserDataStore.getState().userId;
-        if (!userId) return;
+        if (!userId) return null;
         try {
             const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/user-data/generations`, {
                 headers: { 'x-rc-user-id': userId },
             });
-            if (!res.ok) return;
+            if (!res.ok) return null;
             const { count } = await res.json();
             setGenerationCount(count);
+            return count;
         } catch {
             // silent fail — count stays null
             devLog("Failed to fetch generation count")
+            return null;
+        }
+    };
+
+    // After a purchase, the generation grant arrives via the RevenueCat webhook
+    // (INITIAL_PURCHASE -> backend sets the attribute) — that can lag behind the
+    // entitlement by several seconds. Poll until the count turns positive.
+    const refreshGenerationCountUntilPositive = async () => {
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            const count = await fetchGenerationCount();
+            devLog(`Generation count refresh attempt ${attempt}:`, count);
+            if (count !== null && count > 0) return;
+            if (attempt < 8) await wait(2000);
         }
     };
 
@@ -165,7 +180,7 @@ export function RevenueCatProvider({ children }: RevenueCatProviderProps) {
     };
 
     return (
-        <RevenueCatContext.Provider value={{ packages, customerInfo, generationCount, presentPaywall, refreshUserInfo, refreshGenerationCount: fetchGenerationCount, hasEntitlement, refreshUserInfoWithRetry }}>
+        <RevenueCatContext.Provider value={{ packages, customerInfo, generationCount, presentPaywall, refreshUserInfo, refreshGenerationCount: fetchGenerationCount, refreshGenerationCountUntilPositive, hasEntitlement, refreshUserInfoWithRetry }}>
             {children}
         </RevenueCatContext.Provider>
     );
