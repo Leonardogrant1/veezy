@@ -28,13 +28,13 @@ export function VisionSlide({ item, width, height, locked }: { item: Vision; wid
             {uri ? (
                 <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
             ) : (
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.surface }]} />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: '#0a0a0a' }]} />
             )}
 
             {isPending && !uri && (
                 <View style={styles.stateOverlay}>
                     <GlowPulse size={180} />
-                    <Text style={styles.stateTextDark}>{t('vision.slide.generating')}</Text>
+                    <Text style={styles.stateText}>{t('vision.slide.generating')}</Text>
                 </View>
             )}
 
@@ -47,8 +47,8 @@ export function VisionSlide({ item, width, height, locked }: { item: Vision; wid
 
             {isFailed && (
                 <View style={styles.stateOverlay}>
-                    <MaterialCommunityIcons name="image-off-outline" size={40} color={Colors.textMuted} />
-                    <Text style={styles.stateTextDark}>{t('vision.slide.failed')}</Text>
+                    <MaterialCommunityIcons name="image-off-outline" size={40} color="rgba(255,255,255,0.6)" />
+                    <Text style={styles.stateText}>{t('vision.slide.failed')}</Text>
                 </View>
             )}
 
@@ -82,12 +82,6 @@ const styles = StyleSheet.create({
     },
     stateText: {
         color: 'rgba(255,255,255,0.85)',
-        fontFamily: Fonts.sansMedium,
-        fontSize: 15,
-        textAlign: 'center',
-    },
-    stateTextDark: {
-        color: Colors.textMuted,
         fontFamily: Fonts.sansMedium,
         fontSize: 15,
         textAlign: 'center',

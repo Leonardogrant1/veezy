@@ -141,6 +141,7 @@ export default function HomeScreen() {
                     showsVerticalScrollIndicator={false}
                     onViewableItemsChanged={onViewableItemsChanged}
                     viewabilityConfig={viewabilityConfig}
+                    getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
                     onScrollToIndexFailed={() => { }}
                     renderItem={({ item, index }) => (
                         <VisionSlide item={item} width={width} height={height} locked={!isPremium && index === 3} />

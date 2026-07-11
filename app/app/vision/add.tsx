@@ -99,6 +99,8 @@ export default function AddVisionScreen() {
             });
             trackerManager.track('vision_created', { category: generated.category, motivation_style: motivationStyle });
             if (useUserDataStore.getState().haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            // Scroll the feed to the new pending vision so the user sees it being created
+            useVisionStore.getState().setFocusVisionId(generated.visionId);
             router.back();
         } catch {
             trackerManager.track('vision_creation_failed');

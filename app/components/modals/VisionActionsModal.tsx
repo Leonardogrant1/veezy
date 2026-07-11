@@ -11,6 +11,7 @@ import { useUserDataStore } from '@/stores/UserDataStore';
 import { useVisionStore } from '@/stores/VisionStore';
 import { Vision } from '@/types/vision';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
+import { devLog } from '@/utils/dev-log';
 import { regenerateVision } from '@/utils/generateVision';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -142,6 +143,7 @@ export function VisionActionsModal({ vision, onClose }: VisionActionsModalProps)
             trackerManager.track('vision_regenerated');
             handleClose();
         } catch (error) {
+            devLog('Vision regeneration failed:', error);
             trackerManager.track('vision_regeneration_failed');
             Alert.alert(t('vision.actions.regen_error'));
         } finally {
