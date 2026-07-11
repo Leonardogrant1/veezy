@@ -91,4 +91,19 @@ userDataRoute.delete('/vision-image', revenuecatAuth, async (c) => {
     return c.json({ ok: true });
 });
 
+userDataRoute.put('/push-token', revenuecatAuth, async (c) => {
+    const userId = c.var.rcUserId;
+    const body = await c.req.json<{ token?: unknown }>().catch(() => ({ token: undefined }));
+    const token = body.token;
+    if (!token || typeof token !== 'string') {
+        return c.json({ error: 'token is required' }, 400);
+    }
+    await R2Storage.uploadBuffer(
+        `user-data/${userId}/push-token`,
+        Buffer.from(token, 'utf8'),
+        'text/plain',
+    );
+    return c.json({ ok: true });
+});
+
 export default userDataRoute;
