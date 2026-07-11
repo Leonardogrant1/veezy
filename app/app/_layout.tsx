@@ -13,10 +13,10 @@ import {
 } from '@expo-google-fonts/playfair-display';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack as ExpoRouterStack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PostHogProvider, PostHogSurveyProvider } from 'posthog-react-native';
-import { useEffect } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
@@ -34,6 +34,7 @@ import { dismissPaywallRef, paywallOpenRef } from '@/services/purchases/superwal
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { PremiumWelcomeModal } from '@/components/modals/PremiumWelcomeModal';
 import { useUserDataStore } from '@/stores/UserDataStore';
+import { useAppReadyStore } from '@/stores/AppReadyStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
 import { WidgetBridge } from '@/services/widgets/widget-bridge';
 import { useVisionStore } from '@/stores/VisionStore';
@@ -42,6 +43,18 @@ import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
+
+const Stack = Object.assign(
+  (props: React.ComponentProps<typeof ExpoRouterStack>) => {
+    return <ExpoRouterStack {...props} />;
+  },
+  ExpoRouterStack,
+  {
+    Protected: ({ guard, children }: { guard: boolean; children: ReactNode }) => {
+      return guard ? <>{children}</> : null;
+    },
+  }
+);
 
 trackerManager.register(new PostHogTracker());
 trackerManager.register(new AppsFlyerTracker());
@@ -77,6 +90,9 @@ Notifications.setNotificationHandler({
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const hasOnboarded = useUserDataStore((s) => s.hasOnboarded);
+  const hasSeenTutorial = useUserDataStore((s) => s.hasSeenTutorial);
+  const cloudSyncReady = useAppReadyStore((s) => s.cloudSyncReady);
 
   const [fontsLoaded] = useFonts({
     PlayfairDisplay_400Regular,
@@ -128,6 +144,12 @@ export default function RootLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    if (fontsLoaded && cloudSyncReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, cloudSyncReady]);
+
   if (!fontsLoaded) return null;
 
   const posthog = initPosthog();
@@ -140,16 +162,29 @@ export default function RootLayout() {
           <PurchaseWrapper>
             <NotificationProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="start" options={{ animation: 'fade' }} />
-                <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
-                <Stack.Screen name="tutorial" options={{ animation: 'fade' }} />
-                <Stack.Screen name="home" options={{ animation: 'fade' }} />
-                <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="edit-self-reference" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
-                <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
-              </Stack>
+              {cloudSyncReady ? (
+                <Stack screenOptions={{ headerShown: false }}>
+                  {/* 1. Pre-onboarding Stack */}
+                  <Stack.Protected guard={!hasOnboarded}>
+                    <Stack.Screen name="start" options={{ animation: 'fade' }} />
+                    <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+                  </Stack.Protected>
+
+                  {/* 2. Pre-tutorial Stack */}
+                  <Stack.Protected guard={hasOnboarded && !hasSeenTutorial}>
+                    <Stack.Screen name="tutorial" options={{ animation: 'fade' }} />
+                  </Stack.Protected>
+
+                  {/* 3. Main App Stack */}
+                  <Stack.Protected guard={hasOnboarded && hasSeenTutorial}>
+                    <Stack.Screen name="home" options={{ animation: 'fade' }} />
+                    <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+                    <Stack.Screen name="edit-self-reference" options={{ presentation: 'modal' }} />
+                    <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+                    <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+                  </Stack.Protected>
+                </Stack>
+              ) : null}
               <StatusBar style="auto" />
               <PremiumWelcomeModal />
             </ThemeProvider>

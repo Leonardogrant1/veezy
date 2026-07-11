@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "e16abbb8-fa40-49b2-a7da-d03d3949ad71"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.leonardogrant1.veezy",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

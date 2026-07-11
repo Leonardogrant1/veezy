@@ -1,4 +1,4 @@
-import { generateImageWithGeminiVertex } from '@/lib/gemini/generate-image-vertex.js';
+import { generateImage } from '@/lib/images/generate-image.js';
 import { R2Storage } from '@/lib/r2/storage.js';
 import { deductGeneration, ensureGenerationCount } from '@/lib/revenuecat/generations.js';
 import { RCCustomer } from '@/lib/revenuecat/types.js';
@@ -57,7 +57,7 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
                 ).catch(() => { });
             }
             const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined, lang);
-            return generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
+            return generateImage(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
         })();
 
         const [phraseResult, resultB64] = await Promise.all([phrasePromise, imagePipeline]);
@@ -116,7 +116,7 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
         }
 
         const sceneDesc = await generateSceneDescription(personDesc, visionDescription, Array.isArray(existingPhrases) ? existingPhrases : undefined, lang);
-        const resultB64 = await generateImageWithGeminiVertex(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
+        const resultB64 = await generateImage(sceneDesc, personDesc, [{ base64: compositeBase64, mimeType: 'image/jpeg' }]);
 
         const imageKey = `vision-images/${userId}/${visionId}`;
         await R2Storage.uploadBuffer(imageKey, Buffer.from(resultB64, 'base64'));

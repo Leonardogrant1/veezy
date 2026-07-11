@@ -44,6 +44,8 @@ CRITICAL — ONE SCENE ONLY: This must be a single, unified photograph. Absolute
 PERSON (use the reference image to accurately depict this person):
 ${personDescription}
 
+The reference image is ONLY for the person's identity (face, features, build). Do NOT copy the reference photo's expression, pose, camera angle, clothing or setting. Instead, depict the person naturally integrated into the scene below — with an expression, pose and perspective that fit the scene.
+
 SCENE:
 ${sceneDescription}
 
