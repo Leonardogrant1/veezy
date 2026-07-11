@@ -65,6 +65,13 @@ export default function HomeScreen() {
 
     const activeVision: Vision | undefined = filtered[activeIndex];
 
+    // Keep activeIndex in bounds when the list shrinks (deletion, category filter)
+    useEffect(() => {
+        if (filtered.length > 0 && activeIndex >= filtered.length) {
+            setActiveIndex(filtered.length - 1);
+        }
+    }, [filtered.length, activeIndex]);
+
     useEffect(() => {
         PendingVisionWatcher.setOnCompleted(() => { refreshGenerationCount().catch(() => { }); });
     }, []);
@@ -241,7 +248,7 @@ export default function HomeScreen() {
                     <Feather name="chevron-up" size={20} color="rgba(255,255,255,0.6)" style={styles.chevronButton} />
 
                     <Text style={styles.category}>
-                        {t(`category.${activeVision.category ?? 'lifestyle'}`).toUpperCase()}
+                        {t(`category.${activeVision?.category ?? 'lifestyle'}`).toUpperCase()}
                     </Text>
 
                     <Text style={styles.phrase}>
