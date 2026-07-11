@@ -14,6 +14,7 @@ Rules:
 - The output must describe ONLY ONE single scene — as if captured in a single camera frame.
 - Do NOT describe any before/after states, multiple locations, or sequences of events.
 - Portrait orientation: the scene should work as a tall vertical photograph (3:4 ratio, taller than wide).
+- STRICTLY SAFE-FOR-WORK: The person is always fully and appropriately dressed for the setting (e.g. linen resort wear on a yacht or at the beach — NEVER swimwear, underwear, shirtless, or revealing clothing). No suggestive poses, no descriptions of bare skin beyond face and arms. Image generators reject anything else.
 
 Output only the scene description, no preamble or explanation.`;
 

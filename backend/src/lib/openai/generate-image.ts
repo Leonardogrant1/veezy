@@ -1,19 +1,10 @@
-import OpenAI from 'openai';
+import { toFile } from 'openai';
+import { logger } from '@/utils/logger.js';
 import { getOpenAIClient } from './client.js';
 
-const OPENAI_IMAGE_MODEL = 'gpt-5.5';
+const OPENAI_IMAGE_MODEL = 'gpt-image-2';
 
 const CAMERA_SETTINGS = `Shot on Sony A7R V, 85mm f/1.4 lens, natural light, photorealistic, ultra-detailed, 8K resolution, candid photography style`;
-
-function extractImage(response: OpenAI.Responses.Response): string {
-    const result = response.output
-        .filter((output) => output.type === 'image_generation_call')
-        .map((output) => output.result)
-        .find((r): r is string => typeof r === 'string');
-
-    if (!result) throw new Error('No image returned from OpenAI');
-    return result;
-}
 
 export async function generateImageWithGptImage(
     sceneDescription: string,
@@ -31,38 +22,46 @@ CRITICAL — ONE SCENE ONLY: This must be a single, unified photograph. Absolute
 PERSON (use the reference image to accurately depict this person):
 ${personDescription}
 
-The reference image is ONLY for the person's identity (face, features, build). Do NOT copy the reference photo's expression, pose, camera angle, clothing or setting. Instead, depict the person naturally integrated into the scene below — with an expression, pose and perspective that fit the scene.
+IDENTITY vs. POSE — read carefully, these are two separate rules:
+
+1. IDENTITY — keep IDENTICAL to the reference image: facial features, eye color, nose, lips, jawline, skin tone, hairstyle, hair color, beard, body build. The person must be instantly recognizable as the same person.
+
+2. POSE & EXPRESSION — must be COMPLETELY NEW, never copied from the reference photo: facial expression, mouth (smiling or not, open or closed), gaze direction, head angle, camera angle, body pose, lighting on the face.
+
+The reference photo shows ONE frozen moment. You are creating a DIFFERENT moment of the same person's life. Pasting the reference face 1:1 into a new background is a FAILURE.
+
+Hard requirements for the new image:
+- The facial expression MUST match the emotion of the scene — if the scene is positive or aspirational, the person is genuinely smiling or laughing with visible warmth, EVEN IF the reference photo shows a neutral or serious face.
+- The head and camera angle MUST be different from the reference photo — never a straight frontal portrait copy.
+- Natural, candid body language that belongs to the scene — the person is doing something, not posing for a portrait.
+- ANATOMICALLY CORRECT PROPORTIONS: head, face, limbs and body must be in realistic proportion to each other, like in a real photograph of an adult. The head must NOT be oversized relative to the body — no caricature-like or doll-like proportions.
 
 SCENE:
 ${sceneDescription}
 
 STYLE: ${CAMERA_SETTINGS}
 
-Critical: One scene, one frame. The person must closely match the reference photo provided.`;
+Critical: One scene, one frame. Same person (identity), new moment (expression, angle, pose) — never a copy of the reference photo.`;
 
-    const response = await client.responses.create({
+    const files = await Promise.all(
+        referenceImages.map((img, i) =>
+            toFile(Buffer.from(img.base64, 'base64'), `reference-${i}.${img.mimeType.split('/')[1] ?? 'jpg'}`, {
+                type: img.mimeType,
+            }),
+        ),
+    );
+
+    logger.info({ prompt }, 'gpt-image prompt');
+
+    const result = await client.images.edit({
         model: OPENAI_IMAGE_MODEL,
-        input: [
-            {
-                role: 'user',
-                content: [
-                    { type: 'input_text', text: prompt },
-                    ...referenceImages.map((img) => ({
-                        type: 'input_image' as const,
-                        image_url: `data:${img.mimeType};base64,${img.base64}`,
-                        detail: 'high' as const,
-                    })),
-                ],
-            },
-        ],
-        tools: [
-            {
-                type: 'image_generation',
-                size: '1024x1536',
-                quality: 'high',
-            },
-        ],
+        image: files,
+        prompt,
+        size: '1024x1536',
+        quality: 'high',
     });
 
-    return extractImage(response);
+    const imageData = result.data?.[0]?.b64_json;
+    if (!imageData) throw new Error('No image returned from OpenAI');
+    return imageData;
 }
