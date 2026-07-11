@@ -1,6 +1,7 @@
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -74,11 +75,28 @@ function useFloatAnim(config: { distance: number; duration: number; delay?: numb
 }
 
 function SubscriptionStatus() {
-    const { hasEntitlement } = useRevenueCat();
+    const { hasEntitlement, customerInfo } = useRevenueCat();
+    const [copied, setCopied] = useState(false);
+    const userId = customerInfo?.originalAppUserId;
+
+    const copyUserId = async () => {
+        if (!userId) return;
+        await Clipboard.setStringAsync(userId);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+    };
+
     return (
-        <Text style={styles.debugStatusText}>
-            💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}
-        </Text>
+        <>
+            <Text style={styles.debugStatusText}>
+                💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}
+            </Text>
+            <TouchableOpacity onPress={copyUserId}>
+                <Text style={styles.debugStatusText}>
+                    🆔 {copied ? '✓ kopiert' : userId ?? '–'}
+                </Text>
+            </TouchableOpacity>
+        </>
     );
 }
 

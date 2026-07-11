@@ -44,14 +44,14 @@ CRITICAL — ONE SCENE ONLY: This must be a single, unified photograph. Absolute
 PERSON (use the reference image to accurately depict this person):
 ${personDescription}
 
-The reference image is ONLY for the person's identity (face, features, build). Do NOT copy the reference photo's expression, pose, camera angle, clothing or setting. Instead, depict the person naturally integrated into the scene below — with an expression, pose and perspective that fit the scene.
+CRITICAL — RE-IMAGINE THE PERSON, NEVER COPY-PASTE: Do NOT transplant the person from the reference photo into the scene. Do not reuse the reference photo's exact face crop, expression, head angle, lighting or pose — that looks like a cut-out pasted onto a background. Instead, generate the person completely from scratch as a natural, organic part of the scene: a new facial expression that matches the scene's mood, a new pose, a new camera angle, and lighting and shadows on the face and body that are consistent with the scene's environment. Only the person's identity must match the reference (facial features, skin tone, hair, build) — everything else must be re-imagined so the result looks like a real photograph taken in that moment.
 
 SCENE:
 ${sceneDescription}
 
 STYLE: ${CAMERA_SETTINGS}
 
-Critical: One scene, one frame. The person must closely match the reference photo provided.`;
+Critical: One scene, one frame. The person must be recognizable as the same person as in the reference photo — but freshly generated within the scene, never copied from the reference.`;
 
     const contents = [
         { text: prompt },
