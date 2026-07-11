@@ -293,6 +293,8 @@ export default function HomeScreen() {
                                 });
                                 useVisionStore.getState().setFocusVisionId(id);
                                 router.back();
+                                // Auto-cleanup: remove the fake vision after the test window
+                                setTimeout(() => useVisionStore.getState().deleteVision(id), 10000);
                             }, 800);
                         }}
                     >
