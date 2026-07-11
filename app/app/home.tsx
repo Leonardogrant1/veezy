@@ -257,6 +257,33 @@ export default function HomeScreen() {
                     >
                         <Text style={styles.debugButtonText}>📡 Test Remote Push</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={() => {
+                            // Simulates the post-generate flow (pending placeholder + focus
+                            // scroll) without hitting the backend. Tap again to remove.
+                            const store = useVisionStore.getState();
+                            const existing = store.visions.filter((v) => v.id.startsWith('dev-fake-'));
+                            if (existing.length > 0) {
+                                existing.forEach((v) => store.deleteVision(v.id));
+                                return;
+                            }
+                            const id = `dev-fake-${Date.now()}`;
+                            store.addVision({
+                                id,
+                                title: '',
+                                phrase: 'DEV: Simulierte Vision für Ladeansicht & Scroll',
+                                category: 'lifestyle',
+                                imagePath: null,
+                                imageVersion: 1,
+                                status: 'pending',
+                                pendingSince: Date.now(),
+                            });
+                            store.setFocusVisionId(id);
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>🧪 Fake Pending Vision</Text>
+                    </TouchableOpacity>
                 </View>
             )}
 
