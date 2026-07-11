@@ -1,7 +1,7 @@
 import { sendPushNotification } from '@/lib/expo/push.js';
 import { generateImage } from '@/lib/images/generate-image.js';
 import { R2Storage } from '@/lib/r2/storage.js';
-import { deductGeneration, ensureGenerationCount } from '@/lib/revenuecat/generations.js';
+import { deductGeneration, ensureGenerationCount, refundGeneration } from '@/lib/revenuecat/generations.js';
 import { RCCustomer } from '@/lib/revenuecat/types.js';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { describePersonFromImages } from '@/prompts/describe-person.js';
@@ -63,14 +63,17 @@ function fireWorker(origin: string, payload: WorkerPayload): Promise<void> {
         body: JSON.stringify(payload),
     }).then(async (res) => {
         if (!res.ok) {
+            // Worker never ran (its own failure path responds 200 {ok:false}) — refund the up-front deduction
             logger.error({ status: res.status, visionId: payload.visionId }, 'Worker self-call returned error status');
             await writeStatus(payload.userId, payload.visionId, 'failed');
+            await refundGeneration(payload.userId);
             return;
         }
         void res.body?.cancel();
     }).catch((err) => {
         logger.error({ err: err?.message, visionId: payload.visionId }, 'Worker self-call failed');
         writeStatus(payload.userId, payload.visionId, 'failed').catch(() => { });
+        refundGeneration(payload.userId).catch(() => { });
     });
 }
 
@@ -150,6 +153,10 @@ visionRoute.post('/generate', revenuecatAuth, async (c) => {
         const visionId = crypto.randomUUID();
         await writeStatus(userId, visionId, 'pending');
 
+        // Deduct up front so parallel dispatches can't outspend the quota;
+        // every failure path (worker error, self-call error) refunds.
+        await deductGeneration(userId, count);
+
         const proto = c.req.header('x-forwarded-proto') ?? 'http';
         const origin = `${proto}://${new URL(c.req.url).host}`;
         const workerPromise = fireWorker(origin, {
@@ -203,6 +210,10 @@ visionRoute.post('/regenerate', revenuecatAuth, async (c) => {
         getWorkerSecret(); // fail fast before any state is written
 
         await writeStatus(userId, visionId, 'pending');
+
+        // Deduct up front so parallel dispatches can't outspend the quota;
+        // every failure path (worker error, self-call error) refunds.
+        await deductGeneration(userId, count);
 
         const proto = c.req.header('x-forwarded-proto') ?? 'http';
         const origin = `${proto}://${new URL(c.req.url).host}`;
@@ -260,8 +271,7 @@ visionRoute.post('/worker', async (c) => {
         await R2Storage.uploadBuffer(imageKeyFor(userId, visionId), Buffer.from(resultB64, 'base64'));
         await writeStatus(userId, visionId, 'done');
 
-        const count = await ensureGenerationCount(userId);
-        deductGeneration(userId, count); // fire-and-forget, wie bisher
+        // Generation was already deducted at dispatch time — nothing to charge here.
 
         if (pushToken) {
             await sendPushNotification(pushToken, {
@@ -276,6 +286,7 @@ visionRoute.post('/worker', async (c) => {
     } catch (error: any) {
         logger.error({ error: error.message, userId, visionId }, 'Vision worker failed');
         await writeStatus(userId, visionId, 'failed').catch(() => { });
+        await refundGeneration(userId);
         if (pushToken) {
             await sendPushNotification(pushToken, {
                 title: lang === 'de' ? 'Deine Vision konnte nicht erstellt werden — versuch es nochmal' : "Your vision couldn't be created — please try again",

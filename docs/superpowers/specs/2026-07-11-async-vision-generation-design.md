@@ -25,7 +25,7 @@ Das Backend läuft auf Cloud Run (`min-instances: 0`, CPU nur während Requests)
 2. Body-Flag `sync?: boolean`: Wenn `true` (nur Onboarding), läuft der komplette bisherige synchrone Flow unverändert ab — Response wie heute inkl. `signedUrl`.
 3. Async-Fall (Default): Phrase + Affirmationen **synchron** generieren, `visionId` erzeugen, Status `pending` nach R2 schreiben, Worker-Call feuern (fire-and-forget, `.catch` → Status `failed`).
 4. Response: `{ visionId, phrase, category, affirmationsAffirmation, affirmationsFuel, status: 'pending' }` — kein `signedUrl`.
-5. Generation-Abzug erfolgt NICHT hier, sondern im Worker bei Erfolg.
+5. Generation-Abzug erfolgt beim Dispatch (verhindert, dass parallele Dispatches das Kontingent überziehen); alle Fehlerpfade (Worker-Fehler, Self-Call-Fehler) erstatten den Credit über `refundGeneration`.
 
 ### `POST /vision/regenerate` (umgebaut)
 Wie generate, aber ohne Phrase-Schritt: Validierung + Checks, Status `pending`, Worker-Call, Response `{ visionId, status: 'pending' }`. Kein `sync`-Flag nötig (Onboarding regeneriert nicht).
@@ -34,8 +34,8 @@ Wie generate, aber ohne Phrase-Schritt: Validierung + Checks, Status `pending`, 
 Auth: nur `x-internal-secret`. Body: `{ userId, visionId, visionDescription, existingPhrases?, language }`.
 1. Composite + gecachte Personenbeschreibung laden (lazy-describe-Fallback wie bisher).
 2. Szenenbeschreibung → `generateImage()` → Upload nach `vision-images/<userId>/<visionId>`.
-3. Status → `done`, Generation-Abzug (fire-and-forget wie bisher), Push senden: Titel/Body lokalisiert nach `language` (de: „Deine Vision ist fertig ✨" / en: "Your vision is ready ✨"), `data: { visionId }`.
-4. Bei Fehler: Status → `failed`, Push (de: „Deine Vision konnte nicht erstellt werden — versuch es nochmal" / en: "Your vision couldn't be created — please try again"), kein Generation-Abzug.
+3. Status → `done`, Push senden: Titel/Body lokalisiert nach `language` (de: „Deine Vision ist fertig ✨" / en: "Your vision is ready ✨"), `data: { visionId }`. (Abzug ist bereits beim Dispatch erfolgt.)
+4. Bei Fehler: Status → `failed`, Credit-Rückerstattung via `refundGeneration`, Push (de: „Deine Vision konnte nicht erstellt werden — versuch es nochmal" / en: "Your vision couldn't be created — please try again").
 5. Kein Push-Token vorhanden → Schritte laufen normal, Push wird einfach übersprungen.
 
 ### `GET /vision/status?visionId=` (neu)

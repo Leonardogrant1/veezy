@@ -26,3 +26,12 @@ export async function deductGeneration(userId: string, currentCount: number): Pr
         logger.error({ err: err.message }, 'Failed to deduct generation_count');
     }
 }
+
+export async function refundGeneration(userId: string): Promise<void> {
+    try {
+        const count = await ensureGenerationCount(userId);
+        await RevenueCatClient.setAttributes(userId, { [ATTR_COUNT]: String(count + 1) });
+    } catch (err: any) {
+        logger.error({ err: err.message }, 'Failed to refund generation_count');
+    }
+}
