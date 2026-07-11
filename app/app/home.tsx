@@ -7,6 +7,7 @@ import { VisionActionsModal } from '@/components/modals/VisionActionsModal';
 import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { PendingVisionWatcher } from '@/services/pending-vision-watcher';
+import { syncPushToken } from '@/services/push-token-sync';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useSuperwallFunctions } from '@/services/purchases/superwall/useSuperwall';
@@ -35,6 +36,8 @@ import {
     ViewToken,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'http://localhost:8080';
 
 export default function HomeScreen() {
     const { t } = useTranslation();
@@ -217,6 +220,24 @@ export default function HomeScreen() {
                         }}
                     >
                         <Text style={styles.debugButtonText}>🔔 Test Push (5s)</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={async () => {
+                            try {
+                                // Ensure the token is registered + uploaded, then test the full remote chain
+                                await syncPushToken();
+                                const res = await fetch(`${BACKEND_URL}/user-data/test-push`, {
+                                    method: 'POST',
+                                    headers: { 'x-rc-user-id': useUserDataStore.getState().userId },
+                                });
+                                devLog('Test remote push response:', res.status);
+                            } catch (e) {
+                                devLog('Test remote push failed:', e);
+                            }
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>📡 Test Remote Push</Text>
                     </TouchableOpacity>
                 </View>
             )}

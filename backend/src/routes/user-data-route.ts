@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { sendPushNotification } from '@/lib/expo/push.js';
 import { revenuecatAuth } from '@/middleware/revenuecat-auth.js';
 import { R2Storage } from '@/lib/r2/storage.js';
 import { ensureGenerationCount } from '@/lib/revenuecat/generations.js';
@@ -88,6 +89,22 @@ userDataRoute.delete('/vision-image', revenuecatAuth, async (c) => {
     if (!visionId) return c.json({ error: 'visionId query param required' }, 400);
 
     await R2Storage.deleteImage(`vision-images/${userId}/${visionId}`);
+    return c.json({ ok: true });
+});
+
+// Dev helper: sends a real remote push to the caller's stored token,
+// exercising the full chain (R2 token -> Expo Push API -> device).
+userDataRoute.post('/test-push', revenuecatAuth, async (c) => {
+    const userId = c.var.rcUserId;
+    const buf = await R2Storage.downloadBuffer(`user-data/${userId}/push-token`);
+    const token = buf?.toString('utf8');
+    if (!token) return c.json({ error: 'No push token stored for this user' }, 404);
+
+    await sendPushNotification(token, {
+        title: 'DEV: Test Remote Push 🚀',
+        body: 'Die Push-Kette funktioniert (R2 → Expo → Gerät).',
+        data: { test: 'true' },
+    });
     return c.json({ ok: true });
 });
 
