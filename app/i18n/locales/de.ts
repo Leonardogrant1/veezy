@@ -99,6 +99,19 @@ const de: Record<string, string> = {
   'onboarding.notifications.fallback_affirmation': '"Ich lebe in meinem Traumhaus am Meer und bin vollkommen frei."',
   'onboarding.notifications.fallback_fuel': '"Jetzt alles geben – oder für immer davon träumen."',
 
+  'onboarding.demo.badge': 'So funktioniert Veezy',
+  'onboarding.demo.photos_title': 'Du lädst 5 Fotos von dir hoch',
+  'onboarding.demo.photos_subtext': 'Daraus entsteht deine persönliche Figur – zum Beispiel so:',
+  'onboarding.demo.figure_loading': 'Die Figur entsteht…',
+  'onboarding.demo.figure_title': 'Deine persönliche Figur',
+  'onboarding.demo.figure_caption': 'Beispiel-Figur',
+  'onboarding.demo.vision_text': '„Ich lebe in meinem Traumhaus am Meer und bin vollkommen frei."',
+  'onboarding.demo.vision_loading': 'Das Visionsbild entsteht…',
+  'onboarding.demo.example_badge': 'BEISPIEL',
+  'onboarding.demo.phrase': 'Ich lebe meinen Traum am Meer.',
+  'onboarding.demo.category': 'Lifestyle',
+  'onboarding.demo.continue': 'Weiter',
+
   // Add widget step
   'onboarding.widget.title': 'Deine Visionen. Jeden Tag vor Augen.',
   'onboarding.widget.subtitle': 'Füge veezy zu deinem Home-Screen hinzu, um deine Ziele immer im Blick zu haben.',

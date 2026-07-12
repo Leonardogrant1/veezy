@@ -99,6 +99,19 @@ const en = {
   'onboarding.notifications.fallback_affirmation': '"I live in my dream home by the sea and am completely free."',
   'onboarding.notifications.fallback_fuel': '"Give it everything now — or dream about it forever."',
 
+  'onboarding.demo.badge': 'How Veezy works',
+  'onboarding.demo.photos_title': 'You upload 5 photos of yourself',
+  'onboarding.demo.photos_subtext': 'They become your personal figure – for example:',
+  'onboarding.demo.figure_loading': 'Creating the figure…',
+  'onboarding.demo.figure_title': 'Your personal figure',
+  'onboarding.demo.figure_caption': 'Example figure',
+  'onboarding.demo.vision_text': '"I live in my dream home by the sea and am completely free."',
+  'onboarding.demo.vision_loading': 'Creating the vision image…',
+  'onboarding.demo.example_badge': 'EXAMPLE',
+  'onboarding.demo.phrase': 'I am living my dream by the sea.',
+  'onboarding.demo.category': 'Lifestyle',
+  'onboarding.demo.continue': 'Continue',
+
   // Add widget step
   'onboarding.widget.title': 'Your Visions. Every Day.',
   'onboarding.widget.subtitle': 'Add veezy to your home screen to keep your goals in sight at all times.',
