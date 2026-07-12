@@ -107,7 +107,7 @@ const en = {
   'onboarding.demo.figure_cta': 'Create vision image',
   'onboarding.demo.vision_text': 'I live in my dream home by the sea and am completely free.',
   'onboarding.demo.example_badge': 'EXAMPLE',
-  'onboarding.demo.phrase': 'I am living my dream by the sea.',
+  'onboarding.demo.phrase': 'I live in my dream home by the sea and enjoy my freedom.',
   'onboarding.demo.category': 'Lifestyle',
   'onboarding.demo.continue': 'Continue',
 

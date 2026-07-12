@@ -107,7 +107,7 @@ const de: Record<string, string> = {
   'onboarding.demo.figure_cta': 'Visionsbild erstellen',
   'onboarding.demo.vision_text': 'Ich lebe in meinem Traumhaus am Meer und bin vollkommen frei.',
   'onboarding.demo.example_badge': 'BEISPIEL',
-  'onboarding.demo.phrase': 'Ich lebe meinen Traum am Meer.',
+  'onboarding.demo.phrase': 'Ich lebe in meinem Traumhaus am Meer und genieße meine Freiheit.',
   'onboarding.demo.category': 'Lifestyle',
   'onboarding.demo.continue': 'Weiter',
 
