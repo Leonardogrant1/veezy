@@ -224,6 +224,16 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.debugButton}
+                        onPress={() => {
+                            useUserDataStore.setState({
+                                selfReferenceImages: { face_front: null, face_smile: null, face_left: null, face_right: null, body: null },
+                            });
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>🧍 Clear Figur</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
                         onPress={() => showPremiumWelcomeRef.current()}
                     >
                         <Text style={styles.debugButtonText}>⭐ Premium Welcome</Text>
