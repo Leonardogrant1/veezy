@@ -85,7 +85,7 @@ export function DemoGenerationStep() {
     if (phase === 'vision' && visionRevealed) {
         return (
             <View style={styles.container}>
-                <Animated.Image source={DEMO_VISION} style={[StyleSheet.absoluteFill, { opacity: visionOpacity }]} resizeMode="cover" />
+                <Animated.Image source={DEMO_VISION} style={[styles.visionImage, { opacity: visionOpacity }]} />
                 <LinearGradient colors={['rgba(0,0,0,0.35)', 'transparent']} style={[StyleSheet.absoluteFill, { bottom: undefined, height: 180 }]} />
                 <LinearGradient colors={['transparent', 'rgba(0,0,0,0.80)']} style={[StyleSheet.absoluteFill, { top: undefined, height: 500 }]} />
 
@@ -171,6 +171,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#0a0a0a',
+        overflow: 'hidden',
+    },
+    visionImage: {
+        ...StyleSheet.absoluteFillObject,
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     centerContent: {
         flex: 1,
