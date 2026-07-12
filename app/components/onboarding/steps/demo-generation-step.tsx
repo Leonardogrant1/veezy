@@ -1,10 +1,11 @@
 import VisionLoading from '@/components/layout/VisionLoading';
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEMO_VISION = require('@/assets/onboarding-demo/demo-vision.png');
@@ -161,7 +162,7 @@ export function DemoGenerationStep() {
                                         },
                                     ]}
                                 >
-                                    <Image source={source} style={styles.tileImage} resizeMode="cover" />
+                                    <Image source={source} style={styles.tileImage} contentFit="cover" />
                                 </Animated.View>
                             ))}
                         </View>
