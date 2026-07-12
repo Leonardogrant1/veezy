@@ -1,27 +1,29 @@
-import body from '@/assets/face-photo-icons/body.svg';
-import face_front from '@/assets/face-photo-icons/face_front.svg';
-import face_left from '@/assets/face-photo-icons/face_left.svg';
-import face_right from '@/assets/face-photo-icons/face_right.svg';
-import face_smile from '@/assets/face-photo-icons/face_smile.svg';
+import VisionLoading from '@/components/layout/VisionLoading';
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-const DEMO_FIGURE = require('@/assets/onboarding-demo/demo-figure.jpg');
 const DEMO_VISION = require('@/assets/onboarding-demo/demo-vision.jpg');
 
-const PHOTO_ICONS = [face_front, face_smile, face_left, face_right, body];
+// Beispiel-Selfies der Demo-Figur — Platzhalter, werden später durch echte Assets ersetzt
+const DEMO_SELFIES = [
+    require('@/assets/onboarding-demo/demo-figure.jpg'),
+    require('@/assets/onboarding-demo/demo-figure.jpg'),
+    require('@/assets/onboarding-demo/demo-figure.jpg'),
+    require('@/assets/onboarding-demo/demo-figure.jpg'),
+    require('@/assets/onboarding-demo/demo-figure.jpg'),
+];
 
 // Timing (ms)
 const TILE_STAGGER = 260;
-const FIGURE_LOADING = 1800;
-const VISION_LOADING = 1800;
+const TYPE_INTERVAL = 45;
+const VISION_LOADING = 3500;
 
-type Phase = 'photos' | 'figure' | 'vision';
+type Phase = 'photos' | 'typing' | 'loading' | 'result';
 
 export function DemoGenerationStep() {
     const { t } = useTranslation();
@@ -29,12 +31,12 @@ export function DemoGenerationStep() {
     const insets = useSafeAreaInsets();
 
     const [phase, setPhase] = useState<Phase>('photos');
-    const [figureRevealed, setFigureRevealed] = useState(false);
-    const [visionRevealed, setVisionRevealed] = useState(false);
+    const [typed, setTyped] = useState('');
     const [ctaVisible, setCtaVisible] = useState(false);
 
-    const tileAnims = useRef(PHOTO_ICONS.map(() => new Animated.Value(0))).current;
-    const figureOpacity = useRef(new Animated.Value(0)).current;
+    const visionText = t('onboarding.demo.vision_text');
+
+    const tileAnims = useRef(DEMO_SELFIES.map(() => new Animated.Value(0))).current;
     const visionOpacity = useRef(new Animated.Value(0)).current;
     const phraseOpacity = useRef(new Animated.Value(0)).current;
     const phraseTranslate = useRef(new Animated.Value(20)).current;
@@ -69,32 +71,49 @@ export function DemoGenerationStep() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Simuliertes Eintippen der Vision
     useEffect(() => {
-        if (phase === 'figure') {
-            later(() => {
-                setFigureRevealed(true);
-                Animated.timing(figureOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-                    .start(() => showCta());
-            }, FIGURE_LOADING);
-        } else if (phase === 'vision') {
-            later(() => {
-                setVisionRevealed(true);
-                Animated.sequence([
-                    Animated.timing(visionOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                    Animated.parallel([
-                        Animated.timing(phraseOpacity, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                        Animated.timing(phraseTranslate, { toValue: 0, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                    ]),
-                    Animated.timing(buttonOpacity, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-                ]).start();
-            }, VISION_LOADING);
+        if (phase !== 'typing') return;
+        let i = 0;
+        const id = setInterval(() => {
+            i += 1;
+            setTyped(visionText.slice(0, i));
+            if (i >= visionText.length) {
+                clearInterval(id);
+                showCta();
+            }
+        }, TYPE_INTERVAL);
+        return () => clearInterval(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [phase]);
+
+    useEffect(() => {
+        if (phase === 'loading') {
+            later(() => setPhase('result'), VISION_LOADING);
+        } else if (phase === 'result') {
+            Animated.sequence([
+                Animated.timing(visionOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+                Animated.parallel([
+                    Animated.timing(phraseOpacity, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+                    Animated.timing(phraseTranslate, { toValue: 0, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+                ]),
+                Animated.timing(buttonOpacity, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]).start();
         }
         const pending = timeouts.current;
         return () => pending.forEach(clearTimeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [phase]);
 
-    if (phase === 'vision' && visionRevealed) {
+    if (phase === 'loading') {
+        return (
+            <View style={styles.container}>
+                <VisionLoading />
+            </View>
+        );
+    }
+
+    if (phase === 'result') {
         return (
             <View style={styles.container}>
                 <Animated.Image source={DEMO_VISION} style={[styles.visionImage, { opacity: visionOpacity }]} />
@@ -132,7 +151,7 @@ export function DemoGenerationStep() {
                         <Text style={styles.title}>{t('onboarding.demo.photos_title')}</Text>
                         <Text style={styles.subtext}>{t('onboarding.demo.photos_subtext')}</Text>
                         <View style={styles.tileRow}>
-                            {PHOTO_ICONS.map((Icon, i) => (
+                            {DEMO_SELFIES.map((source, i) => (
                                 <Animated.View
                                     key={i}
                                     style={[
@@ -143,44 +162,31 @@ export function DemoGenerationStep() {
                                         },
                                     ]}
                                 >
-                                    <Icon width={34} height={34} />
+                                    <Image source={source} style={styles.tileImage} resizeMode="cover" />
                                 </Animated.View>
                             ))}
                         </View>
                     </>
                 )}
 
-                {phase === 'figure' && !figureRevealed && (
-                    <View style={styles.loadingBlock}>
-                        <ActivityIndicator color="white" size="large" />
-                        <Text style={styles.loadingText}>{t('onboarding.demo.figure_loading')}</Text>
-                    </View>
-                )}
-
-                {phase === 'figure' && figureRevealed && (
+                {phase === 'typing' && (
                     <>
-                        <Text style={styles.title}>{t('onboarding.demo.figure_title')}</Text>
-                        <Animated.Image source={DEMO_FIGURE} style={[styles.figureImage, { opacity: figureOpacity }]} resizeMode="cover" />
-                        <Text style={styles.caption}>{t('onboarding.demo.figure_caption')}</Text>
-                    </>
-                )}
-
-                {phase === 'vision' && !visionRevealed && (
-                    <View style={styles.loadingBlock}>
+                        <Text style={styles.title}>{t('onboarding.demo.typing_title')}</Text>
                         <View style={styles.visionTextCard}>
-                            <Text style={styles.visionText}>{t('onboarding.demo.vision_text')}</Text>
+                            <Text style={styles.visionText}>
+                                {typed}
+                                {typed.length < visionText.length && <Text style={styles.cursor}>▍</Text>}
+                            </Text>
                         </View>
-                        <ActivityIndicator color="white" size="large" />
-                        <Text style={styles.loadingText}>{t('onboarding.demo.vision_loading')}</Text>
-                    </View>
+                    </>
                 )}
             </View>
 
-            {ctaVisible && phase !== 'vision' && (
+            {ctaVisible && (
                 <Animated.View style={[styles.ctaFooter, { paddingBottom: insets.bottom + 32, opacity: ctaOpacity }]}>
                     <TouchableOpacity
                         style={styles.continueButton}
-                        onPress={() => advanceTo(phase === 'photos' ? 'figure' : 'vision')}
+                        onPress={() => advanceTo(phase === 'photos' ? 'typing' : 'loading')}
                         activeOpacity={0.85}
                     >
                         <Text style={styles.continueText}>
@@ -254,29 +260,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.2)',
         backgroundColor: 'rgba(255,255,255,0.08)',
-        alignItems: 'center',
-        justifyContent: 'center',
+        overflow: 'hidden',
     },
-    loadingBlock: {
-        alignItems: 'center',
-        gap: 18,
-    },
-    loadingText: {
-        color: 'rgba(255,255,255,0.6)',
-        fontFamily: Fonts.sans,
-        fontSize: 14,
-    },
-    figureImage: {
-        width: 220,
-        height: 300,
-        borderRadius: 18,
-    },
-    caption: {
-        color: 'rgba(255,255,255,0.45)',
-        fontFamily: Fonts.sans,
-        fontSize: 12,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
+    tileImage: {
+        width: '100%',
+        height: '100%',
     },
     visionTextCard: {
         borderRadius: 14,
@@ -285,7 +273,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.06)',
         paddingHorizontal: 18,
         paddingVertical: 14,
-        marginBottom: 8,
+        marginTop: 8,
+        minHeight: 80,
+        alignSelf: 'stretch',
     },
     visionText: {
         color: 'rgba(255,255,255,0.85)',
@@ -293,6 +283,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         lineHeight: 24,
         textAlign: 'center',
+    },
+    cursor: {
+        color: Colors.accent,
     },
     exampleBadge: {
         position: 'absolute',
