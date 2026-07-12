@@ -31,6 +31,8 @@ export default function AddVisionScreen() {
     const userId = useUserDataStore((s) => s.userId);
     const motivationStyle = useUserDataStore((s) => s.motivationStyle);
     const language = useUserDataStore((s) => s.language);
+    const selfReferenceImages = useUserDataStore((s) => s.selfReferenceImages);
+    const hasFigure = Object.values(selfReferenceImages).some(Boolean);
 
     const [state, setState] = useState<ScreenState>('input');
     const [description, setDescription] = useState('');
@@ -111,6 +113,31 @@ export default function AddVisionScreen() {
             setState('input');
         }
     };
+
+    // ─── Figure gate ───────────────────────────────────────────────
+    if (state === 'input' && !hasFigure) {
+        return (
+            <View style={styles.darkContainer}>
+                <TouchableOpacity
+                    style={[styles.closeButton, { top: insets.top + 12 }]}
+                    onPress={() => router.back()}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.closeText}>✕</Text>
+                </TouchableOpacity>
+
+                <View style={styles.innerContainer}>
+                    <View style={styles.gateContent}>
+                        <Text style={styles.headline}>{t('vision.add.figure_gate_title')}</Text>
+                        <Text style={styles.gateText}>{t('vision.add.figure_gate_text')}</Text>
+                        <TouchableOpacity style={styles.gateButton} onPress={() => router.push('/edit-self-reference')} activeOpacity={0.85}>
+                            <Text style={styles.gateButtonText}>{t('vision.add.figure_gate_button')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        );
+    }
 
     // ─── Input state ───────────────────────────────────────────────
     if (state === 'input') {
@@ -211,5 +238,32 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.sans,
         fontSize: 13,
         textAlign: 'center',
+    },
+    gateContent: {
+        width: '100%',
+        paddingHorizontal: 28,
+        gap: 16,
+        alignItems: 'center',
+    },
+    gateText: {
+        color: 'rgba(255,255,255,0.55)',
+        fontFamily: Fonts.sans,
+        fontSize: 14,
+        lineHeight: 21,
+        textAlign: 'center',
+    },
+    gateButton: {
+        marginTop: 8,
+        backgroundColor: 'white',
+        borderRadius: 14,
+        paddingVertical: 16,
+        paddingHorizontal: 28,
+        alignItems: 'center',
+    },
+    gateButtonText: {
+        color: '#0d0d0d',
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
