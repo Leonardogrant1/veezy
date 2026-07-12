@@ -7,8 +7,6 @@ type OnboardingControlContextValue = {
     setOnDisabledPress: (fn: () => void) => void;
     nextStep: () => void;
     finishOnboarding: () => void;
-    visionDescription: string;
-    setVisionDescription: (value: string) => void;
 };
 
 export const OnboardingControlContext = createContext<OnboardingControlContextValue | null>(null);

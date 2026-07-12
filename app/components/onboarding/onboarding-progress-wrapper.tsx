@@ -42,7 +42,6 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     function setOnDisabledPress(fn: () => void) { onDisabledPressRef.current = fn; }
     // prevBg = background of the outgoing step, stays visible underneath during fade
     const [prevBg, setPrevBg] = useState(() => bgForStep(steps[0]));
-    const [visionDescription, setVisionDescription] = useState('');
     const inFlightRef = useRef(false);
     const { openWithPlacement } = useSuperwallFunctions();
 
@@ -112,7 +111,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     }, [currentIndex]);
 
     return (
-        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, setOnDisabledPress, nextStep, visionDescription, setVisionDescription }}>
+        <OnboardingControlContext.Provider value={{ currentIndex, canContinue, finishOnboarding, setCanContinue, setOnDisabledPress, nextStep }}>
             {/* Outer view holds the PREVIOUS step's bg — visible during crossfade */}
             <View style={[styles.container, { backgroundColor: prevBg }]}>
                 {/* Animated view brings the NEW step's bg + all content */}

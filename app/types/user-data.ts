@@ -29,6 +29,7 @@ export type UserData = {
     primaryCategory: PrimaryCategory | null
     visionDescription: string
     language: 'de' | 'en'
+    showDevButtons: boolean
 }
 
 export function calculateAge(birthday: string): number {

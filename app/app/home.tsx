@@ -58,6 +58,7 @@ export default function HomeScreen() {
     const focusVisionId = useVisionStore((s) => s.focusVisionId);
 
     const isPremium = hasEntitlement(PREMIUM_IDENTIFIER);
+    const showDevButtons = useUserDataStore((s) => s.showDevButtons);
 
     const filtered = useMemo(() => {
         const list = selectedCategory === 'all'
@@ -185,7 +186,7 @@ export default function HomeScreen() {
                 pointerEvents="none"
             />
 
-            {__DEV__ && (
+            {__DEV__ && showDevButtons && (
                 <View style={styles.debugContainer}>
                     <Text style={styles.debugStatusText}>
                         💳 {hasEntitlement(PREMIUM_IDENTIFIER) ? 'Premium ✅' : 'Free ❌'}

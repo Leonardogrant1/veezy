@@ -103,6 +103,7 @@ function SubscriptionStatus() {
 export default function StartScreen() {
     const { t, i18n } = useTranslation();
     const updateSettings = useUserDataStore((s) => s.updateSettings);
+    const showDevButtons = useUserDataStore((s) => s.showDevButtons);
 
     // Blob float animations
     const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
@@ -176,7 +177,7 @@ export default function StartScreen() {
                 </TouchableOpacity>
             </View>
 
-            {__DEV__ && (
+            {__DEV__ && showDevButtons && (
                 <View style={styles.debugContainer}>
                     <SubscriptionStatus />
                     <TouchableOpacity

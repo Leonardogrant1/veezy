@@ -28,6 +28,7 @@ export default function SettingsScreen() {
     const birthday = useUserDataStore((s) => s.birthday);
     const haptics = useUserDataStore((s) => s.haptics);
     const language = useUserDataStore((s) => s.language);
+    const showDevButtons = useUserDataStore((s) => s.showDevButtons);
     const updateSettings = useUserDataStore((s) => s.updateSettings);
 
     const { hasEntitlement } = useRevenueCat();
@@ -181,6 +182,24 @@ export default function SettingsScreen() {
                         </TouchableOpacity>
                     ))}
                 </View>
+
+                {/* DEV – only in __DEV__ builds */}
+                {__DEV__ && (
+                    <>
+                        <Text style={[styles.sectionLabel, { color: '#f97316' }]}>🛠 Developer</Text>
+                        <View style={styles.rowGroup}>
+                            <View style={styles.row}>
+                                <Text style={styles.rowLabel}>DEV Buttons anzeigen</Text>
+                                <Switch
+                                    value={showDevButtons}
+                                    onValueChange={(v) => updateSettings({ showDevButtons: v })}
+                                    trackColor={{ false: Colors.borderDivider, true: '#f97316' }}
+                                    thumbColor="white"
+                                />
+                            </View>
+                        </View>
+                    </>
+                )}
             </ScrollView>
 
             <EditFieldModal
