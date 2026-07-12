@@ -234,6 +234,20 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.debugButton}
+                        onPress={() => {
+                            useVisionStore.setState({ visions: [] });
+                            useUserDataStore.setState({
+                                hasOnboarded: false,
+                                hasSeenTutorial: false,
+                                selfReferenceImages: { face_front: null, face_smile: null, face_left: null, face_right: null, body: null },
+                            });
+                            router.replace('/start');
+                        }}
+                    >
+                        <Text style={styles.debugButtonText}>🆕 Neuer User</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
                         onPress={() => showPremiumWelcomeRef.current()}
                     >
                         <Text style={styles.debugButtonText}>⭐ Premium Welcome</Text>
