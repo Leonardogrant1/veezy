@@ -53,8 +53,8 @@ export function DemoGenerationStep() {
                 Animated.timing(a, { toValue: 1, duration: 350, easing: Easing.out(Easing.cubic), useNativeDriver: true })
             )
         ).start(() => later(() => setPhase('figure'), HOLD_PHOTOS));
-        return () => timeouts.current.forEach(clearTimeout);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const pending = timeouts.current;
+        return () => pending.forEach(clearTimeout);
     }, []);
 
     useEffect(() => {
@@ -77,6 +77,8 @@ export function DemoGenerationStep() {
                 ]).start();
             }, VISION_LOADING);
         }
+        const pending = timeouts.current;
+        return () => pending.forEach(clearTimeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [phase]);
 
