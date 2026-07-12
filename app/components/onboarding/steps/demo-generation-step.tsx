@@ -18,9 +18,7 @@ const PHOTO_ICONS = [face_front, face_smile, face_left, face_right, body];
 
 // Timing (ms)
 const TILE_STAGGER = 260;
-const HOLD_PHOTOS = 1100;
 const FIGURE_LOADING = 1800;
-const HOLD_FIGURE = 1600;
 const VISION_LOADING = 1800;
 
 type Phase = 'photos' | 'figure' | 'vision';
@@ -33,6 +31,7 @@ export function DemoGenerationStep() {
     const [phase, setPhase] = useState<Phase>('photos');
     const [figureRevealed, setFigureRevealed] = useState(false);
     const [visionRevealed, setVisionRevealed] = useState(false);
+    const [ctaVisible, setCtaVisible] = useState(false);
 
     const tileAnims = useRef(PHOTO_ICONS.map(() => new Animated.Value(0))).current;
     const figureOpacity = useRef(new Animated.Value(0)).current;
@@ -40,10 +39,22 @@ export function DemoGenerationStep() {
     const phraseOpacity = useRef(new Animated.Value(0)).current;
     const phraseTranslate = useRef(new Animated.Value(20)).current;
     const buttonOpacity = useRef(new Animated.Value(0)).current;
+    const ctaOpacity = useRef(new Animated.Value(0)).current;
     const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     function later(fn: () => void, ms: number) {
         timeouts.current.push(setTimeout(fn, ms));
+    }
+
+    function showCta() {
+        setCtaVisible(true);
+        Animated.timing(ctaOpacity, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    }
+
+    function advanceTo(next: Phase) {
+        setCtaVisible(false);
+        ctaOpacity.setValue(0);
+        setPhase(next);
     }
 
     useEffect(() => {
@@ -52,9 +63,10 @@ export function DemoGenerationStep() {
             tileAnims.map((a) =>
                 Animated.timing(a, { toValue: 1, duration: 350, easing: Easing.out(Easing.cubic), useNativeDriver: true })
             )
-        ).start(() => later(() => setPhase('figure'), HOLD_PHOTOS));
+        ).start(() => showCta());
         const pending = timeouts.current;
         return () => pending.forEach(clearTimeout);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -62,7 +74,7 @@ export function DemoGenerationStep() {
             later(() => {
                 setFigureRevealed(true);
                 Animated.timing(figureOpacity, { toValue: 1, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true })
-                    .start(() => later(() => setPhase('vision'), HOLD_FIGURE));
+                    .start(() => showCta());
             }, FIGURE_LOADING);
         } else if (phase === 'vision') {
             later(() => {
@@ -163,6 +175,20 @@ export function DemoGenerationStep() {
                     </View>
                 )}
             </View>
+
+            {ctaVisible && phase !== 'vision' && (
+                <Animated.View style={[styles.ctaFooter, { paddingBottom: insets.bottom + 32, opacity: ctaOpacity }]}>
+                    <TouchableOpacity
+                        style={styles.continueButton}
+                        onPress={() => advanceTo(phase === 'photos' ? 'figure' : 'vision')}
+                        activeOpacity={0.85}
+                    >
+                        <Text style={styles.continueText}>
+                            {t(phase === 'photos' ? 'onboarding.demo.photos_cta' : 'onboarding.demo.figure_cta')}
+                        </Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            )}
         </View>
     );
 }
@@ -290,6 +316,12 @@ const styles = StyleSheet.create({
         left: 16,
         right: 16,
         gap: 16,
+    },
+    ctaFooter: {
+        position: 'absolute',
+        bottom: 0,
+        left: 16,
+        right: 16,
     },
     phraseCard: {
         borderRadius: 18,
