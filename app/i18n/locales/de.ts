@@ -100,8 +100,8 @@ const de: Record<string, string> = {
   'onboarding.notifications.fallback_fuel': '"Jetzt alles geben – oder für immer davon träumen."',
 
   'onboarding.demo.badge': 'So funktioniert Veezy',
-  'onboarding.demo.photos_title': 'Du lädst 5 Fotos von dir hoch',
-  'onboarding.demo.photos_subtext': 'Daraus entsteht deine persönliche Figur – zum Beispiel so:',
+  'onboarding.demo.photos_title': 'Du machst mind. 4 schnelle Selfies',
+  'onboarding.demo.photos_subtext': 'Sie machen deine Visionsbilder so realistisch wie möglich – aus ihnen entsteht deine persönliche Figur. Zum Beispiel so:',
   'onboarding.demo.photos_cta': 'Figur erstellen',
   'onboarding.demo.figure_loading': 'Die Figur entsteht…',
   'onboarding.demo.figure_title': 'Deine persönliche Figur',

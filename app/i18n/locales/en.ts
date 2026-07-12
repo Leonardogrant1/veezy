@@ -100,8 +100,8 @@ const en = {
   'onboarding.notifications.fallback_fuel': '"Give it everything now — or dream about it forever."',
 
   'onboarding.demo.badge': 'How Veezy works',
-  'onboarding.demo.photos_title': 'You upload 5 photos of yourself',
-  'onboarding.demo.photos_subtext': 'They become your personal figure – for example:',
+  'onboarding.demo.photos_title': 'You take at least 4 quick selfies',
+  'onboarding.demo.photos_subtext': 'They make your vision images as realistic as possible – they become your personal figure. For example:',
   'onboarding.demo.photos_cta': 'Create figure',
   'onboarding.demo.figure_loading': 'Creating the figure…',
   'onboarding.demo.figure_title': 'Your personal figure',
