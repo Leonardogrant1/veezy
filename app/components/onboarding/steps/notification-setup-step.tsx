@@ -1,7 +1,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -10,17 +10,11 @@ import { formatHour } from '@/components/modals/NotificationSettingsModal';
 import { Colors, Fonts, Gold } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
-import { useVisionStore } from '@/stores/VisionStore';
 import { MotivationStyle } from '@/types/user-data';
 
 const MIN = 1;
 const MAX = 10;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-
-function pickRandom<T>(arr: T[]): T | undefined {
-    if (arr.length === 0) return undefined;
-    return arr[Math.floor(Math.random() * arr.length)];
-}
 
 type HourPickerProps = {
     visible: boolean;
@@ -62,7 +56,7 @@ export function NotificationSetupStep() {
     const { t } = useTranslation();
     const { setCanContinue } = useOnboardingControl();
 
-    const FALLBACK_EXAMPLES: Record<MotivationStyle, string> = {
+    const EXAMPLES: Record<MotivationStyle, string> = {
         affirmation: t('onboarding.notifications.fallback_affirmation'),
         fuel: t('onboarding.notifications.fallback_fuel'),
     };
@@ -73,7 +67,6 @@ export function NotificationSetupStep() {
     ];
     const { notificationsPerDay, notificationStartHour, notificationEndHour, motivationStyle, updateSettings } =
         useUserDataStore();
-    const visions = useVisionStore((s) => s.visions);
 
     const [count, setCount] = useState(notificationsPerDay);
     const [startHour, setStartHour] = useState(notificationStartHour);
@@ -102,12 +95,7 @@ export function NotificationSetupStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [unlocked]);
 
-    // Stable examples — picked once on mount, don't change when style switches
-    const examples = useMemo<Record<MotivationStyle, string>>(() => ({
-        affirmation: pickRandom(visions.flatMap((v) => v.affirmationsAffirmation ?? [])) ?? FALLBACK_EXAMPLES.affirmation,
-        fuel: pickRandom(visions.flatMap((v) => v.affirmationsFuel ?? [])) ?? FALLBACK_EXAMPLES.fuel,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), []);
+    const examples = EXAMPLES;
 
     function unlock() {
         setUnlocked(true);
