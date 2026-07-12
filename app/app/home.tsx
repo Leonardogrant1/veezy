@@ -52,6 +52,7 @@ export default function HomeScreen() {
     const [categoryModalVisible, setCategoryModalVisible] = useState(false);
     const [actionsVision, setActionsVision] = useState<Vision | null>(null);
     const [userIdCopied, setUserIdCopied] = useState(false);
+    const [devEmptyState, setDevEmptyState] = useState(false);
 
     const phraseOpacity = useRef(new Animated.Value(1)).current;
     const listRef = useRef<FlatList<Vision>>(null);
@@ -61,11 +62,12 @@ export default function HomeScreen() {
     const showDevButtons = useUserDataStore((s) => s.showDevButtons);
 
     const filtered = useMemo(() => {
+        if (__DEV__ && devEmptyState) return [];
         const list = selectedCategory === 'all'
             ? visions
             : visions.filter((v) => v.category === selectedCategory);
         return isPremium ? list : list.slice(0, 4);
-    }, [visions, selectedCategory, isPremium]);
+    }, [visions, selectedCategory, isPremium, devEmptyState]);
 
     const activeVision: Vision | undefined = filtered[activeIndex];
 
@@ -231,6 +233,12 @@ export default function HomeScreen() {
                         }}
                     >
                         <Text style={styles.debugButtonText}>🧍 Clear Figur</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.debugButton}
+                        onPress={() => setDevEmptyState((v) => !v)}
+                    >
+                        <Text style={styles.debugButtonText}>{devEmptyState ? '👁 Feed zeigen' : '👻 Empty State'}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.debugButton}
