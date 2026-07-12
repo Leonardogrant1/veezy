@@ -3,19 +3,18 @@ import { useOnboardingControl } from '@/components/onboarding/onboarding-control
 import { Colors, Fonts } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Animated, Easing, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 
-const DEMO_VISION = require('@/assets/onboarding-demo/demo-vision.jpg');
+const DEMO_VISION = require('@/assets/onboarding-demo/demo-vision.png');
 
 // Beispiel-Selfies der Demo-Figur — Platzhalter, werden später durch echte Assets ersetzt
 const DEMO_SELFIES = [
-    require('@/assets/onboarding-demo/demo-figure.jpg'),
-    require('@/assets/onboarding-demo/demo-figure.jpg'),
-    require('@/assets/onboarding-demo/demo-figure.jpg'),
-    require('@/assets/onboarding-demo/demo-figure.jpg'),
-    require('@/assets/onboarding-demo/demo-figure.jpg'),
+    require('@/assets/onboarding-demo/selfies/front.png'),
+    require('@/assets/onboarding-demo/selfies/right.png'),
+    require('@/assets/onboarding-demo/selfies/left.png'),
+    require('@/assets/onboarding-demo/selfies/smile.png')
 ];
 
 // Timing (ms)
@@ -250,13 +249,16 @@ const styles = StyleSheet.create({
     },
     tileRow: {
         flexDirection: 'row',
-        gap: 10,
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 12,
         marginTop: 14,
+        alignSelf: 'stretch',
     },
     tile: {
-        width: 56,
-        height: 56,
-        borderRadius: 12,
+        width: '46%',
+        aspectRatio: 1,
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.2)',
         backgroundColor: 'rgba(255,255,255,0.08)',
