@@ -61,6 +61,10 @@ UI und Logik bleiben identisch: Frequenz 1–10, Zeitfenster (Start-/Endstunde),
 - **Bei der Umsetzung zu verifizieren:** Home zeigt mit `hasOnboarded=true` und null Visionen einen sauberen Empty-State, der zur Figur-/Vision-Erstellung führt.
 - Backend bleibt unangetastet; der Sync-Pfad von `/vision/generate` wird lediglich nicht mehr aus dem Onboarding aufgerufen.
 
+## Nachtrag (2026-07-12, user-approved)
+
+Das Final-Review fand eine Post-Onboarding-Sackgasse: Ohne Figur schlug `/vision/add` immer mit Backend-400 fehl. Fix: `/vision/add` zeigt ohne `selfReferenceImages` ein Figur-Gate (Erklärung + Button), das per `router.push` zu `edit-self-reference` führt; nach dem Speichern kehrt der User automatisch zurück und das Gate weicht reaktiv dem Eingabefeld.
+
 ## Fehlerbehandlung
 
 Der Demo-Step hat keine Netzwerk-Calls und damit keine Fehlerpfade. Permission-Verweigerung im Notification-Step verhält sich wie bisher.
