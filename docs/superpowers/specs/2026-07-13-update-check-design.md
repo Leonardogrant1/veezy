@@ -24,7 +24,7 @@ Response: `{ "updateRequired": boolean }`
 
 Response: `{ "version": string, "releaseNotes": string }`
 
-- **iOS:** iTunes Lookup API (`https://itunes.apple.com/lookup?bundleId=studio.northbyte.veezy`), reading `version` and `releaseNotes` from the first result. Zero results (app not yet indexed) → `404`.
+- **iOS:** iTunes Lookup API (`https://itunes.apple.com/lookup?bundleId=studio.northbyte.veezy`), reading `version` and `releaseNotes` from the first result. Zero results (app not yet indexed) are treated like any other upstream failure (→ `502`, see below) — the client fails open either way.
 - **Android:** `google-play-scraper` (new backend dependency) for package `studio.northbyte.veezy`; `recentChanges` maps to `releaseNotes` (empty string if absent).
 - **Cache:** in-memory, per-platform key, TTL 2 hours. Upstream errors with a stale cache entry present → serve stale; without cache → `502`.
 
