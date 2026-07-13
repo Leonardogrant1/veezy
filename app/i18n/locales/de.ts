@@ -275,6 +275,14 @@ const de: Record<string, string> = {
   'edit_self_reference.subtitle': 'Diese Bilder werden genutzt, um dich in deinen Visionen darzustellen. Lade ein Foto aus vier Perspektiven hoch.',
   'edit_self_reference.save': 'Speichern',
   'edit_self_reference.save_error': 'Fehler beim Speichern',
+
+  // Version / Updates
+  'version.force_update_title': 'Update erforderlich',
+  'version.force_update_body': 'Diese Version von Veezy wird nicht mehr unterstützt. Bitte aktualisiere die App, um fortzufahren.',
+  'version.update_available_title': 'Update verfügbar',
+  'version.whats_new': 'Was ist neu',
+  'version.update_now': 'Jetzt aktualisieren',
+  'version.update_later': 'Später',
 };
 
 export default de;

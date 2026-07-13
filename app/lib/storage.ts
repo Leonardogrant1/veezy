@@ -6,6 +6,7 @@ export const StorageKeys = {
     USER_DATA:   'user.data',
     VISIONS:     'visions',
     WIDGET_DATA: 'widget.data',
+    VERSION_DIALOG_DISMISSED_AT: 'version.dialogDismissedAt',
 } as const;
 
 export function getUserData() {

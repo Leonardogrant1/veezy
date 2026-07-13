@@ -275,6 +275,14 @@ const en = {
   'edit_self_reference.subtitle': 'These images are used to place you in your visions. Upload a photo from four different angles.',
   'edit_self_reference.save': 'Save',
   'edit_self_reference.save_error': 'Error while saving',
+
+  // Version / updates
+  'version.force_update_title': 'Update required',
+  'version.force_update_body': 'This version of Veezy is no longer supported. Please update to continue.',
+  'version.update_available_title': 'Update available',
+  'version.whats_new': "What's new",
+  'version.update_now': 'Update now',
+  'version.update_later': 'Later',
 } as const;
 
 export type TranslationKeys = keyof typeof en;
