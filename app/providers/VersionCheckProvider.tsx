@@ -1,5 +1,6 @@
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
+import * as SplashScreen from 'expo-splash-screen';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
@@ -51,6 +52,7 @@ export function VersionCheckProvider({ children }: { children: ReactNode }) {
         // Backend-Kompatibilitäts-Check hat höchste Priorität
         if (checkResult.status === 'fulfilled' && checkResult.value.updateRequired) {
             setState({ status: 'force_update', storeVersion: null, releaseNotes: null });
+            SplashScreen.hideAsync().catch(() => {});
             return;
         }
 
@@ -59,6 +61,7 @@ export function VersionCheckProvider({ children }: { children: ReactNode }) {
             const diff = compareVersions(localVersion, storeVersion);
             if (diff === 'major') {
                 setState({ status: 'force_update', storeVersion, releaseNotes });
+                SplashScreen.hideAsync().catch(() => {});
                 return;
             }
             if (diff === 'minor') {
@@ -72,10 +75,17 @@ export function VersionCheckProvider({ children }: { children: ReactNode }) {
         }
 
         // patch, equal oder fehlgeschlagene Checks → ok (fail open)
-        setState({ status: 'ok', storeVersion: null, releaseNotes: null });
+        // Aber: aktives Force-Update nur aufheben, wenn beide Checks erfolgreich waren —
+        // fehlgeschlagene Checks (z.B. offline) dürfen die Sperre nicht umgehen
+        const bothChecksSucceeded = checkResult.status === 'fulfilled' && storeResult.status === 'fulfilled';
+        setState((prev) => {
+            if (prev.status === 'force_update' && !bothChecksSucceeded) return prev;
+            return { status: 'ok', storeVersion: null, releaseNotes: null };
+        });
     }
 
     useEffect(() => {
+        mountedRef.current = true;
         runChecks();
 
         const sub = AppState.addEventListener('change', (nextState: AppStateStatus) => {
