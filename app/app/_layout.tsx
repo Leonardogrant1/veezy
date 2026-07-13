@@ -33,6 +33,7 @@ import { cancelPaywallAbandonNotification, schedulePaywallAbandonNotification } 
 import { dismissPaywallRef, paywallOpenRef } from '@/services/purchases/superwall/useSuperwall';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { PremiumWelcomeModal } from '@/components/modals/PremiumWelcomeModal';
+import { VersionCheckProvider } from '@/providers/VersionCheckProvider';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { useAppReadyStore } from '@/stores/AppReadyStore';
 import { UserCloudSync } from '@/services/user-cloud-sync';
@@ -180,44 +181,46 @@ export default function RootLayout() {
   const posthog = initPosthog();
 
   return (
-    <PostHogProvider client={posthog}>
-      <PostHogSurveyProvider>
-      <KeyboardProvider>
-        <RevenueCatProvider>
-          <PurchaseWrapper>
-            <NotificationProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              {cloudSyncReady ? (
-                <Stack screenOptions={{ headerShown: false }}>
-                  {/* 1. Pre-onboarding Stack */}
-                  <Stack.Protected guard={!hasOnboarded}>
-                    <Stack.Screen name="start" options={{ animation: 'fade' }} />
-                    <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
-                  </Stack.Protected>
+    <VersionCheckProvider>
+      <PostHogProvider client={posthog}>
+        <PostHogSurveyProvider>
+        <KeyboardProvider>
+          <RevenueCatProvider>
+            <PurchaseWrapper>
+              <NotificationProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                {cloudSyncReady ? (
+                  <Stack screenOptions={{ headerShown: false }}>
+                    {/* 1. Pre-onboarding Stack */}
+                    <Stack.Protected guard={!hasOnboarded}>
+                      <Stack.Screen name="start" options={{ animation: 'fade' }} />
+                      <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+                    </Stack.Protected>
 
-                  {/* 2. Pre-tutorial Stack */}
-                  <Stack.Protected guard={hasOnboarded && !hasSeenTutorial}>
-                    <Stack.Screen name="tutorial" options={{ animation: 'fade' }} />
-                  </Stack.Protected>
+                    {/* 2. Pre-tutorial Stack */}
+                    <Stack.Protected guard={hasOnboarded && !hasSeenTutorial}>
+                      <Stack.Screen name="tutorial" options={{ animation: 'fade' }} />
+                    </Stack.Protected>
 
-                  {/* 3. Main App Stack */}
-                  <Stack.Protected guard={hasOnboarded && hasSeenTutorial}>
-                    <Stack.Screen name="home" options={{ animation: 'fade' }} />
-                    <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
-                    <Stack.Screen name="edit-self-reference" options={{ presentation: 'modal' }} />
-                    <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
-                    <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
-                  </Stack.Protected>
-                </Stack>
-              ) : null}
-              <StatusBar style="auto" />
-              <PremiumWelcomeModal />
-            </ThemeProvider>
-            </NotificationProvider>
-          </PurchaseWrapper>
-        </RevenueCatProvider>
-      </KeyboardProvider>
-      </PostHogSurveyProvider>
-    </PostHogProvider>
+                    {/* 3. Main App Stack */}
+                    <Stack.Protected guard={hasOnboarded && hasSeenTutorial}>
+                      <Stack.Screen name="home" options={{ animation: 'fade' }} />
+                      <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+                      <Stack.Screen name="edit-self-reference" options={{ presentation: 'modal' }} />
+                      <Stack.Screen name="vision/[id]" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+                      <Stack.Screen name="vision/add" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+                    </Stack.Protected>
+                  </Stack>
+                ) : null}
+                <StatusBar style="auto" />
+                <PremiumWelcomeModal />
+              </ThemeProvider>
+              </NotificationProvider>
+            </PurchaseWrapper>
+          </RevenueCatProvider>
+        </KeyboardProvider>
+        </PostHogSurveyProvider>
+      </PostHogProvider>
+    </VersionCheckProvider>
   );
 }
