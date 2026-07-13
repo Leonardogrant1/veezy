@@ -32,6 +32,7 @@ function setCooldown(): void {
 export function VersionCheckProvider({ children }: { children: ReactNode }) {
     const [state, setState] = useState<State>({ status: 'ok', storeVersion: null, releaseNotes: null });
     const backgroundedAt = useRef<number | null>(null);
+    const mountedRef = useRef(true);
 
     async function runChecks() {
         const localVersion = Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? null;
@@ -41,6 +42,8 @@ export function VersionCheckProvider({ children }: { children: ReactNode }) {
             fetchStoreVersion(),
             fetchVersionCheck(localVersion),
         ]);
+
+        if (!mountedRef.current) return;
 
         // DEBUG: Force-Update erzwingen zum Testen
         // const checkResult = { status: 'fulfilled' as const, value: { updateRequired: true } };
@@ -87,7 +90,10 @@ export function VersionCheckProvider({ children }: { children: ReactNode }) {
             }
         });
 
-        return () => sub.remove();
+        return () => {
+            mountedRef.current = false;
+            sub.remove();
+        };
     }, []);
 
     function handleDismiss() {
