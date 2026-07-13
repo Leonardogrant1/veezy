@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { networkInterfaces } from 'os';
 import revenueCatWebhookRoute from './routes/revenuecat-webhook-route.js';
 import selfReferenceRoute from './routes/self-reference-route.js';
+import storeInfoRoute from './routes/store-info-route.js';
 import userDataRoute from './routes/user-data-route.js';
 import versionCheckRoute from './routes/version-check-route.js';
 import visionRoute from './routes/vision-route.js';
@@ -15,6 +16,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 app.route('/webhooks/revenuecat', revenueCatWebhookRoute);
 app.route('/vision', visionRoute);
 app.route('/self-reference', selfReferenceRoute);
+app.route('/store-info', storeInfoRoute);
 app.route('/user-data', userDataRoute);
 app.route('/version-check', versionCheckRoute);
 
