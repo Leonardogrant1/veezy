@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 
 const GENERATIONS_BY_PRODUCT: Record<string, number> = {
     veezy_premium_weekly: 15,
+    veezy_premium_monthly: 30,
     veezy_premium_yearly: 180,
     veezy_premium_yearly_trial: 180,
 };
