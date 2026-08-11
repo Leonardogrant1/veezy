@@ -30,6 +30,7 @@ export type UserData = {
     motivationStyle: MotivationStyle
     primaryCategory: PrimaryCategory | null
     attributionSource: string | null
+    referralCode: string | null
     ageGroup: AgeGroup | null
     visionDescription: string
     language: 'de' | 'en'

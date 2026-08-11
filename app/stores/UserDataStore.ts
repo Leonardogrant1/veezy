@@ -17,7 +17,7 @@ type UserDataStore = UserData & {
     setLastSentPushToken: (token: string | null) => void;
     completeOnboarding: () => void;
     completeTutorial: () => void;
-    updateSettings: (patch: Partial<Pick<UserData, 'name' | 'birthday' | 'gender' | 'notifications' | 'notificationsPerDay' | 'notificationStartHour' | 'notificationEndHour' | 'haptics' | 'motivationStyle' | 'primaryCategory' | 'attributionSource' | 'ageGroup' | 'visionDescription' | 'language' | 'showDevButtons'>>) => void;
+    updateSettings: (patch: Partial<Pick<UserData, 'name' | 'birthday' | 'gender' | 'notifications' | 'notificationsPerDay' | 'notificationStartHour' | 'notificationEndHour' | 'haptics' | 'motivationStyle' | 'primaryCategory' | 'attributionSource' | 'ageGroup' | 'visionDescription' | 'language' | 'showDevButtons' | 'referralCode'>>) => void;
     updateSelfReferenceImages: (patch: Partial<SelfReferenceImages>) => void;
 };
 
@@ -40,6 +40,7 @@ export const useUserDataStore = create<UserDataStore>()(
             motivationStyle: 'affirmation' as const,
             primaryCategory: null,
             attributionSource: null,
+            referralCode: null,
             ageGroup: null,
             visionDescription: '',
             language: detectLanguage(),
