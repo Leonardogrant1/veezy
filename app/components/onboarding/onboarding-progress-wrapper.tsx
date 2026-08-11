@@ -44,7 +44,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     // prevBg = background of the outgoing step, stays visible underneath during fade
     const [prevBg, setPrevBg] = useState(() => bgForStep(steps[0]));
     const inFlightRef = useRef(false);
-    const { openWithPlacement } = useSuperwallFunctions();
+    const { openWithPlacement, update } = useSuperwallFunctions();
 
     const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
     const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
@@ -76,6 +76,14 @@ export function OnboardingProgressWrapper({ steps }: Props) {
     async function finishOnboarding() {
         trackerManager.track('onboarding_completed');
         useUserDataStore.getState().completeOnboarding();
+        const referralCode = useUserDataStore.getState().referralCode;
+        if (referralCode) {
+            try {
+                await update({ promocode: referralCode });
+            } catch {
+                // Attribut-Sync darf das Onboarding-Ende nie blockieren
+            }
+        }
         const navigate = () => router.replace('/');
         await openPlacementWithImage(openWithPlacement, 'onboarding_completed', navigate, undefined, navigate);
     }
