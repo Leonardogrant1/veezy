@@ -1,13 +1,13 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Animated, FlatList, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { formatHour } from '@/components/modals/NotificationSettingsModal';
-import { Colors, Fonts, Gold } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
 import { MotivationStyle } from '@/types/user-data';
@@ -54,7 +54,7 @@ function HourPicker({ visible, value, onSelect, onClose }: HourPickerProps) {
 
 export function NotificationSetupStep() {
     const { t } = useTranslation();
-    const { setCanContinue } = useOnboardingControl();
+    const { nextStep } = useOnboardingControl();
 
     const EXAMPLES: Record<MotivationStyle, string> = {
         affirmation: t('onboarding.notifications.fallback_affirmation'),
@@ -74,32 +74,19 @@ export function NotificationSetupStep() {
     const [style, setStyle] = useState<MotivationStyle>(motivationStyle);
     const [picker, setPicker] = useState<'start' | 'end' | null>(null);
     const [testSent, setTestSent] = useState(false);
-    const [unlocked, setUnlocked] = useState(false);
+    // false = footer button sends the test notification, true = footer button continues
+    const [testDone, setTestDone] = useState(false);
+    const [sending, setSending] = useState(false);
 
-    // Pulse animation on the test button while not yet unlocked
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    useEffect(() => {
-        if (unlocked) {
-            pulseAnim.stopAnimation();
-            pulseAnim.setValue(1);
-            return;
-        }
-        const loop = Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseAnim, { toValue: 1.03, duration: 700, useNativeDriver: true }),
-                Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-            ])
-        );
-        loop.start();
-        return () => loop.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [unlocked]);
+    const footerOpacity = useRef(new Animated.Value(1)).current;
 
     const examples = EXAMPLES;
 
-    function unlock() {
-        setUnlocked(true);
-        setCanContinue(true);
+    function swapToContinue() {
+        Animated.timing(footerOpacity, { toValue: 0, duration: 160, useNativeDriver: true }).start(() => {
+            setTestDone(true);
+            Animated.timing(footerOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+        });
     }
 
     function updateCount(next: number) {
@@ -124,25 +111,31 @@ export function NotificationSetupStep() {
     }
 
     async function handleTestNotification() {
-        const { status } = await Notifications.requestPermissionsAsync();
-        trackerManager.track('notification_permission', { status: status === 'granted' ? 'authorized' : 'declined' });
-        if (status !== 'granted') {
-            unlock(); // denied → still let them continue
-            return;
+        if (sending) return;
+        setSending(true);
+        try {
+            const { status } = await Notifications.requestPermissionsAsync();
+            trackerManager.track('notification_permission', { status: status === 'granted' ? 'authorized' : 'declined' });
+            if (status !== 'granted') {
+                swapToContinue(); // denied → still let them continue
+                return;
+            }
+
+            await Notifications.scheduleNotificationAsync({
+                content: { title: '✨ veezy', body: examples[style] },
+                trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3 },
+            });
+
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            setTestSent(true);
+            swapToContinue();
+        } finally {
+            setSending(false);
         }
-
-        await Notifications.scheduleNotificationAsync({
-            content: { title: '✨ veezy', body: examples[style] },
-            trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3 },
-        });
-
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setTestSent(true);
-        unlock();
-        setTimeout(() => setTestSent(false), 3000);
     }
 
     return (
+        <View style={styles.wrapper}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
             <Text style={styles.title}>{t('onboarding.notifications.title')}</Text>
             <Text style={styles.subtitle}>{t('onboarding.notifications.subtitle')}</Text>
@@ -215,47 +208,77 @@ export function NotificationSetupStep() {
                 })}
             </View>
 
-            {/* Test-Benachrichtigung */}
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+        </ScrollView>
+
+        <View style={styles.footer}>
+            {testSent && <Text style={styles.sentHint}>{t('onboarding.notifications.test_sent')}</Text>}
+            <Animated.View style={{ opacity: footerOpacity }}>
                 <TouchableOpacity
-                    style={[
-                        styles.testButton,
-                        !unlocked && styles.testButtonHighlight,
-                        testSent && styles.testButtonSent,
-                    ]}
-                    onPress={handleTestNotification}
-                    activeOpacity={0.75}
+                    style={[styles.footerButton, sending && styles.footerButtonDisabled]}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        if (testDone) nextStep();
+                        else handleTestNotification();
+                    }}
+                    activeOpacity={0.85}
+                    disabled={sending}
                 >
-                    <MaterialIcons
-                        name={testSent ? 'check' : 'notifications-active'}
-                        size={18}
-                        color={testSent ? Colors.accent : !unlocked ? Colors.accent : Colors.textMuted}
-                    />
-                    <Text style={[styles.testButtonText, (!unlocked || testSent) && styles.testButtonTextSent]}>
-                        {testSent ? t('onboarding.notifications.test_sent') : t('onboarding.notifications.test_button')}
+                    <Text style={styles.footerButtonText}>
+                        {testDone ? t('common.continue') : t('onboarding.notifications.test_button')}
                     </Text>
                 </TouchableOpacity>
             </Animated.View>
+        </View>
 
-            <HourPicker
-                visible={picker === 'start'}
-                value={startHour}
-                onSelect={handleStartSelect}
-                onClose={() => setPicker(null)}
-            />
-            <HourPicker
-                visible={picker === 'end'}
-                value={endHour}
-                onSelect={handleEndSelect}
-                onClose={() => setPicker(null)}
-            />
-        </ScrollView>
+        <HourPicker
+            visible={picker === 'start'}
+            value={startHour}
+            onSelect={handleStartSelect}
+            onClose={() => setPicker(null)}
+        />
+        <HourPicker
+            visible={picker === 'end'}
+            value={endHour}
+            onSelect={handleEndSelect}
+            onClose={() => setPicker(null)}
+        />
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
+    wrapper: {
+        flex: 1,
+    },
     scroll: {
         flex: 1,
+    },
+    footer: {
+        paddingHorizontal: 20,
+        paddingTop: 8,
+        paddingBottom: 48,
+        gap: 10,
+    },
+    sentHint: {
+        fontFamily: Fonts.serifItalic,
+        fontSize: 13,
+        color: Colors.accent,
+        textAlign: 'center',
+    },
+    footerButton: {
+        backgroundColor: '#1a1a1a',
+        borderRadius: 14,
+        paddingVertical: 16,
+        alignItems: 'center',
+    },
+    footerButtonDisabled: {
+        opacity: 0.6,
+    },
+    footerButtonText: {
+        color: 'white',
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 16,
+        fontWeight: '700',
     },
     container: {
         paddingHorizontal: 24,
@@ -404,33 +427,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: Colors.textMuted,
         lineHeight: 20,
-    },
-    testButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        paddingVertical: 16,
-        borderRadius: 12,
-        borderWidth: 1.5,
-        borderColor: Colors.borderCard,
-        backgroundColor: 'rgba(255,255,255,0.4)',
-    },
-    testButtonHighlight: {
-        borderColor: Colors.accent,
-        backgroundColor: Gold[50],
-    },
-    testButtonSent: {
-        borderColor: Colors.accentSubtle,
-        backgroundColor: Colors.accentSubtle + '22',
-    },
-    testButtonText: {
-        fontFamily: Fonts.sansMedium,
-        fontSize: 14,
-        color: Colors.textMuted,
-    },
-    testButtonTextSent: {
-        color: Colors.accent,
     },
     // HourPicker
     hourBackdrop: {

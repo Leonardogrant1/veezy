@@ -1,13 +1,14 @@
 import { OnboardingProgressWrapper } from '@/components/onboarding/onboarding-progress-wrapper';
-import { AddWidgetStep } from '@/components/onboarding/steps/add-widget-step';
+import { AgeStep } from '@/components/onboarding/steps/age-step';
+import { AttributionStep } from '@/components/onboarding/steps/attribution-step';
 import { DemoGenerationStep } from '@/components/onboarding/steps/demo-generation-step';
-import { makeEmotionSlide } from '@/components/onboarding/steps/emotion-slide-step';
 import { NameStep } from '@/components/onboarding/steps/name-step';
+import { NotificationExplainStep } from '@/components/onboarding/steps/notification-explain-step';
+import { ScienceStep } from '@/components/onboarding/steps/science-step';
 import { NotificationSetupStep } from '@/components/onboarding/steps/notification-setup-step';
+import { PersonalizationStep } from '@/components/onboarding/steps/personalization-step';
 import { TrackingStep } from '@/components/onboarding/steps/tracking-step';
 import { TrialOfferStep } from '@/components/onboarding/steps/trial-offer-step';
-import { TrialReminderStep } from '@/components/onboarding/steps/trial-reminder-step';
-import { WhatYouWillGetStep } from '@/components/onboarding/steps/what-you-will-get-step';
 import { OnboardingStep } from '@/components/onboarding/types';
 import { trackerManager } from '@/lib/tracking/tracker-manager';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -37,43 +38,17 @@ export default function OnboardingScreen() {
     }, [])
 
     const ONBOARDING_STEPS = useMemo<OnboardingStep[]>(() => {
-        const HookSlide = makeEmotionSlide({
-            label: t('onboarding.hook.label'),
-            headline: t('onboarding.hook.headline'),
-            subtext: t('onboarding.hook.subtext'),
-        });
-
-        const IdentityShiftSlide = makeEmotionSlide({
-            label: t('onboarding.identity_shift.label'),
-            headline: t('onboarding.identity_shift.headline'),
-            subtext: t('onboarding.identity_shift.subtext'),
-        });
-
-        const MicroLogicSlide = makeEmotionSlide({
-            label: t('onboarding.micro_logic.label'),
-            headline: t('onboarding.micro_logic.headline'),
-            subtext: t('onboarding.micro_logic.subtext'),
-        });
-
-        const CompanionSlide = makeEmotionSlide({
-            label: t('onboarding.companion.label'),
-            headline: t('onboarding.companion.headline'),
-            subtext: t('onboarding.companion.subtext'),
-        });
-
         return [
-            { component: HookSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: AttributionStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
+            { component: AgeStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
             { component: TrackingStep, showProgressIndicator: false, continueButtonText: t('common.continue'), theme: 'light', preContinue: handleRequestTracking },
             { component: NameStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false },
-            { component: IdentityShiftSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-            { component: MicroLogicSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
+            { component: ScienceStep, theme: 'light', continueButtonText: t('common.continue') },
             { component: DemoGenerationStep, showProgressIndicator: false, showContinueButton: false },
-            { component: CompanionSlide, showProgressIndicator: false, showContinueButton: false, theme: 'light' },
-            { component: NotificationSetupStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: false, preContinue: handleRequestNotifications },
-            { component: AddWidgetStep, theme: 'light', continueButtonText: t('common.continue') },
-            { component: TrialOfferStep, theme: 'light', continueButtonText: t('common.continue') },
-            { component: TrialReminderStep, theme: 'light', continueButtonText: t('common.continue') },
-            { component: WhatYouWillGetStep, theme: 'light', continueButtonText: t('onboarding.what_you_get.cta') },
+            { component: NotificationExplainStep, showProgressIndicator: false, continueButtonText: t('common.continue') },
+            { component: NotificationSetupStep, theme: 'light', showContinueButton: false, preContinue: handleRequestNotifications },
+            { component: PersonalizationStep, theme: 'light', showContinueButton: false, showProgressIndicator: false },
+            { component: TrialOfferStep, theme: 'light', continueButtonText: t('onboarding.trial.cta') },
         ];
     }, [handleRequestNotifications, handleRequestTracking, t]);
 

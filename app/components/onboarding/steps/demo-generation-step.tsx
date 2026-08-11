@@ -1,6 +1,7 @@
 import VisionLoading from '@/components/layout/VisionLoading';
 import { useOnboardingControl } from '@/components/onboarding/onboarding-control-context';
 import { Colors, Fonts } from '@/constants/theme';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
@@ -22,8 +23,9 @@ const DEMO_SELFIES = [
 const TILE_STAGGER = 260;
 const TYPE_INTERVAL = 45;
 const VISION_LOADING = 3500;
+const WIDGET_MORPH = 600;
 
-type Phase = 'photos' | 'typing' | 'loading' | 'result';
+type Phase = 'photos' | 'typing' | 'loading' | 'result' | 'widget';
 
 export function DemoGenerationStep() {
     const { t } = useTranslation();
@@ -42,6 +44,10 @@ export function DemoGenerationStep() {
     const phraseTranslate = useRef(new Animated.Value(20)).current;
     const buttonOpacity = useRef(new Animated.Value(0)).current;
     const ctaOpacity = useRef(new Animated.Value(0)).current;
+    const widgetScale = useRef(new Animated.Value(2.4)).current;
+    const widgetTranslate = useRef(new Animated.Value(-40)).current;
+    const chromeOpacity = useRef(new Animated.Value(0)).current;
+    const widgetTextOpacity = useRef(new Animated.Value(0)).current;
     const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     function later(fn: () => void, ms: number) {
@@ -54,6 +60,7 @@ export function DemoGenerationStep() {
     }
 
     function advanceTo(next: Phase) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setCtaVisible(false);
         ctaOpacity.setValue(0);
         setPhase(next);
@@ -99,6 +106,14 @@ export function DemoGenerationStep() {
                 ]),
                 Animated.timing(buttonOpacity, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
             ]).start();
+        } else if (phase === 'widget') {
+            Animated.parallel([
+                Animated.timing(widgetScale, { toValue: 1, duration: WIDGET_MORPH, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+                Animated.timing(widgetTranslate, { toValue: 0, duration: WIDGET_MORPH, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+                Animated.timing(chromeOpacity, { toValue: 1, duration: WIDGET_MORPH, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+            ]).start(() => {
+                Animated.timing(widgetTextOpacity, { toValue: 1, duration: 350, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(() => showCta());
+            });
         }
         const pending = timeouts.current;
         return () => pending.forEach(clearTimeout);
@@ -130,11 +145,62 @@ export function DemoGenerationStep() {
                         <Text style={styles.phrase}>{t('onboarding.demo.phrase')}</Text>
                     </Animated.View>
                     <Animated.View style={{ opacity: buttonOpacity }}>
-                        <TouchableOpacity style={styles.continueButton} onPress={nextStep} activeOpacity={0.85}>
+                        <TouchableOpacity style={styles.continueButton} onPress={() => advanceTo('widget')} activeOpacity={0.85}>
                             <Text style={styles.continueText}>{t('onboarding.demo.continue')}</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </View>
+            </View>
+        );
+    }
+
+    if (phase === 'widget') {
+        return (
+            <View style={styles.container}>
+                <Image source={DEMO_VISION} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={40} />
+                <View style={styles.wallpaperDim} />
+
+                <View style={[styles.widgetPhaseContent, { paddingTop: insets.top + 24 }]}>
+                    <Animated.View style={[styles.widgetHeader, { opacity: widgetTextOpacity }]}>
+                        <View style={styles.badgeInline}>
+                            <Text style={styles.badgeText}>{t('onboarding.demo.widget_badge')}</Text>
+                        </View>
+                        <Text style={styles.title}>{t('onboarding.demo.widget_title')}</Text>
+                        <Text style={styles.subtext}>{t('onboarding.demo.widget_subtitle')}</Text>
+                    </Animated.View>
+
+                    <View style={styles.homescreen}>
+                        <Animated.Text style={[styles.clock, { opacity: chromeOpacity }]}>9:41</Animated.Text>
+                        <Animated.View style={[styles.widgetCard, { transform: [{ scale: widgetScale }, { translateY: widgetTranslate }] }]}>
+                            <Image source={DEMO_VISION} style={styles.widgetImage} contentFit="cover" />
+                            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.75)']} style={styles.widgetGradient} />
+                            <View style={styles.widgetTextBlock}>
+                                <Text style={styles.widgetCategory}>{t('onboarding.demo.category').toUpperCase()}</Text>
+                                <Text style={styles.widgetPhrase} numberOfLines={2}>{t('onboarding.demo.phrase')}</Text>
+                            </View>
+                        </Animated.View>
+                        <Animated.View style={[styles.iconGrid, { opacity: chromeOpacity }]}>
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <View key={i} style={styles.iconPlaceholder} />
+                            ))}
+                        </Animated.View>
+                    </View>
+                </View>
+
+                {ctaVisible && (
+                    <Animated.View style={[styles.ctaFooter, { paddingBottom: insets.bottom + 32, opacity: ctaOpacity }]}>
+                        <TouchableOpacity
+                            style={styles.continueButton}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                nextStep();
+                            }}
+                            activeOpacity={0.85}
+                        >
+                            <Text style={styles.continueText}>{t('onboarding.demo.continue')}</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                )}
             </View>
         );
     }
@@ -348,5 +414,81 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.sansSemiBold,
         fontSize: 16,
         fontWeight: '700',
+    },
+    wallpaperDim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+    },
+    widgetPhaseContent: {
+        flex: 1,
+        paddingHorizontal: 28,
+    },
+    widgetHeader: {
+        alignItems: 'center',
+        gap: 10,
+    },
+    badgeInline: {
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+        borderRadius: 999,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+    },
+    homescreen: {
+        flex: 1,
+        justifyContent: 'center',
+        gap: 24,
+    },
+    clock: {
+        color: 'rgba(255,255,255,0.9)',
+        fontFamily: Fonts.sans,
+        fontSize: 15,
+        textAlign: 'center',
+        letterSpacing: 1,
+    },
+    widgetCard: {
+        alignSelf: 'stretch',
+        aspectRatio: 1.7,
+        borderRadius: 22,
+        overflow: 'hidden',
+        backgroundColor: '#111',
+    },
+    widgetImage: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    widgetGradient: {
+        ...StyleSheet.absoluteFillObject,
+        top: '35%',
+    },
+    widgetTextBlock: {
+        position: 'absolute',
+        left: 14,
+        right: 14,
+        bottom: 12,
+        gap: 3,
+    },
+    widgetCategory: {
+        color: Colors.accent,
+        fontFamily: Fonts.sansSemiBold,
+        fontSize: 9,
+        letterSpacing: 2,
+    },
+    widgetPhrase: {
+        color: 'rgba(255,255,255,0.95)',
+        fontFamily: Fonts.serifBold,
+        fontSize: 14,
+        lineHeight: 19,
+    },
+    iconGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 18,
+    },
+    iconPlaceholder: {
+        width: 56,
+        height: 56,
+        borderRadius: 13,
+        backgroundColor: 'rgba(255,255,255,0.14)',
     },
 });

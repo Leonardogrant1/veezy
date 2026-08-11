@@ -8,6 +8,8 @@ export type SelfReferenceImages = {
 
 export type MotivationStyle = 'affirmation' | 'fuel'
 
+export type AgeGroup = 'under_18' | '18_24' | '25_34' | '35_44' | '45_54' | '55_plus'
+
 export type PrimaryCategory = 'wealth' | 'lifestyle' | 'body' | 'mindset'
 
 export type UserData = {
@@ -27,6 +29,8 @@ export type UserData = {
     selfReferenceImages: SelfReferenceImages
     motivationStyle: MotivationStyle
     primaryCategory: PrimaryCategory | null
+    attributionSource: string | null
+    ageGroup: AgeGroup | null
     visionDescription: string
     language: 'de' | 'en'
     showDevButtons: boolean

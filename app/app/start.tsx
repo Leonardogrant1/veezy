@@ -1,19 +1,20 @@
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Easing, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import Logo from '@/assets/logo.svg';
-import { Cream, Colors, Fonts, Gold } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
 import { changeLanguage } from '@/i18n';
 import { PREMIUM_IDENTIFIER } from '@/services/purchases/revenuecat/constants';
 import { useRevenueCat } from '@/services/purchases/revenuecat/providers/RevenueCatProvider';
 import { useUserDataStore } from '@/stores/UserDataStore';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('screen');
-const BUTTON_W = 200;
+const BUTTON_W = SCREEN_W - 64;
 
 
 function useShimmerAnim() {
@@ -44,34 +45,21 @@ function useShimmerAnim() {
     return { x, scale };
 }
 
-function useFloatAnim(config: { distance: number; duration: number; delay?: number }) {
-    const anim = useRef(new Animated.Value(0)).current;
+// Langsamer Ken-Burns-Zoom auf dem Hintergrundbild
+function useKenBurnsAnim() {
+    const scale = useRef(new Animated.Value(1)).current;
     useEffect(() => {
         const loop = Animated.loop(
             Animated.sequence([
-                Animated.timing(anim, {
-                    toValue: config.distance,
-                    duration: config.duration,
-                    delay: config.delay ?? 0,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(anim, {
-                    toValue: -config.distance,
-                    duration: config.duration,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(anim, {
-                    toValue: 0,
-                    duration: config.duration,
-                    useNativeDriver: true,
-                }),
+                Animated.timing(scale, { toValue: 1.08, duration: 14000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+                Animated.timing(scale, { toValue: 1, duration: 14000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
             ])
         );
         loop.start();
         return () => loop.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    return anim;
+    return scale;
 }
 
 function SubscriptionStatus() {
@@ -105,13 +93,7 @@ export default function StartScreen() {
     const updateSettings = useUserDataStore((s) => s.updateSettings);
     const showDevButtons = useUserDataStore((s) => s.showDevButtons);
 
-    // Blob float animations
-    const blob1Y = useFloatAnim({ distance: 18, duration: 3200 });
-    const blob1X = useFloatAnim({ distance: 12, duration: 4100, delay: 300 });
-    const blob2Y = useFloatAnim({ distance: 22, duration: 3800, delay: 600 });
-    const blob2X = useFloatAnim({ distance: 14, duration: 3500, delay: 100 });
-    const blob3Y = useFloatAnim({ distance: 14, duration: 4400, delay: 800 });
-
+    const bgScale = useKenBurnsAnim();
     const { x: shimmerX, scale: buttonScale } = useShimmerAnim();
 
     // Content stagger
@@ -151,13 +133,20 @@ export default function StartScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Background image */}
-            <Image source={require('@/assets/images/dummy-vision-image.jpg')} style={styles.bgImage} resizeMode="cover" />
-
-            {/* Animated blobs */}
-            <Animated.View style={[styles.blob, styles.blobTop, { transform: [{ translateY: blob1Y }, { translateX: blob1X }] }]} />
-            <Animated.View style={[styles.blob, styles.blobBottom, { transform: [{ translateY: blob2Y }, { translateX: blob2X }] }]} />
-            <Animated.View style={[styles.blob, styles.blobCenter, { transform: [{ translateY: blob3Y }] }]} />
+            {/* Full-bleed vision background with slow zoom */}
+            <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ scale: bgScale }] }]}>
+                <Image source={require('@/assets/onboarding-demo/demo-vision.png')} style={styles.bgImage} resizeMode="cover" />
+            </Animated.View>
+            {/* Scrim nimmt das Bild zurück, damit Text/CTA führen */}
+            <View style={styles.scrim} />
+            <LinearGradient
+                colors={['rgba(0,0,0,0.5)', 'transparent']}
+                style={[StyleSheet.absoluteFill, { bottom: undefined, height: 220 }]}
+            />
+            <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.95)']}
+                style={[StyleSheet.absoluteFill, { top: undefined, height: SCREEN_H * 0.65 }]}
+            />
 
             {/* Language picker — top right corner */}
             <View style={styles.languagePicker}>
@@ -192,10 +181,10 @@ export default function StartScreen() {
                 </View>
             )}
 
-            {/* Centered content */}
+            {/* Bottom-anchored content */}
             <View style={styles.content}>
                 <Animated.View style={[styles.logoWrapper, { opacity: logoOpacity }]}>
-                    <Logo width={64} height={64} />
+                    <Logo width={56} height={56} />
                 </Animated.View>
 
                 <Animated.Text style={[styles.title, { opacity: titleOpacity, transform: [{ translateY: titleY }] }]}>
@@ -204,8 +193,15 @@ export default function StartScreen() {
                 <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity, transform: [{ translateY: subtitleY }] }]}>
                     {t('start.subtitle')}
                 </Animated.Text>
-                <Animated.View style={{ opacity: buttonOpacity, transform: [{ translateY: buttonY }, { scale: buttonScale }] }}>
-                    <TouchableOpacity style={styles.button} onPress={() => router.replace('/onboarding')} activeOpacity={0.85}>
+                <Animated.View style={[styles.buttonWrapper, { opacity: buttonOpacity, transform: [{ translateY: buttonY }, { scale: buttonScale }] }]}>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            router.replace('/onboarding');
+                        }}
+                        activeOpacity={0.85}
+                    >
                         <Text style={styles.buttonText}>{t('start.cta')}</Text>
                         {/* Shimmer sweep */}
                         <Animated.View style={[styles.shimmer, { transform: [{ translateX: shimmerX }, { rotate: '20deg' }] }]}>
@@ -226,43 +222,15 @@ export default function StartScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Cream[400],
+        backgroundColor: '#0a0a0a',
     },
     bgImage: {
-        position: 'absolute',
-        width: SCREEN_W,
-        height: SCREEN_H,
-        opacity: 0.13,
-        top: 0,
-        left: 0,
+        width: '100%',
+        height: '100%',
     },
-    blob: {
-        position: 'absolute',
-        borderRadius: 999,
-    },
-    blobTop: {
-        width: 380,
-        height: 380,
-        backgroundColor: Gold[400],
-        top: -120,
-        right: -100,
-        opacity: 0.35,
-    },
-    blobBottom: {
-        width: 320,
-        height: 320,
-        backgroundColor: Gold[300],
-        bottom: -80,
-        left: -80,
-        opacity: 0.35,
-    },
-    blobCenter: {
-        width: 200,
-        height: 200,
-        backgroundColor: Gold[500],
-        top: '35%',
-        left: '20%',
-        opacity: 0.15,
+    scrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.3)',
     },
     languagePicker: {
         position: 'absolute',
@@ -278,46 +246,50 @@ const styles = StyleSheet.create({
         borderRadius: 19,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.35)',
         borderWidth: 1.5,
         borderColor: 'transparent',
     },
     langButtonActive: {
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        borderColor: Colors.accent,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderColor: 'rgba(255,255,255,0.8)',
     },
     langFlag: { fontSize: 18 },
     content: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         alignItems: 'center',
         paddingHorizontal: 32,
+        paddingBottom: 64,
     },
     logoWrapper: {
-        marginBottom: 32,
+        marginBottom: 24,
     },
     title: {
         fontFamily: Fonts.serifBold,
         fontSize: 42,
         lineHeight: 52,
-        color: Colors.textHeadline,
+        color: 'white',
         textAlign: 'center',
-        marginBottom: 16,
+        marginBottom: 14,
     },
     subtitle: {
         fontFamily: Fonts.sans,
         fontSize: 16,
         lineHeight: 24,
-        color: Colors.textMuted,
+        color: 'rgba(255,255,255,0.75)',
         textAlign: 'center',
-        marginBottom: 48,
+        marginBottom: 40,
+    },
+    buttonWrapper: {
+        alignSelf: 'stretch',
     },
     button: {
         backgroundColor: Colors.accent,
-        paddingHorizontal: 48,
-        paddingVertical: 16,
+        paddingVertical: 17,
         borderRadius: 999,
         overflow: 'hidden',
+        alignItems: 'center',
     },
     shimmer: {
         position: 'absolute',

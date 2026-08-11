@@ -4,26 +4,28 @@ const de: Record<string, string> = {
   'common.error_generic': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
 
   // Start screen
-  'start.title': "Manifest deine\nZukunft",
-  'start.subtitle': "Sieh dich selbst dort,\nwo du hinwillst.",
+  'start.title': "Dein AI\nVision Board",
+  'start.subtitle': "Tägliche Motivation.\nDeine Ziele im Blick.",
   'start.cta': 'Loslegen',
 
   // Onboarding — emotion slides
-  'onboarding.hook.label': 'PHASE 1',
-  'onboarding.hook.headline': 'Stell dir vor, du könntest dein zukünftiges Leben sehen.',
-  'onboarding.hook.subtext': 'Nicht träumen. Sehen.',
+  // Science step (Matthews 2015, Zielerreichung)
+  'onboarding.science.title': 'Wer seine Ziele sieht, erreicht sie',
+  'onboarding.science.body': 'Tägliche Signale halten dein Unterbewusstsein auf dein Ziel ausgerichtet — das prägt deine Entscheidungen, und deine Entscheidungen prägen dein Ergebnis. In einer Studie erreichten Menschen, die ihre Ziele im Blick behielten, sie fast doppelt so oft.',
+  'onboarding.science.bar_without': 'Ziele nur im Kopf',
+  'onboarding.science.bar_with': 'Ziele im Blick',
+  'onboarding.science.source': 'Dr. Gail Matthews (2015), Dominican University of California — Studie zur Zielerreichung mit 267 Teilnehmenden.',
 
-  'onboarding.identity_shift.label': 'PHASE 2',
-  'onboarding.identity_shift.headline': 'Stell dir vor… du hast es geschafft.',
-  'onboarding.identity_shift.subtext': 'Wie fühlt sich das an?',
+  // Attribution step
+  'onboarding.attribution.title': 'Wo hast du von uns gehört?',
+  'onboarding.attribution.subtitle': 'Das hilft uns zu verstehen, wie Leute veezy finden.',
+  'onboarding.attribution.friends': 'Freunde & Familie',
+  'onboarding.attribution.other': 'Sonstiges',
 
-  'onboarding.micro_logic.label': 'PHASE 3',
-  'onboarding.micro_logic.headline': 'Dein Gehirn glaubt, was es regelmäßig sieht.',
-  'onboarding.micro_logic.subtext': 'Wiederholung schafft Realität.',
-
-  'onboarding.companion.label': 'DEIN WEG',
-  'onboarding.companion.headline': 'Wir begleiten dich auf deinem Weg.',
-  'onboarding.companion.subtext': 'Jeden Tag erinnern wir dich an dein Ziel, damit du nicht vergisst, wohin du willst.',
+  // Age step
+  'onboarding.age.title': 'Wie alt bist du?',
+  'onboarding.age.subtitle': 'Damit wir veezy besser auf dich zuschneiden können.',
+  'onboarding.age.under_18': 'Unter 18',
 
   // Name step
   'onboarding.name.headline': "Wie sollen wir\ndich nennen?",
@@ -82,7 +84,7 @@ const de: Record<string, string> = {
   'onboarding.reaction.not_yet': "Noch nicht ganz meins",
 
   // Notification setup step
-  'onboarding.notifications.title': 'Dein Reminder-Plan',
+  'onboarding.notifications.title': 'Wann sollen wir dich erinnern?',
   'onboarding.notifications.subtitle': 'Stell ein, wann und wie oft veezy dich an deine Ziele erinnern soll.',
   'onboarding.notifications.section_frequency': 'Häufigkeit & Zeitraum',
   'onboarding.notifications.per_day': 'Pro Tag',
@@ -110,35 +112,35 @@ const de: Record<string, string> = {
   'onboarding.demo.phrase': 'Ich lebe in meinem Traumhaus am Meer und genieße meine Freiheit.',
   'onboarding.demo.category': 'Lifestyle',
   'onboarding.demo.continue': 'Weiter',
+  'onboarding.demo.widget_badge': 'Das Veezy Widget',
+  'onboarding.demo.widget_title': 'Deine Vision. Als Widget auf deinem Homescreen.',
+  'onboarding.demo.widget_subtitle': 'Jeden Tag, bei jedem Blick aufs Handy.',
 
-  // Add widget step
-  'onboarding.widget.title': 'Deine Visionen. Jeden Tag vor Augen.',
-  'onboarding.widget.subtitle': 'Füge veezy zu deinem Home-Screen hinzu, um deine Ziele immer im Blick zu haben.',
+  // Notification explain step
+  'onboarding.notification_explain.title': 'Wir erinnern dich an deine Vision',
+  'onboarding.notification_explain.subtitle': 'Kleine Impulse über den Tag verteilt – wann es dir passt.',
+  'onboarding.notification_explain.banner_time': 'jetzt',
 
-  // Trial offer step
-  'onboarding.trial_offer.label': 'EXKLUSIV FÜR DICH',
-  'onboarding.trial_offer.title': "3 Tage kostenlos.\nKein Risiko.",
-  'onboarding.trial_offer.subtitle': 'Wir geben dir vollen Zugang zu veezy Premium — damit du selbst spürst, was möglich ist.',
+  // Personalization step
+  'onboarding.personalization.title': 'Wir richten veezy für dich ein',
+  'onboarding.personalization.title_with_name': '{{name}}, wir richten veezy für dich ein',
+  'onboarding.personalization.stage_profile': 'Profil wird erstellt…',
+  'onboarding.personalization.stage_visions': 'Deine Visionen werden zugeschnitten…',
+  'onboarding.personalization.stage_reminders': '{{perDay}}× tägliche Erinnerungen werden geplant…',
+  'onboarding.personalization.stage_widget': 'Dein Widget wird vorbereitet…',
+  'onboarding.personalization.stage_done': 'Alles bereit!',
 
-  // Trial reminder step
-  'onboarding.trial_reminder.label': 'SO FUNKTIONIERT ES',
-  'onboarding.trial_reminder.title': 'Keine versteckten Kosten.',
-  'onboarding.trial_reminder.day_today': 'Heute',
-  'onboarding.trial_reminder.day_today_desc': 'Dein kostenloser Zugang beginnt.',
-  'onboarding.trial_reminder.day_2': 'Tag 2',
-  'onboarding.trial_reminder.day_2_desc': 'Erinnerung: Dein Test endet morgen.',
-  'onboarding.trial_reminder.day_3': 'Tag 3',
-  'onboarding.trial_reminder.day_3_desc': 'Abo beginnt — jederzeit kündbar.',
-  'onboarding.trial_reminder.cancel_note': 'Jederzeit in den iPhone-Einstellungen kündbar.',
-
-  // What you will get step
-  'onboarding.what_you_get.title': 'Was dich erwartet',
-  'onboarding.what_you_get.benefit_1': 'Deine Vision täglich vor Augen',
-  'onboarding.what_you_get.benefit_2': 'Personalisierte Affirmationen',
-  'onboarding.what_you_get.benefit_3': 'Home- & Lock-Screen Widget',
-  'onboarding.what_you_get.benefit_4': 'Motivationsstil nach deiner Wahl',
-  'onboarding.what_you_get.benefit_5': '3 Tage kostenlos testen',
-  'onboarding.what_you_get.cta': "Los geht's!",
+  // Trial step (timeline)
+  'onboarding.trial.title': "3 Tage kostenlos.\nKein Risiko.",
+  'onboarding.trial.subtitle': 'Wir geben dir vollen Zugang zu veezy Premium — damit du selbst spürst, was möglich ist.',
+  'onboarding.trial.timeline_0_title': 'Heute',
+  'onboarding.trial.timeline_0_body': 'Dein kostenloser Zugang beginnt — alles freigeschaltet.',
+  'onboarding.trial.timeline_1_title': 'Tag 2',
+  'onboarding.trial.timeline_1_body': 'Wir erinnern dich, bevor dein Test endet.',
+  'onboarding.trial.timeline_2_title': 'Tag 3',
+  'onboarding.trial.timeline_2_body': 'Abo beginnt — jederzeit kündbar.',
+  'onboarding.trial.badge': 'Keine versteckten Kosten. Jederzeit in den iPhone-Einstellungen kündbar.',
+  'onboarding.trial.cta': "Los geht's!",
 
   // Home screen
   'home.empty_title': 'Erstelle deine erste Vision',

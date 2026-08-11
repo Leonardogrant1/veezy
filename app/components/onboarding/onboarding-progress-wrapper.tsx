@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Gold } from '@/constants/theme';
@@ -155,6 +156,7 @@ export function OnboardingProgressWrapper({ steps }: Props) {
                                         onDisabledPressRef.current?.();
                                         return;
                                     }
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     nextStep();
                                 }}
                             >
