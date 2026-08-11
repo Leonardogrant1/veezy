@@ -22,6 +22,15 @@ const en = {
   'onboarding.attribution.friends': 'Friends & family',
   'onboarding.attribution.other': 'Other',
 
+  // Referral code step
+  'onboarding.referral.headline': 'Got a creator code?',
+  'onboarding.referral.subtitle': 'Optional — you can skip this step.',
+  'onboarding.referral.placeholder': 'CODE',
+  'onboarding.referral.submit': 'Redeem',
+  'onboarding.referral.success': 'Code redeemed!',
+  'onboarding.referral.error_not_found': 'Code not found',
+  'onboarding.referral.error_network': 'Something went wrong. Please try again.',
+
   // Age step
   'onboarding.age.title': 'How old are you?',
   'onboarding.age.subtitle': 'So we can tailor veezy to you.',

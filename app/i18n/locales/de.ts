@@ -22,6 +22,15 @@ const de: Record<string, string> = {
   'onboarding.attribution.friends': 'Freunde & Familie',
   'onboarding.attribution.other': 'Sonstiges',
 
+  // Referral code step
+  'onboarding.referral.headline': 'Hast du einen Creator-Code?',
+  'onboarding.referral.subtitle': 'Optional — du kannst diesen Schritt überspringen.',
+  'onboarding.referral.placeholder': 'CODE',
+  'onboarding.referral.submit': 'Einlösen',
+  'onboarding.referral.success': 'Code eingelöst!',
+  'onboarding.referral.error_not_found': 'Code nicht gefunden',
+  'onboarding.referral.error_network': 'Etwas ist schiefgelaufen. Versuch es noch mal.',
+
   // Age step
   'onboarding.age.title': 'Wie alt bist du?',
   'onboarding.age.subtitle': 'Damit wir veezy besser auf dich zuschneiden können.',
