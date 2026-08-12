@@ -92,6 +92,12 @@ const en = {
   'onboarding.reaction.good': 'Feels good',
   'onboarding.reaction.not_yet': "Not quite mine yet",
 
+  // Rating step
+  'onboarding.rating.title': "You're in,\n{{name}}.",
+  'onboarding.rating.title_no_name': "You're in.",
+  'onboarding.rating.subtitle': "veezy was built to remind you every day of what is truly important to you.\n\nIf you believe in what we are building — help us reach more people like you.",
+  'onboarding.rating.badge': 'It takes 5 seconds and means the world to us.',
+
   // Notification setup step
   'onboarding.notifications.title': 'When should we remind you?',
   'onboarding.notifications.subtitle': "Set when and how often veezy should remind you of your goals.",

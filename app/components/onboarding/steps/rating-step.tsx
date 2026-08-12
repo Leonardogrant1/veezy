@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import * as StoreReview from 'expo-store-review';
+import { useTranslation } from 'react-i18next';
 
 import { Colors, Fonts, Gold } from '@/constants/theme';
 import { useUserDataStore } from '@/stores/UserDataStore';
@@ -21,27 +23,43 @@ function useFadeSlide(delay: number) {
 }
 
 export function RatingStep() {
+    const { t } = useTranslation();
     const name = useUserDataStore((s) => s.name);
-    const displayName = name.trim() || 'du';
+    const trimmedName = name.trim();
 
     const titleAnim = useFadeSlide(150);
-    const bodyAnim = useFadeSlide(400);
     const badgeAnim = useFadeSlide(700);
+
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            try {
+                if (await StoreReview.isAvailableAsync()) {
+                    await StoreReview.requestReview();
+                }
+            } catch (e) {
+                // silently ignore errors requesting review
+            }
+        }, 900);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const titleText = trimmedName
+        ? t('onboarding.rating.title', { name: trimmedName })
+        : t('onboarding.rating.title_no_name');
 
     return (
         <View style={styles.container}>
             <View style={styles.inner}>
                 <Animated.View style={titleAnim}>
-                    <Text style={styles.title}>Du bist dabei,{'\n'}{displayName}.</Text>
+                    <Text style={styles.title}>{titleText}</Text>
                     <Text style={styles.subtitle}>
-                        veezy wurde entwickelt, um dich jeden Tag an das zu erinnern, was dir wirklich wichtig ist.{'\n\n'}
-                        Wenn du glaubst, was wir aufbauen — hilf uns, mehr Menschen wie dich zu erreichen.
+                        {t('onboarding.rating.subtitle')}
                     </Text>
                 </Animated.View>
 
                 <Animated.View style={[styles.badge, badgeAnim]}>
                     <Text style={styles.badgeIcon}>⭐</Text>
-                    <Text style={styles.badgeText}>Es dauert 5 Sekunden und bedeutet uns alles.</Text>
+                    <Text style={styles.badgeText}>{t('onboarding.rating.badge')}</Text>
                 </Animated.View>
             </View>
         </View>

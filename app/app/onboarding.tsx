@@ -7,6 +7,7 @@ import { NotificationExplainStep } from '@/components/onboarding/steps/notificat
 import { ScienceStep } from '@/components/onboarding/steps/science-step';
 import { NotificationSetupStep } from '@/components/onboarding/steps/notification-setup-step';
 import { PersonalizationStep } from '@/components/onboarding/steps/personalization-step';
+import { RatingStep } from '@/components/onboarding/steps/rating-step';
 import { ReferralCodeStep } from '@/components/onboarding/steps/referral-code-step';
 import { TrackingStep } from '@/components/onboarding/steps/tracking-step';
 import { TrialOfferStep } from '@/components/onboarding/steps/trial-offer-step';
@@ -49,6 +50,7 @@ export default function OnboardingScreen() {
             { component: NotificationExplainStep, showProgressIndicator: false, continueButtonText: t('common.continue') },
             { component: NotificationSetupStep, theme: 'light', showContinueButton: false, preContinue: handleRequestNotifications },
             { component: PersonalizationStep, theme: 'light', showContinueButton: false, showProgressIndicator: false },
+            { component: RatingStep, theme: 'light', continueButtonText: t('common.continue') },
             { component: ReferralCodeStep, theme: 'light', continueButtonText: t('common.continue'), initialCanContinue: true },
             { component: TrialOfferStep, theme: 'light', continueButtonText: t('onboarding.trial.cta') },
         ];

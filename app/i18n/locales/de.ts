@@ -92,6 +92,12 @@ const de: Record<string, string> = {
   'onboarding.reaction.good': 'Fühlt sich gut an',
   'onboarding.reaction.not_yet': "Noch nicht ganz meins",
 
+  // Rating step
+  'onboarding.rating.title': 'Du bist dabei,\n{{name}}.',
+  'onboarding.rating.title_no_name': 'Du bist dabei.',
+  'onboarding.rating.subtitle': 'veezy wurde entwickelt, um dich jeden Tag an das zu erinnern, was dir wirklich wichtig ist.\n\nWenn du glaubst, was wir aufbauen — hilf uns, mehr Menschen wie dich zu erreichen.',
+  'onboarding.rating.badge': 'Es dauert 5 Sekunden und bedeutet uns alles.',
+
   // Notification setup step
   'onboarding.notifications.title': 'Wann sollen wir dich erinnern?',
   'onboarding.notifications.subtitle': 'Stell ein, wann und wie oft veezy dich an deine Ziele erinnern soll.',
