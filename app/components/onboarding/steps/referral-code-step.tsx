@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Animated,
     Easing,
     Keyboard,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -16,6 +19,7 @@ import { useOnboardingControl } from '@/components/onboarding/onboarding-control
 import { Colors, Fonts } from '@/constants/theme';
 import { trackAffiliateCode } from '@/services/affiliate-tracking';
 import { useUserDataStore } from '@/stores/UserDataStore';
+import { parseReferralClipboard } from '@/utils/referral-clipboard';
 
 type SubmitStatus = 'idle' | 'loading' | 'success' | 'error_not_found' | 'error_network';
 
@@ -28,6 +32,8 @@ export function ReferralCodeStep() {
     const alreadyRedeemed = !!existingCode;
     const [code, setCode] = useState(existingCode ?? '');
     const [status, setStatus] = useState<SubmitStatus>(alreadyRedeemed ? 'success' : 'idle');
+    const [clipboardMiss, setClipboardMiss] = useState(false);
+    const clipboardChecked = useRef(false);
 
     const focusOffset = useRef(new Animated.Value(0)).current;
 
@@ -53,17 +59,17 @@ export function ReferralCodeStep() {
 
     function handleChange(value: string) {
         setCode(value.toUpperCase());
+        setClipboardMiss(false);
         if (status === 'error_not_found' || status === 'error_network') {
             setStatus('idle');
         }
     }
 
-    async function handleSubmit() {
-        if (!canSubmit) return;
+    async function submitCode(trimmedCode: string) {
         setStatus('loading');
-        const result = await trackAffiliateCode(code.trim());
+        const result = await trackAffiliateCode(trimmedCode);
         if (result === 'success') {
-            updateSettings({ referralCode: code.trim() });
+            updateSettings({ referralCode: trimmedCode });
             setStatus('success');
             Keyboard.dismiss();
             setTimeout(() => nextStep(), 600);
@@ -74,13 +80,67 @@ export function ReferralCodeStep() {
         }
     }
 
-    const showFeedback = status === 'success' || status === 'error_not_found' || status === 'error_network';
+    async function handleSubmit() {
+        if (!canSubmit) return;
+        await submitCode(code.trim());
+    }
+
+    // Clipboard lesen und bei "VEEZY:<CODE>"-Payload direkt einlösen. Auf iOS
+    // erst nach dem Primer-Dialog aufrufen — der native Paste-Prompt wirkt
+    // dann angefordert statt aufgedrängt.
+    async function redeemFromClipboard(userInitiated: boolean) {
+        try {
+            const text = await Clipboard.getStringAsync();
+            const clipboardCode = parseReferralClipboard(text);
+            if (!clipboardCode) {
+                // Hinweis nur, wenn der User den Read angestoßen hat — beim
+                // stillen Android-Read wäre "Kein Code gefunden" kontextlos
+                if (userInitiated) setClipboardMiss(true);
+                return;
+            }
+            setCode(clipboardCode);
+            await submitCode(clipboardCode);
+        } catch {
+            // Clipboard verweigert (iOS-Paste-Prompt abgelehnt) — User tippt manuell
+        }
+    }
+
+    // Auto-Redeem: iOS zeigt vor dem Clipboard-Read einen Primer, weil der
+    // native Paste-Prompt sonst abschreckt. Android liest still.
+    useEffect(() => {
+        if (alreadyRedeemed || clipboardChecked.current) return;
+        clipboardChecked.current = true;
+        (async () => {
+            if (Platform.OS === 'ios') {
+                // hasStringAsync triggert den Paste-Prompt nicht — sagt aber nur
+                // "irgendein Text liegt da", deshalb die konditionale Primer-Copy
+                const hasString = await Clipboard.hasStringAsync().catch(() => false);
+                if (!hasString) return;
+                Alert.alert(
+                    t('onboarding.referral.clipboard_title'),
+                    t('onboarding.referral.clipboard_message'),
+                    [
+                        { text: t('onboarding.referral.clipboard_cancel'), style: 'cancel' },
+                        { text: t('onboarding.referral.clipboard_confirm'), onPress: () => redeemFromClipboard(true) },
+                    ],
+                );
+                return;
+            }
+            await redeemFromClipboard(false);
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const showClipboardMiss = clipboardMiss && status === 'idle';
+    const showFeedback = showClipboardMiss || status === 'success' || status === 'error_not_found' || status === 'error_network';
     const feedbackText =
-        status === 'success'
-            ? t('onboarding.referral.success')
-            : status === 'error_not_found'
-                ? t('onboarding.referral.error_not_found')
-                : t('onboarding.referral.error_network');
+        showClipboardMiss
+            ? t('onboarding.referral.clipboard_not_found')
+            : status === 'success'
+                ? t('onboarding.referral.success')
+                : status === 'error_not_found'
+                    ? t('onboarding.referral.error_not_found')
+                    : t('onboarding.referral.error_network');
 
     return (
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>
@@ -121,7 +181,7 @@ export function ReferralCodeStep() {
                         </TouchableOpacity>
                     </View>
                     {showFeedback && (
-                        <Text style={[styles.feedback, { color: status === 'success' ? '#2E7D32' : '#C62828' }]}>
+                        <Text style={[styles.feedback, { color: status === 'success' ? '#2E7D32' : showClipboardMiss ? Colors.textMuted : '#C62828' }]}>
                             {feedbackText}
                         </Text>
                     )}

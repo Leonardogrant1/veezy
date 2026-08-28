@@ -1,8 +1,10 @@
 import { REVENUECAT_API_KEYS } from "@/services/purchases/revenuecat/constants";
 import { SUPERWALL_API_KEYS, SUPERWALL_ENTITLEMENTS } from "@/services/purchases/superwall/constants";
+import { useUserDataStore } from "@/stores/UserDataStore";
 import {
     CustomPurchaseControllerProvider,
-    SuperwallProvider
+    SuperwallProvider,
+    useSuperwall
 } from "expo-superwall";
 import { useEffect } from "react";
 import { Platform } from "react-native";
@@ -61,7 +63,19 @@ export function PurchaseWrapper({ children }: PurchaseWrapperProps) {
 
 // necessary because to use useSuperwallFunctions we need to be inside SuperwallProvider
 function PurchaseLogicWrapper({ children }: { children: React.ReactNode }) {
-    const { setSubscriptionStatus } = useSuperwallFunctions();
+    const { setSubscriptionStatus, update } = useSuperwallFunctions();
+    // Guard on isConfigured: Superwall.configure() is async — calling Superwall.shared
+    // before it completes triggers assertionFailure in SuperwallKit.
+    const isConfigured = useSuperwall((state) => state.isConfigured);
+    const referralCode = useUserDataStore((s) => s.referralCode);
+
+    // Re-apply the referral promocode on every start — the one-shot update at
+    // onboarding end can fail (network) and attributes don't survive reinstalls.
+    useEffect(() => {
+        if (!isConfigured || !referralCode) return;
+        update({ promocode: referralCode }).catch(() => { });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [referralCode, isConfigured]);
 
     useEffect(() => {
         const apiKey = Platform.OS === "ios"

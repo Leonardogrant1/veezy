@@ -30,6 +30,11 @@ const de: Record<string, string> = {
   'onboarding.referral.success': 'Code eingelöst!',
   'onboarding.referral.error_not_found': 'Code nicht gefunden',
   'onboarding.referral.error_network': 'Etwas ist schiefgelaufen. Versuch es noch mal.',
+  'onboarding.referral.clipboard_title': 'Creator-Code einlösen',
+  'onboarding.referral.clipboard_message': 'Wenn du über einen Creator-Link hier bist, lösen wir deinen Code direkt aus der Zwischenablage ein.',
+  'onboarding.referral.clipboard_confirm': 'Code einlösen',
+  'onboarding.referral.clipboard_cancel': 'Manuell eingeben',
+  'onboarding.referral.clipboard_not_found': 'Kein Code gefunden — tipp ihn einfach ein.',
 
   // Age step
   'onboarding.age.title': 'Wie alt bist du?',

@@ -30,6 +30,11 @@ const en = {
   'onboarding.referral.success': 'Code redeemed!',
   'onboarding.referral.error_not_found': 'Code not found',
   'onboarding.referral.error_network': 'Something went wrong. Please try again.',
+  'onboarding.referral.clipboard_title': 'Redeem creator code',
+  'onboarding.referral.clipboard_message': 'If you got here through a creator link, we can apply your code straight from your clipboard.',
+  'onboarding.referral.clipboard_confirm': 'Redeem code',
+  'onboarding.referral.clipboard_cancel': 'Enter manually',
+  'onboarding.referral.clipboard_not_found': 'No code found — just type it in.',
 
   // Age step
   'onboarding.age.title': 'How old are you?',
